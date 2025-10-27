@@ -1,0 +1,11 @@
+# pyproject.toml - configuração mínima
+[project]
+name = "trabalho_a2"
+version = "0.1.0"
+description = "Scaffold do projeto para coleta e ML sobre dados (exemplo mínimo)"
+authors = ["Seu Nome <seu@email.com>"]
+requires-python = ">=3.9"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

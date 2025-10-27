@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "property_id": "509656370",
+    "dimension_headers": [
+      "date",
+      "eventName",
+      "sessionSource",
+      "sessionMedium"
+    ],
+    "metric_headers": [
+      "keyEvents",
+      "eventCount",
+      "totalRevenue",
+      "transactions",
+      "purchaseRevenue"
+    ],
+    "row_count": 0,
+    "collected_at": "2025-10-22T13:48:14.166253",
+    "report_type": "conversions"
+  },
+  "rows": []
+}

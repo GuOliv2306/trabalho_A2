@@ -1,0 +1,35 @@
+# Configurações do Google Analytics 4
+google_analytics:
+  property_id: "YOUR_GA4_PROPERTY_ID"  # Ex: "123456789"
+  credentials_path: "path/to/credentials.json"  # Caminho para arquivo JSON de credenciais
+
+# Configurações do Google Search Console
+google_search_console:
+  site_url: "https://www.example.com/"  # URL verificada no GSC
+  credentials_path: "path/to/credentials.json"  # Pode usar mesma Service Account do GA4
+  max_rows_queries: 5000  # Limite de queries a coletar
+  max_rows_pages: 1000  # Limite de páginas a coletar
+  date_offset_days: 3  # GSC tem delay de 2-3 dias, use 3daysAgo como end_date
+
+# Configurações de coleta
+collection:
+  default_start_date: "30daysAgo"  # Data inicial padrão
+  default_end_date: "today"  # Data final padrão
+  include_realtime: false  # Se true, coleta dados em tempo real também
+  
+  # Tipos de reports a coletar (traffic, conversions, engagement)
+  report_types:
+    - traffic
+    - conversions
+    - engagement
+
+# Configurações de armazenamento
+storage:
+  raw_data_dir: "data/raw"  # Diretório para JSONs coletados
+  processed_data_dir: "data/processed"  # Diretório para banco de dados
+  database_path: "data/processed/ga4_data.duckdb"  # Caminho do banco DuckDB
+
+# Configurações de agendamento (futuro)
+scheduling:
+  enabled: false
+  cron_expression: "0 2 * * *"  # Todo dia às 2h da manhã

@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "property_id": "509656370",
+    "dimension_headers": [
+      "date",
+      "sessionSource",
+      "sessionMedium",
+      "sessionCampaignName"
+    ],
+    "metric_headers": [
+      "sessions",
+      "activeUsers",
+      "newUsers",
+      "screenPageViews",
+      "averageSessionDuration"
+    ],
+    "row_count": 0,
+    "collected_at": "2025-10-22T21:57:53.525983",
+    "report_type": "traffic"
+  },
+  "rows": []
+}

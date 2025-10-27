@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "property_id": "509656370",
+    "dimension_headers": [
+      "date",
+      "pagePath",
+      "unifiedScreenName",
+      "deviceCategory"
+    ],
+    "metric_headers": [
+      "engagementRate",
+      "engagedSessions",
+      "averageSessionDuration",
+      "eventCount",
+      "userEngagementDuration"
+    ],
+    "row_count": 0,
+    "collected_at": "2025-10-21T15:11:47.966998",
+    "report_type": "engagement"
+  },
+  "rows": []
+}
