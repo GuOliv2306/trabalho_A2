@@ -1,424 +1,344 @@
-# Sistema de Coleta e Análise de Dados - Google Analytics 4 & Search Console
+# 📊 Analytics API - Sistema de Análise de Dados GA4 & GSC
 
-Sistema completo para coleta, armazenamento e análise de dados do **Google Analytics 4 (GA4)** e **Google Search Console (GSC)** usando as APIs oficiais.
+API completa de análise de dados com **Machine Learning** e **IA Generativa** para relatórios automáticos de marketing digital. Sistema pronto para produção com dados simulados ou reais do **Google Analytics 4 (GA4)** e **Google Search Console (GSC)**.
 
-## 📋 Funcionalidades
+## 🌟 Destaques
 
-✅ **Coleta de Dados GA4**
-- Tráfego (sessões, usuários, pageviews, fontes)
-- Conversões (eventos-chave, receita, transações)
-- Engajamento (taxa de engajamento, duração, eventos)
-- Dados em tempo real (usuários ativos, páginas visualizadas)
+- 🚀 **API REST completa** com FastAPI (13 endpoints)
+- 🤖 **Relatórios com IA Generativa** (GPT-4o-mini via Agno)
+- 📈 **Machine Learning** para clustering e análise preditiva
+- 🎲 **Simulador de dados** realistas (50 dias, 3.668 registros)
+- 💾 **DuckDB** para análise de alto desempenho
+- 🔄 **Deploy automático** no Render
+- 📚 **Documentação completa** para desenvolvimento frontend
 
-✅ **Coleta de Dados GSC**
-- Performance de palavras-chave (queries, cliques, impressões, CTR)
-- Performance de páginas/URLs
-- Análise por país (geolocalização)
-- Análise por dispositivo (desktop, mobile, tablet)
-- Séries temporais (evolução diária)
+## 🎯 Funcionalidades Principais
 
-✅ **Limpeza e Validação de Dados**
-- Tratamento automático de valores nulos (zero-fill, forward-fill)
-- Recálculo de CTR para dados GSC
-- Remoção de duplicatas
-- Validação de integridade (ranges, consistência)
-- Relatórios de qualidade de dados
+### 1️⃣ **Dashboard & KPIs**
+- Total de páginas, sessões, conversões
+- Taxa de conversão e bounce rate
+- Duração média de sessão
+- Matriz de correlação entre métricas
 
-✅ **Armazenamento**
-- Formato JSON local (`data/raw/`)
-- Banco de dados DuckDB unificado (`data/processed/`)
-- Schema otimizado para análise combinada GA4 + GSC
-- Limpeza automática antes de inserção no banco
+### 2️⃣ **Machine Learning (K-Means Clustering)**
+- **Clusters de Canais**: Agrupa fontes de tráfego por performance
+- **Clusters de Keywords**: Segmenta queries do GSC por comportamento
+- **Clusters de Páginas**: Identifica padrões de engajamento
 
-✅ **Infraestrutura**
-- API FastAPI para endpoints customizados
-- Docker/Docker Compose (em desenvolvimento)
-- Scripts de automação
+### 3️⃣ **Relatórios com IA Generativa** ⭐ **PRINCIPAL**
+- Análise narrativa completa do período
+- 5 seções estruturadas com insights
+- 8-10 recomendações priorizadas (high/medium/low)
+- Confidence score automático
+- Geração em ~80 segundos
 
-## 🚀 Instalação
+### 4️⃣ **Análise Detalhada**
+- Performance de páginas específicas
+- Simulador preditivo de métricas
+- Dados brutos de todas as tabelas
 
-### 1. Criar ambiente virtual
+### 5️⃣ **Administração**
+- Populate database (gerar dados simulados)
+- Database stats (estatísticas do banco)
+- Health check
+
+## 🚀 Quick Start
+
+### 1. Instalação
 
 ```bash
+# Clonar repositório
+git clone https://github.com/GuOliv2306/trabalho_A2.git
+cd trabalho_A2
+
+# Criar ambiente virtual
 python -m venv .venv
 source .venv/bin/activate  # Linux/Mac
 # ou
-.venv\Scripts\activate  # Windows
-```
+.venv\Scripts\activate     # Windows
 
-### 2. Instalar dependências
-
-```bash
+# Instalar dependências
 pip install -r requirements.txt
 ```
 
-### 3. Configurar credenciais do Google Analytics e Search Console
+### 2. Configurar variáveis de ambiente
 
-#### 3.1. Obter credenciais
-1. Acesse [Google Cloud Console](https://console.cloud.google.com/)
-2. Crie/selecione um projeto
-3. Ative as APIs:
-   - **Google Analytics Data API** (para GA4)
-   - **Google Search Console API** (para GSC)
-4. Crie uma **Service Account**
-5. Baixe o arquivo JSON de credenciais
-6. **Importante**: Adicione a Service Account como usuário em:
-   - GA4: Admin → Property Access Management → Add user (role: Viewer)
-   - GSC: Settings → Users and permissions → Add user (role: Full)
-
-#### 3.2. Configurar variáveis de ambiente
-
-```bash
-export GA4_PROPERTY_ID="123456789"  # Seu Property ID do GA4
-export GSC_SITE_URL="https://www.seusite.com/"  # URL verificada no GSC
-export GOOGLE_APPLICATION_CREDENTIALS="/caminho/para/credentials.json"
-```
-
-Ou crie um arquivo `.env`:
+Crie um arquivo `.env` na raiz do projeto:
 
 ```env
-GA4_PROPERTY_ID=123456789
-GSC_SITE_URL=https://www.seusite.com/
-GOOGLE_APPLICATION_CREDENTIALS=/caminho/para/credentials.json
+# OpenAI API (para relatórios com IA)
+OPENAI_API_KEY=sk-proj-...
+
+# Chave de admin (qualquer string para proteger endpoints admin)
+ADMIN_KEY=sua-chave-secreta-aqui
 ```
 
-### 4. Configurar settings (opcional)
-
-Copie e edite o arquivo de configuração:
+### 3. Iniciar a API
 
 ```bash
-cp config/settings.example.yaml config/settings.yaml
-# Edite config/settings.yaml com suas configurações
+# Método 1: Script direto
+python app/main.py
+
+# Método 2: Via Uvicorn (com reload automático)
+python -m uvicorn app.main:app --reload --port 8000
 ```
 
-## 📖 Uso
+A API estará disponível em:
+- 🌐 **API**: http://localhost:8000
+- 📚 **Documentação**: http://localhost:8000/docs
+- 🏥 **Health Check**: http://localhost:8000/api/v1/health
 
-### Coleta Completa GA4 (Exemplo Básico)
+### 4. Popular o banco com dados simulados
 
 ```bash
-python scripts/exemplo_coleta_ga4.py
+curl -X POST "http://localhost:8000/api/v1/admin/populate-database" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "days": 50,
+    "overwrite": true,
+    "admin_key": "sua-chave-secreta-aqui"
+  }'
 ```
 
-Este script executa:
-1. Coleta dados dos últimos 7 dias do GA4
-2. Salva JSONs em `data/raw/`
-3. Insere dados no banco DuckDB
-4. Exibe estatísticas resumidas
+Isso vai gerar:
+- ✅ 50 dias de dados simulados
+- ✅ 3.668 registros realistas
+- ✅ 4 tabelas: traffic, engagement, conversions, gsc_query_performance
 
-### Coleta Completa GSC (Exemplo Básico)
+### 5. Gerar relatório com IA
 
 ```bash
-python scripts/exemplo_coleta_gsc.py
+curl -X POST "http://localhost:8000/api/v1/reports/generate" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "period_days": 7,
+    "detail_level": "executive"
+  }'
 ```
 
-Este script executa:
-1. Coleta dados de busca orgânica dos últimos 7 dias
-2. Salva JSONs em `data/raw/`
-3. Insere dados no mesmo banco DuckDB
-4. Exibe top queries, páginas e estatísticas
+Retorna um relatório completo com:
+- 📝 Executive summary
+- 📊 5 seções analíticas
+- 🎯 8-10 recomendações priorizadas
 
-### Uso Programático - GA4
+## � API Endpoints (10 endpoints para frontend)
 
-```python
-from src.collectors.ga_orchestrator import GA4Orchestrator
-from src.collectors.db_storage import GA4DatabaseStorage
-
-# 1. Inicializar orchestrator
-orchestrator = GA4Orchestrator(
-    property_id="123456789",
-    credentials_path="credentials.json"
-)
-
-# 2. Coletar dados
-saved_files = orchestrator.collect_and_save(
-    report_types=["traffic", "conversions", "engagement"],
-    start_date="30daysAgo",
-    end_date="today"
-)
-
-# 3. Armazenar no banco
-db = GA4DatabaseStorage()
-for filepath in saved_files.values():
-    db.insert_from_json(filepath)
-
-# 4. Executar queries
-stats = db.get_summary_stats()
-print(stats)
-
-db.close()
+### 🏥 Health Check
+```http
+GET /api/v1/health
 ```
 
-### Uso Programático - GSC
-
-```python
-from src.collectors.gsc_orchestrator import GSCOrchestrator
-from src.collectors.db_storage import GA4DatabaseStorage
-
-# 1. Inicializar orchestrator
-orchestrator = GSCOrchestrator(
-    site_url="https://www.seusite.com/",
-    credentials_path="credentials.json"
-)
-
-# 2. Coletar dados
-saved_files = orchestrator.collect_and_save(
-    report_types=[
-        "query_performance",
-        "page_performance",
-        "country_performance",
-        "device_performance",
-        "date_performance",
-    ],
-    start_date="2024-01-01",
-    end_date="2024-01-31",
-    max_rows_queries=5000,
-    max_rows_pages=1000,
-)
-
-# 3. Armazenar no banco (mesmo banco do GA4!)
-db = GA4DatabaseStorage()
-for filepath in saved_files.values():
-    db.insert_from_json(filepath)
-
-db.close()
+### 📊 Dashboard & KPIs
+```http
+GET /api/v1/overview/kpis
+# Retorna: totalPaginas, sessoesTotais, conversoesTotais, mediaBounceRate, mediaSessionDuration
 ```
 
-### Coleta Incremental (Atualização Diária)
-
-```python
-from src.collectors.ga_orchestrator import GA4Orchestrator
-
-orchestrator = GA4Orchestrator(property_id="123456789")
-
-# Coleta apenas dados de ontem
-filepath = orchestrator.collect_incremental(
-    report_type="traffic",
-    start_date="yesterday",
-    end_date="yesterday"
-)
+### 📈 Análises Estáticas
+```http
+GET /api/v1/analysis/correlation_matrix
+# Matriz de correlação entre métricas
 ```
 
-## 📊 Estrutura de Dados
+### 🤖 Machine Learning (K-Means)
+```http
+GET /api/v1/ml/channel_clusters?n_clusters=3
+# Clusters de canais de tráfego
 
-### GA4 - Tipos de Reports
+GET /api/v1/ml/keyword_clusters?n_clusters=3
+# Clusters de keywords (GSC)
 
-#### 1. Traffic (Tráfego)
-- **Dimensões**: date, sessionSource, sessionMedium, sessionCampaignName
-- **Métricas**: sessions, activeUsers, newUsers, screenPageViews, averageSessionDuration
-
-#### 2. Conversions (Conversões)
-- **Dimensões**: date, eventName, sessionSource, sessionMedium
-- **Métricas**: keyEvents, eventCount, totalRevenue, transactions, purchaseRevenue
-
-#### 3. Engagement (Engajamento)
-- **Dimensões**: date, pagePath, unifiedScreenName, deviceCategory
-- **Métricas**: engagementRate, engagedSessions, averageSessionDuration, eventCount, userEngagementDuration
-
-#### 4. Realtime Traffic (Tempo Real)
-- **Dimensões**: unifiedScreenName, country, city
-- **Métricas**: activeUsers, screenPageViews
-
-### GSC - Tipos de Reports
-
-#### 1. Query Performance (Palavras-chave)
-- **Dimensões**: query (palavra-chave)
-- **Métricas**: clicks, impressions, ctr, position
-- **Uso**: Identificar queries que trazem tráfego orgânico
-
-#### 2. Page Performance (Páginas/URLs)
-- **Dimensões**: page (URL)
-- **Métricas**: clicks, impressions, ctr, position
-- **Uso**: Analisar performance de páginas específicas
-
-#### 3. Country Performance (Países)
-- **Dimensões**: country (código ISO)
-- **Métricas**: clicks, impressions, ctr, position
-- **Uso**: Análise geográfica do tráfego orgânico
-
-#### 4. Device Performance (Dispositivos)
-- **Dimensões**: device (DESKTOP, MOBILE, TABLET)
-- **Métricas**: clicks, impressions, ctr, position
-- **Uso**: Otimização por tipo de dispositivo
-
-#### 5. Date Performance (Série Temporal)
-- **Dimensões**: date
-- **Métricas**: clicks, impressions, ctr, position
-- **Uso**: Análise de tendências ao longo do tempo
-
-#### 6. Query + Page Performance (Combinado)
-- **Dimensões**: query, page
-- **Métricas**: clicks, impressions, ctr, position
-- **Uso**: Análise detalhada query → landing page
-
-## 🧹 Limpeza e Validação de Dados
-
-### Funcionalidades de Limpeza
-
-O sistema inclui módulo completo de limpeza automática (`src/cleaning/`):
-
-**Tratamento de Valores Nulos:**
-- Métricas numéricas → `0.0` (zero-fill)
-- Dimensões texto → valores padrão: `"(not set)"`, `"(direct)"`, `"(none)"`
-- CTR nulo → recalculado automaticamente: `clicks / impressions`
-
-**Remoção de Duplicatas:**
-- Identifica registros duplicados por chaves únicas
-- Mantém versão mais recente (`collected_at`)
-- Gera relatórios de duplicatas removidas
-
-**Validação de Integridade:**
-- Formatos de data (YYYY-MM-DD)
-- Ranges válidos (CTR: 0-1, position: >=1)
-- Consistência lógica (ex: `new_users <= active_users`)
-- CTR vs clicks/impressions (tolerância 1%)
-
-### Uso Automático
-
-```python
-from src.collectors.db_storage import GA4DatabaseStorage
-
-# Limpeza acontece automaticamente antes de inserir no banco
-db = GA4DatabaseStorage(
-    auto_clean=True,         # Trata nulos e recalcula métricas
-    auto_deduplicate=True    # Remove duplicatas
-)
-
-count = db.insert_from_json("data/raw/ga4_traffic.json")
-# Dados já foram limpos e validados!
+GET /api/v1/ml/page_clusters?n_clusters=3
+# Clusters de páginas por engajamento
 ```
 
-### Uso Manual
+### 🔍 Análises Preditivas
+```http
+GET /api/v1/page_analysis?path=/produtos/item-1
+# Análise detalhada de página específica
 
-```python
-from src.cleaning import JSONCleaner, DeduplicateData, ValidationReport
-
-# Limpar arquivo JSON
-cleaned = JSONCleaner.clean_json_file(
-    input_path="data/raw/gsc_queries.json",
-    output_path="data/processed/cleaned_queries.json",
-    source="gsc"
-)
-
-# Remover duplicatas
-unique = DeduplicateData.deduplicate_gsc_query(cleaned['rows'])
-
-# Validar qualidade
-report = ValidationReport.validate_dataset(unique, GSCValidator.validate_performance_row)
-print(f"Taxa de validação: {report['validation_rate']*100:.1f}%")
+POST /api/v1/predict/simulator
+# Body: { "sessions": 1000, "bounce_rate": 0.3, "avg_duration": 120 }
+# Retorna: predição de conversões, engajamento, recomendações
 ```
 
-**Documentação completa:** Ver `src/cleaning/README.md`
+### 📄 Visualização de Dados
+```http
+GET /api/v1/data/all?limit=50
+# Todos os dados de todas as tabelas
 
-## 🗄️ Banco de Dados
+GET /api/v1/data/summary
+# Estatísticas resumidas do banco
+```
 
-### Schema DuckDB
+### ⭐ Relatórios com IA Generativa
+```http
+POST /api/v1/reports/generate
+# Body: { "period_days": 7, "detail_level": "executive" }
+# Gera relatório completo com GPT-4o-mini
+```
 
-O banco unificado possui **10 tabelas**:
+**📚 Documentação completa:** Ver [`docs/DOCUMENTACAO_API_PARA_FRONTEND.md`](docs/DOCUMENTACAO_API_PARA_FRONTEND.md)
 
-**GA4 (4 tabelas):**
-- `traffic`: Dados de tráfego histórico
-- `conversions`: Dados de conversões e receita
-- `engagement`: Dados de engajamento
-- `realtime_traffic`: Snapshots de dados em tempo real
+## 🎲 Simulador de Dados
 
-**GSC (6 tabelas):**
-- `gsc_query_performance`: Performance por palavra-chave
-- `gsc_page_performance`: Performance por URL
-- `gsc_country_performance`: Performance por país
-- `gsc_device_performance`: Performance por dispositivo
-- `gsc_date_performance`: Série temporal diária
-- `gsc_query_page_performance`: Combinação query + page
+O sistema inclui um simulador completo de dados realistas para testes:
+
+```bash
+# Gerar 50 dias de dados (via API)
+curl -X POST "http://localhost:8000/api/v1/admin/populate-database" \
+  -H "Content-Type: application/json" \
+  -d '{"days": 50, "overwrite": true, "admin_key": "sua-chave"}'
+
+# Ou via script Python
+python tests/simulador_dados.py --days 50 --clear
+
+# Visualizar dados gerados
+python tests/visualizar_dados.py
+```
+
+### Dados Gerados (50 dias)
+
+| Tabela | Registros | Descrição |
+|--------|-----------|-----------|
+| `traffic` | 1.150 | Tráfego por canal (source/medium) |
+| `engagement` | 1.250 | Engajamento por página |
+| `conversions` | 900 | Eventos de conversão |
+| `gsc_query_performance` | 368 | Performance de keywords |
+| **TOTAL** | **3.668** | Registros realistas |
+
+**Características:**
+- ✅ Distribuições estatísticas realistas (Poisson, Normal, Beta)
+- ✅ Padrões temporais (fins de semana vs dias úteis)
+- ✅ Correlações entre métricas (bounce vs duration)
+- ✅ Variação por canal (organic, paid, social, etc.)
+
+## 🗄️ Banco de Dados (DuckDB)
+
+### Schema Principal
+
+| Tabela | Descrição | Campos Principais |
+|--------|-----------|-------------------|
+| **traffic** | Tráfego por canal | date, session_source, session_medium, sessions, active_users, new_users, screen_page_views, average_session_duration |
+| **engagement** | Engajamento por página | date, page_path, engagement_rate, engaged_sessions, event_count, average_session_duration |
+| **conversions** | Eventos de conversão | date, event_name, session_source, key_events, event_count, total_revenue, transactions |
+| **gsc_query_performance** | Performance de keywords | date, query, clicks, impressions, ctr, position |
 
 ### Queries de Exemplo
 
-#### GA4: Top páginas mais visitadas
-
 ```python
 from src.collectors.db_storage import GA4DatabaseStorage
 
 db = GA4DatabaseStorage()
 
-result = db.query("""
+# Top páginas mais visitadas
+result = db.query_df("""
     SELECT 
         page_path,
         SUM(screen_page_views) as total_views,
-        SUM(engaged_sessions) as engaged
+        AVG(engagement_rate) as avg_engagement
     FROM engagement
     GROUP BY page_path
     ORDER BY total_views DESC
     LIMIT 10
 """)
-```
 
-#### GA4: Receita por fonte/mídia
-
-```python
-result = db.query("""
+# Receita por fonte
+result = db.query_df("""
     SELECT 
         session_source,
         session_medium,
         SUM(total_revenue) as revenue,
-        SUM(transactions) as txns
+        SUM(key_events) as conversions
     FROM conversions
     GROUP BY session_source, session_medium
     ORDER BY revenue DESC
 """)
-```
 
-#### GSC: Top queries por cliques
-
-```python
-result = db.query("""
+# Top keywords
+result = db.query_df("""
     SELECT 
         query,
         SUM(clicks) as total_clicks,
-        SUM(impressions) as total_impressions,
-        AVG(ctr) as avg_ctr,
         AVG(position) as avg_position
     FROM gsc_query_performance
     GROUP BY query
     ORDER BY total_clicks DESC
     LIMIT 20
 """)
-```
 
-#### GSC: Performance de páginas
-
-```python
-result = db.query("""
-    SELECT 
-        page,
-        SUM(clicks) as clicks,
-        AVG(position) as avg_position
-    FROM gsc_page_performance
-    WHERE clicks > 10
-    GROUP BY page
-    ORDER BY clicks DESC
-""")
-```
-
-#### Análise Combinada GA4 + GSC
-
-```python
-# Correlação: Tráfego orgânico (GA4) vs Cliques (GSC)
-result = db.query("""
-    SELECT 
-        g.date,
-        SUM(t.sessions) as ga4_sessions,
-        SUM(g.clicks) as gsc_clicks,
-        AVG(g.position) as avg_position
-    FROM gsc_date_performance g
-    LEFT JOIN traffic t 
-        ON g.date = t.date 
-        AND t.session_medium = 'organic'
-    GROUP BY g.date
-    ORDER BY g.date DESC
-    LIMIT 30
-""")
-```
-
-```python
 db.close()
+```
+
+## 🤖 Relatórios com IA Generativa
+
+### Como Funciona
+
+O sistema usa **Agno** (framework para agentes de IA) + **GPT-4o-mini** para gerar relatórios analíticos automáticos:
+
+```mermaid
+graph LR
+    A[Coleta de Dados] --> B[5 Endpoints em Paralelo]
+    B --> C[KPIs + Clusters + Correlações]
+    C --> D[Formatação para IA]
+    D --> E[GPT-4o-mini via Agno]
+    E --> F[Relatório Estruturado]
+```
+
+### Endpoints Coletados Automaticamente
+
+1. **KPIs**: Sessões, conversões, bounce rate, duração média
+2. **Channel Clusters**: 3 clusters de canais por performance (K-Means)
+3. **Keyword Clusters**: 3 clusters de keywords (K-Means)
+4. **Page Clusters**: 3 clusters de páginas por engajamento (K-Means)
+5. **Correlations**: Matriz de correlação entre métricas
+
+### Estrutura do Relatório
+
+```json
+{
+  "executive_summary": "Resumo executivo do período...",
+  "sections": [
+    {
+      "title": "Seção 1 — Visão Geral de Performance",
+      "content": "Análise narrativa...",
+      "key_insights": [
+        "Insight 1",
+        "Insight 2",
+        "Insight 3"
+      ]
+    },
+    // ... mais 4 seções
+  ],
+  "recommendations": [
+    {
+      "priority": "high",
+      "category": "conversions",
+      "action": "Auditar tracking...",
+      "rationale": "Justificativa baseada em dados..."
+    },
+    // ... 7-10 recomendações
+  ]
+}
+```
+
+### Performance
+
+- ⏱️ **Tempo de geração**: ~80 segundos
+- 📊 **Tokens consumidos**: ~7.400 tokens (input + output)
+- 💰 **Custo aproximado**: ~$0.001 por relatório (GPT-4o-mini)
+- ✅ **Confidence Score**: Calculado automaticamente (0.0 - 1.0)
+
+### Exemplo de Uso
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/reports/generate" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "period_days": 30,
+    "detail_level": "detailed",
+    "focus_areas": ["traffic", "conversions"]
+  }'
 ```
 
 ## 🏗️ Estrutura do Projeto
@@ -426,197 +346,159 @@ db.close()
 ```
 trabalho_A2/
 ├── app/
-│   ├── __init__.py
-│   └── main.py              # FastAPI endpoints (exemplo mínimo)
+│   ├── main.py                  # FastAPI - 13 endpoints
+│   ├── report_models.py         # Pydantic models + formatação
+│   ├── report_agent.py          # Agente Agno para IA
+│   └── start_api.sh             # Script para iniciar API
 ├── src/
-│   ├── ga/                  # Módulo Google Analytics 4
-│   │   ├── __init__.py
-│   │   ├── ga_client.py     # Cliente GA4 Data API
-│   │   └── collectors.py    # Coletores especializados GA4
-│   ├── gsc/                 # Módulo Google Search Console
-│   │   ├── __init__.py
-│   │   ├── gsc_client.py    # Cliente GSC API
-│   │   └── collectors.py    # Coletores especializados GSC
-│   ├── collectors/          # Orchestrators e storage
-│   │   ├── __init__.py
-│   │   ├── ga_orchestrator.py   # Coordena coleta GA4
-│   │   ├── gsc_orchestrator.py  # Coordena coleta GSC
-│   │   └── db_storage.py        # Armazenamento DuckDB unificado (com limpeza)
-│   ├── cleaning/            # **NOVO** Limpeza e validação
-│   │   ├── __init__.py
-│   │   ├── data_cleaner.py      # Tratamento de nulos, recálculo CTR
-│   │   ├── deduplicator.py      # Remoção de duplicatas
-│   │   ├── validators.py        # Validação de integridade
-│   │   └── README.md            # Documentação detalhada
-│   └── ml/                  # Machine Learning (placeholder)
+│   ├── collectors/
+│   │   ├── db_storage.py        # DuckDB storage + queries
+│   │   ├── ga_orchestrator.py  # Orchestrator GA4
+│   │   └── gsc_orchestrator.py # Orchestrator GSC
+│   ├── ml/
+│   │   ├── channel_profiling.py    # K-Means para canais
+│   │   ├── keyword_clustering.py   # K-Means para keywords
+│   │   └── page_segmentation.py    # K-Means para páginas
+│   ├── cleaning/                # Limpeza e validação
+│   └── ga/ & gsc/               # Clientes das APIs
 ├── data/
-│   ├── raw/                 # JSONs coletados (GA4 + GSC)
-│   └── processed/           # Banco DuckDB + JSONs limpos
-├── config/
-│   ├── settings.example.yaml
-│   └── settings.yaml        # (crie este arquivo)
-├── scripts/
-│   ├── exemplo_coleta_ga4.py     # Script demonstrativo GA4
-│   ├── exemplo_coleta_gsc.py     # Script demonstrativo GSC
-│   ├── exemplo_limpeza_dados.py  # **NOVO** Demonstra limpeza/validação
-│   └── run.sh
-├── docker/
-│   ├── docker-compose.yml
-│   └── Dockerfile
-├── requirements.txt
+│   ├── raw/                     # JSONs coletados
+│   └── processed/
+│       └── ga4_data.duckdb      # Banco DuckDB principal
+├── tests/
+│   ├── simulador_dados.py       # Gerador de dados realistas
+│   └── visualizar_dados.py      # Visualização no terminal
+├── docs/
+│   ├── DOCUMENTACAO_API_PARA_FRONTEND.md  # Docs completa API
+│   ├── PROMPT_PARA_GERAR_FRONTEND.md      # Prompt para IA gerar frontend
+│   └── [outros docs...]
+├── requirements.txt             # Dependências Python
+├── .env                         # Variáveis de ambiente
 └── README.md
 ```
 
-## 🔧 API FastAPI (em desenvolvimento)
+## � Deploy em Produção
 
-Inicie o servidor FastAPI:
+### Render (Atual)
 
-```bash
-uvicorn app.main:app --reload
-```
+A API está em produção no Render:
 
-Acesse:
-- Docs: http://127.0.0.1:8000/docs
-- Health: http://127.0.0.1:8000/health
+- 🌐 **URL**: https://siteup.onrender.com
+- 📚 **Docs**: https://siteup.onrender.com/docs
+- 🏥 **Health**: https://siteup.onrender.com/api/v1/health
 
-## � API FastAPI - Endpoints Disponíveis
-
-### Iniciar a API
+### Deploy Manual
 
 ```bash
-# Método 1: Execução direta
-python app/main.py
+# 1. Configurar variáveis de ambiente no Render
+OPENAI_API_KEY=sk-proj-...
+ADMIN_KEY=sua-chave-secreta
 
-# Método 2: Via Uvicorn
-python -m uvicorn app.main:app --reload --port 8000
+# 2. Configurar build
+# Build Command: pip install -r requirements.txt
+# Start Command: python app/main.py
+
+# 3. Deploy automático via GitHub
+git push origin main
 ```
 
-### Documentação Interativa
+### Variáveis de Ambiente Necessárias
 
-- **Swagger UI:** http://localhost:8000/docs
-- **ReDoc:** http://localhost:8000/redoc
+| Variável | Obrigatória | Descrição |
+|----------|-------------|-----------|
+| `OPENAI_API_KEY` | ✅ Sim | Para relatórios com IA |
+| `ADMIN_KEY` | ✅ Sim | Proteção de endpoints admin |
+| `PORT` | ❌ Não | Render define automaticamente |
 
-### Endpoints Implementados
+## �️ Stack Tecnológico
 
-#### 🏥 Health Check
-```bash
-GET /health                                  # Status da API
-```
+| Categoria | Tecnologia | Versão |
+|-----------|-----------|--------|
+| **Backend** | FastAPI | 0.115+ |
+| **IA** | OpenAI GPT-4o-mini | Latest |
+| **Framework IA** | Agno | Latest |
+| **ML** | scikit-learn | 1.3+ |
+| **Database** | DuckDB | 1.1+ |
+| **Data Processing** | pandas, numpy | Latest |
+| **Validação** | Pydantic | 2.0+ |
+| **Deploy** | Render | - |
 
-#### 📊 Dashboard & Análises
-```bash
-GET /api/v1/overview/kpis                    # KPIs principais (sessões, conversões, bounce rate)
-GET /api/v1/analysis/correlation_matrix      # Matriz de correlação entre métricas
-GET /api/v1/analysis/page_clusters           # Clusters de páginas por performance
-GET /api/v1/page_analysis?path=/produtos     # Análise detalhada de página específica
-POST /api/v1/predict/simulator               # Simulador preditivo de performance
-```
+## 📚 Documentação Completa
 
-#### ✨ Visualização de Dados (NOVO)
-```bash
-GET /api/v1/data/all?limit=10                # Ver todos os dados (8 tabelas: GA4 + GSC)
-GET /api/v1/data/summary                     # Resumo estatístico completo
-```
+- 📖 **[API Documentation](docs/DOCUMENTACAO_API_PARA_FRONTEND.md)** - Documentação completa dos 10 endpoints para frontend
+- 🎨 **[Frontend Generation Prompt](docs/PROMPT_PARA_GERAR_FRONTEND.md)** - Prompt otimizado para IA gerar o frontend
+- 📊 **[Estado do Projeto](docs/ESTADO_ATUAL_PROJETO.md)** - Status atual e próximos passos
+- 🔍 **[Exemplos de Requisições](docs/EXEMPLOS_REQUISICOES.md)** - Exemplos práticos de uso da API
 
-### Exemplo de Uso
+## 🎯 Casos de Uso
 
-```bash
-# Ver primeiros 5 registros de cada tabela
-curl "http://localhost:8000/api/v1/data/all?limit=5" | python -m json.tool
+### 1. Dashboard Executivo
+- KPIs principais em tempo real
+- Visualização de clusters de canais/keywords/páginas
+- Relatórios automáticos com IA
 
-# Ver apenas resumo estatístico
-curl "http://localhost:8000/api/v1/data/summary" | python -m json.tool
+### 2. Análise de Marketing
+- Performance de canais de aquisição
+- ROI por fonte de tráfego
+- Identificação de keywords de alto valor
 
-# Obter KPIs do dashboard
-curl "http://localhost:8000/api/v1/overview/kpis" | python -m json.tool
-```
+### 3. Otimização de Conversão
+- Análise preditiva de páginas
+- Simulador de cenários
+- Recomendações priorizadas por IA
 
-**Documentação detalhada dos endpoints:** Ver [`ENDPOINTS_VISUALIZACAO.md`](ENDPOINTS_VISUALIZACAO.md)
+### 4. Monitoramento Contínuo
+- Health check automático
+- Estatísticas do banco de dados
+- Geração de dados para testes
 
-## 🧪 Simulador de Dados
+## 🤝 Desenvolvimento Frontend
 
-Para testar a API sem dados reais do Google Analytics/Search Console:
+O sistema está preparado para integração com frontend moderno:
 
-```bash
-# Gerar 30 dias de dados simulados (1.864 registros)
-python tests/simulador_dados.py --days 30
+**Tecnologias recomendadas:**
+- React + TypeScript
+- Tailwind CSS
+- shadcn/ui componentes
+- React Query para cache
+- Recharts para gráficos
 
-# Limpar banco e gerar novos dados
-python tests/simulador_dados.py --clear --days 30
+**Documentação completa para frontend:**
+- Ver [`docs/DOCUMENTACAO_API_PARA_FRONTEND.md`](docs/DOCUMENTACAO_API_PARA_FRONTEND.md)
+- Usar [`docs/PROMPT_PARA_GERAR_FRONTEND.md`](docs/PROMPT_PARA_GERAR_FRONTEND.md) com ChatGPT/Claude
 
-# Visualizar dados gerados no terminal
-python tests/visualizar_dados.py
-```
+## � Próximos Passos
 
-O simulador gera dados realistas com:
-- ✅ Distribuições estatísticas (Poisson, Normal, Beta)
-- ✅ Padrões de comportamento de usuários reais
-- ✅ Variação temporal (fins de semana vs dias úteis)
-- ✅ 8 tabelas completas (GA4: traffic, conversions, engagement | GSC: queries, pages, countries, devices, dates)
+### ✅ Concluído
+- [x] API FastAPI completa (13 endpoints)
+- [x] Machine Learning (K-Means clustering)
+- [x] Relatórios com IA Generativa (Agno + GPT-4o-mini)
+- [x] Simulador de dados realistas
+- [x] Deploy em produção (Render)
+- [x] Documentação completa
 
-## �📝 Próximos Passos
+### 🚧 Em Desenvolvimento
+- [ ] Frontend React + TypeScript
+- [ ] Autenticação JWT
+- [ ] WebSockets para dados em tempo real
+- [ ] Agendamento de relatórios automáticos
 
-1. **Limpeza de Dados** (`src/cleaning/`) ✅ **CONCLUÍDO**
-   - ✅ Normalização automática de dados GA4 + GSC
-   - ✅ Remoção de duplicatas (por chave única)
-   - ✅ Tratamento de valores nulos (zero-fill, CTR recálculo)
-   - ✅ Validação de integridade (ranges, consistência)
-   - ✅ Integração automática com db_storage.py
-
-2. **Machine Learning** (`src/ml/`)
-   - Previsão de conversões usando dados de tráfego orgânico
-   - Segmentação de palavras-chave (high/medium/low intent)
-   - Análise de churn
-   - Correlação GA4 sessions x GSC clicks
-
-3. **Endpoints FastAPI** (`app/main.py`)
-   - GET /ga4/collect - Trigger coleta manual GA4
-   - GET /gsc/collect - Trigger coleta manual GSC
-   - GET /reports/{type} - Retorna dados JSON
-   - GET /stats - Estatísticas agregadas (GA4 + GSC)
-   - GET /keywords/top - Top queries do GSC
-   - POST /analysis/combined - Análise combinada
-
-4. **Docker & Automação**
-   - Containerizar aplicação
-   - Agendamento de coletas (cron: GA4 diário, GSC a cada 3 dias)
-   - CI/CD pipeline
-   - Dashboards com Streamlit/Plotly
-
-## 💡 Casos de Uso
-
-### 1. Análise SEO Completa
-Combine dados do GSC (queries, posições) com dados do GA4 (sessões, conversões) para:
-- Identificar queries com alto CTR mas baixa conversão
-- Otimizar páginas com boa posição mas baixo engajamento
-- Correlacionar mudanças em position com variação de tráfego
-
-### 2. Atribuição de Valor a Queries
-```python
-# Atribui receita do GA4 a queries do GSC
-db.query("""
-    SELECT 
-        g.query,
-        SUM(g.clicks) as clicks,
-        AVG(c.total_revenue) / AVG(t.sessions) as revenue_per_session
-    FROM gsc_query_performance g
-    JOIN gsc_page_performance p ON g.page = p.page
-    JOIN traffic t ON p.page LIKE '%' || t.page_path || '%'
-    JOIN conversions c ON t.date = c.date
-    GROUP BY g.query
-    ORDER BY revenue_per_session DESC
-""")
-```
-
-### 3. Monitoramento de Performance
-- Alertas quando queries importantes caem de posição
-- Tracking de organic sessions (GA4) vs clicks (GSC)
-- Detecção de anomalias em CTR
-
-## 🤝 Contribuição
-
-Este é um projeto de exemplo/scaffold. Adapte conforme suas necessidades.
+### 💡 Futuro
+- [ ] Coleta real de GA4/GSC (opcional)
+- [ ] Mais modelos de ML (regressão, classificação)
+- [ ] Dashboards interativos com Streamlit
+- [ ] Exportação para PDF/Excel
 
 ## 📄 Licença
 
-MIT License
+MIT License - Veja LICENSE para detalhes.
+
+## 👤 Autor
+
+**Gustavo Oliveira**
+- GitHub: [@GuOliv2306](https://github.com/GuOliv2306)
+- Repositório: [trabalho_A2](https://github.com/GuOliv2306/trabalho_A2)
+
+---
+
+⭐ **Se este projeto foi útil, considere dar uma estrela no GitHub!**

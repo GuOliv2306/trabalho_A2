@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 import sys
 from pathlib import Path
 import numpy as np
+import pandas as pd
 import uuid
 from datetime import datetime, timedelta
 import logging
@@ -270,20 +271,41 @@ async def get_channel_clusters(n_clusters: int = Query(3, ge=2, le=10, descripti
         """)
         
         if df.empty or len(df) < n_clusters:
-            raise HTTPException(
-                status_code=400, 
-                detail=f"Dados insuficientes para clustering. Necessário pelo menos {n_clusters} canais com mais de 5 sessões."
-            )
+            # Para geração de relatórios, retorna estrutura vazia ao invés de erro
+            logger.warning(f"Dados insuficientes para clustering de canais: {len(df)} canais encontrados (mínimo: {n_clusters})")
+            return {
+                "algoritmo": "K-Means Clustering",
+                "n_clusters": n_clusters,
+                "total_canais": 0,
+                "clusters": {},
+                "warning": f"Dados insuficientes. Necessário pelo menos {n_clusters} canais com mais de 5 sessões."
+            }
         
         # Aplica o ChannelProfiler
         profiler = ChannelProfiler(n_clusters=n_clusters)
         df_clustered = profiler.fit_transform(df)
         
-        # Prepara resposta
+        # Prepara resposta com estrutura compatível com report_models.py
+        clusters_dict = {}
+        for cluster_id in range(n_clusters):
+            cluster_data = df_clustered[df_clustered['cluster'] == cluster_id]
+            clusters_dict[str(cluster_id)] = {
+                'count': len(cluster_data),
+                'channels': [f"{row['source']}/{row['medium']}" for _, row in cluster_data.iterrows()],
+                'avg_metrics': {
+                    'sessions': float(cluster_data['sessions'].mean()),
+                    'active_users': float(cluster_data.get('activeUsers', cluster_data.get('active_users', pd.Series([0]))).mean()),
+                    'new_users': float(cluster_data.get('newUsers', cluster_data.get('new_users', pd.Series([0]))).mean()),
+                    'screen_page_views': float(cluster_data.get('screenPageViews', cluster_data.get('screen_page_views', pd.Series([0]))).mean()),
+                    'avg_duration': float(cluster_data.get('averageSessionDuration', cluster_data.get('average_session_duration', pd.Series([0]))).mean())
+                }
+            }
+        
         return {
             "algoritmo": "K-Means Clustering",
             "n_clusters": n_clusters,
             "total_canais": len(df_clustered),
+            "clusters": clusters_dict,
             "canais": df_clustered[['source', 'medium', 'sessions', 'cluster']].to_dict('records'),
             "cluster_centers": profiler.get_cluster_centers().to_dict('records'),
             "segment_summary": profiler.get_segment_summary(df_clustered).to_dict('records')
@@ -325,20 +347,40 @@ async def get_keyword_clusters(n_clusters: int = Query(4, ge=2, le=10, descripti
         """)
         
         if df.empty or len(df) < n_clusters:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Dados insuficientes para clustering. Necessário pelo menos {n_clusters} queries com mais de 50 impressões."
-            )
+            # Para geração de relatórios, retorna estrutura vazia ao invés de erro
+            logger.warning(f"Dados insuficientes para clustering de keywords: {len(df)} queries encontradas (mínimo: {n_clusters})")
+            return {
+                "algoritmo": "K-Means Clustering",
+                "n_clusters": n_clusters,
+                "total_keywords": 0,
+                "clusters": {},
+                "warning": f"Dados insuficientes. Necessário pelo menos {n_clusters} queries com mais de 50 impressões."
+            }
         
         # Aplica o KeywordClusterer
         clusterer = KeywordClusterer(n_clusters=n_clusters)
         df_clustered = clusterer.fit_transform(df)
         
-        # Prepara resposta
+        # Prepara resposta com estrutura compatível com report_models.py
+        clusters_dict = {}
+        for cluster_id in range(n_clusters):
+            cluster_data = df_clustered[df_clustered['cluster'] == cluster_id]
+            clusters_dict[str(cluster_id)] = {
+                'count': len(cluster_data),
+                'queries': cluster_data['query'].tolist(),
+                'avg_metrics': {
+                    'clicks': float(cluster_data['clicks'].mean()),
+                    'impressions': float(cluster_data['impressions'].mean()),
+                    'ctr': float(cluster_data['ctr'].mean() * 100),  # Converter para %
+                    'position': float(cluster_data['position'].mean())
+                }
+            }
+        
         return {
             "algoritmo": "K-Means Clustering",
             "n_clusters": n_clusters,
             "total_keywords": len(df_clustered),
+            "clusters": clusters_dict,
             "keywords": df_clustered[['query', 'clicks', 'impressions', 'ctr', 'position', 'cluster']].to_dict('records'),
             "cluster_centers": clusterer.get_cluster_centers().to_dict('records'),
             "segment_summary": clusterer.get_segment_summary(df_clustered).to_dict('records')
@@ -379,20 +421,39 @@ async def get_page_clusters_ml(n_clusters: int = Query(5, ge=2, le=10, descripti
         """)
         
         if df.empty or len(df) < n_clusters:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Dados insuficientes para clustering. Necessário pelo menos {n_clusters} páginas com mais de 3 eventos."
-            )
+            # Para geração de relatórios, retorna estrutura vazia ao invés de erro
+            logger.warning(f"Dados insuficientes para clustering de páginas: {len(df)} páginas encontradas (mínimo: {n_clusters})")
+            return {
+                "algoritmo": "K-Means Clustering",
+                "n_clusters": n_clusters,
+                "total_paginas": 0,
+                "clusters": {},
+                "warning": f"Dados insuficientes. Necessário pelo menos {n_clusters} páginas com mais de 3 eventos."
+            }
         
         # Aplica o PageSegmenter
         segmenter = PageSegmenter(n_clusters=n_clusters)
         df_clustered = segmenter.fit_transform(df)
         
-        # Prepara resposta
+        # Prepara resposta com estrutura compatível com report_models.py
+        clusters_dict = {}
+        for cluster_id in range(n_clusters):
+            cluster_data = df_clustered[df_clustered['cluster'] == cluster_id]
+            clusters_dict[str(cluster_id)] = {
+                'count': len(cluster_data),
+                'pages': cluster_data['page_path'].tolist(),
+                'avg_metrics': {
+                    'engagement_rate': float(cluster_data['engagement_rate'].mean() * 100),  # Converter para %
+                    'event_count': float(cluster_data['event_count'].mean()),
+                    'avg_duration': float(cluster_data['average_session_duration'].mean())
+                }
+            }
+        
         return {
             "algoritmo": "K-Means Clustering",
             "n_clusters": n_clusters,
             "total_paginas": len(df_clustered),
+            "clusters": clusters_dict,
             "paginas": df_clustered[['page_path', 'engagement_rate', 'event_count', 'average_session_duration', 'cluster']].to_dict('records'),
             "cluster_centers": segmenter.get_cluster_centers().to_dict('records'),
             "segment_summary": segmenter.get_segment_summary(df_clustered).to_dict('records')
@@ -931,9 +992,22 @@ async def generate_report(request: ReportRequest):
             results = {}
             for key, task in tasks.items():
                 try:
-                    results[key] = await task
+                    result = await task
+                    results[key] = result
+                    
+                    # Log detalhado para debug
+                    if key.endswith('_clusters'):
+                        total_key = f"total_{key.replace('_clusters', 's')}"
+                        total = result.get(total_key, result.get('total_canais', result.get('total_keywords', result.get('total_paginas', 0))))
+                        if total == 0:
+                            logger.warning(f"⚠️ Endpoint {key} retornou 0 items - dados insuficientes para clustering")
+                        else:
+                            logger.info(f"✅ Endpoint {key} coletado com sucesso: {total} items em {result.get('n_clusters', 0)} clusters")
+                    else:
+                        logger.info(f"✅ Endpoint {key} coletado com sucesso")
+                        
                 except Exception as e:
-                    logger.warning(f"Erro ao coletar {key}: {str(e)}")
+                    logger.error(f"❌ Erro ao coletar {key}: {str(e)}")
                     results[key] = {}
             
             return results

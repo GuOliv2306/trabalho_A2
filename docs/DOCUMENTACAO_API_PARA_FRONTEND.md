@@ -4,8 +4,8 @@
 
 Esta é uma **API REST de Analytics** construída com FastAPI que fornece dados de marketing digital, análises de Machine Learning e relatórios narrativos gerados por IA (GPT-4o-mini via Agno).
 
-**Base URL (Local):** `http://localhost:8000`  
-**Base URL (Produção):** `https://seu-app.onrender.com`
+**Base URL (Produção):** `https://siteup.onrender.com`  
+**Swagger Docs:** `https://siteup.onrender.com/docs`
 
 ---
 
@@ -13,97 +13,55 @@ Esta é uma **API REST de Analytics** construída com FastAPI que fornece dados 
 
 ### Dados Disponíveis
 
-A API trabalha com dados simulados de:
+A API trabalha com dados de:
 - **Google Analytics 4 (GA4)**: Tráfego, engagement, conversões
 - **Google Search Console (GSC)**: Keywords, impressões, cliques, CTR, posições
 - **Machine Learning**: Clusters de canais, keywords e páginas (K-Means)
 
 ### Período de Dados
 
-- Dados históricos configuráveis (7 a 365 dias)
+- Dados históricos configuráveis (1 a 365 dias)
 - Gerados sob demanda via endpoint administrativo
-- Atualmente com ~31.099 sessões e ~94.652 conversões no banco
+- Dados agregados por data para análise temporal
 
 ---
 
 ## 🔗 Lista Completa de Endpoints
 
-### 1. Health Check
-### 2. KPIs Principais
+### 1. KPIs Principais
+### 2. Matriz de Correlação
 ### 3. Análise de Canais (ML)
 ### 4. Análise de Keywords (ML)
 ### 5. Análise de Páginas (ML)
-### 6. Matriz de Correlação
-### 7. Simulador de Performance de Página
-### 8. Relatórios Narrativos com IA ⭐
-### 9. Endpoints Administrativos 🔒
+### 6. Análise de Página Específica
+### 7. Simulador de Performance
+### 8. Dados Brutos Completos
+### 9. Resumo de Dados
+### 10. Relatórios Narrativos com IA ⭐
 
 ---
 
-## 📍 ENDPOINT 1: Health Check
-
-**Propósito:** Verificar se a API está online e operacional.
-
-**Método:** `GET`  
-**URL:** `/api/v1/health`  
-**Autenticação:** Não requerida
-
-### Request
-```http
-GET /api/v1/health HTTP/1.1
-Host: localhost:8000
-```
-
-### Response (200 OK)
-```json
-{
-  "status": "healthy",
-  "message": "API is running"
-}
-```
-
-### Quando Usar no Frontend
-- Página de loading inicial
-- Status indicator no header
-- Healthcheck periódico (setInterval a cada 30s)
-
-### Exemplo React
-```jsx
-const [apiStatus, setApiStatus] = useState('checking');
-
-useEffect(() => {
-  fetch('/api/v1/health')
-    .then(res => res.json())
-    .then(data => setApiStatus(data.status))
-    .catch(() => setApiStatus('offline'));
-}, []);
-```
-
----
-
-## 📍 ENDPOINT 2: KPIs Principais
+## 📍 ENDPOINT 1: KPIs Principais
 
 **Propósito:** Obter métricas principais de performance do site (sessões, conversões, bounce rate, etc).
 
 **Método:** `GET`  
-**URL:** `/api/v1/kpis`  
+**URL:** `/api/v1/overview/kpis`  
 **Autenticação:** Não requerida
 
 ### Request
 ```http
-GET /api/v1/kpis HTTP/1.1
-Host: localhost:8000
+GET https://siteup.onrender.com/api/v1/overview/kpis HTTP/1.1
 ```
 
 ### Response (200 OK)
 ```json
 {
+  "totalPaginas": 9,
   "sessoesTotais": 31099,
   "conversoesTotais": 94652,
-  "taxaConversao": 304.36,
   "mediaBounceRate": 27.0,
-  "duracaoMediaSessao": 108.9,
-  "totalPaginas": 9
+  "mediaSessionDuration": 108.9
 }
 ```
 
@@ -111,12 +69,11 @@ Host: localhost:8000
 
 | Campo | Tipo | Descrição |
 |-------|------|-----------|
+| `totalPaginas` | number | Total de páginas únicas visitadas |
 | `sessoesTotais` | number | Total de sessões no período |
 | `conversoesTotais` | number | Total de conversões no período |
-| `taxaConversao` | number | (conversões / sessões) * 100 |
-| `mediaBounceRate` | number | Taxa média de rejeição (%) |
-| `duracaoMediaSessao` | number | Tempo médio de sessão em segundos |
-| `totalPaginas` | number | Número de páginas únicas visitadas |
+| `mediaBounceRate` | number | Taxa média de rejeição (0-1, multiplicar por 100 para %) |
+| `mediaSessionDuration` | number | Duração média de sessão em segundos |
 
 ### Quando Usar no Frontend
 - **Dashboard principal** (cards com KPIs)
@@ -130,7 +87,7 @@ function DashboardKPIs() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/v1/kpis')
+    fetch('https://siteup.onrender.com/api/v1/overview/kpis')
       .then(res => res.json())
       .then(data => {
         setKpis(data);
@@ -143,6 +100,11 @@ function DashboardKPIs() {
   return (
     <div className="kpi-grid">
       <KPICard 
+        title="Páginas" 
+        value={kpis.totalPaginas} 
+        icon="📄"
+      />
+      <KPICard 
         title="Sessões" 
         value={kpis.sessoesTotais.toLocaleString()} 
         icon="👥"
@@ -153,15 +115,141 @@ function DashboardKPIs() {
         icon="🎯"
       />
       <KPICard 
-        title="Taxa de Conversão" 
-        value={`${kpis.taxaConversao.toFixed(2)}%`} 
-        icon="📈"
-      />
-      <KPICard 
         title="Bounce Rate" 
-        value={`${kpis.mediaBounceRate.toFixed(1)}%`} 
+        value={`${(kpis.mediaBounceRate * 100).toFixed(1)}%`} 
         icon="⚡"
       />
+      <KPICard 
+        title="Duração Média" 
+        value={`${Math.round(kpis.mediaSessionDuration)}s`} 
+        icon="⏱️"
+      />
+    </div>
+  );
+}
+```
+
+---
+
+## 📍 ENDPOINT 2: Matriz de Correlação
+
+**Propósito:** Obter correlações estatísticas entre métricas agregadas por data.
+
+**Método:** `GET`  
+**URL:** `/api/v1/analysis/correlation_matrix`  
+**Autenticação:** Não requerida
+
+### Request
+```http
+GET https://siteup.onrender.com/api/v1/analysis/correlation_matrix HTTP/1.1
+```
+
+### Response (200 OK)
+```json
+{
+  "conversions": {
+    "sessions": 0.87,
+    "pageViews": 0.92,
+    "avgSessionDuration": 0.45
+  },
+  "engagementRate": {
+    "sessions": 0.34,
+    "pageViews": 0.56,
+    "avgSessionDuration": 0.68
+  },
+  "averageSessionDuration": {
+    "sessions": 0.23,
+    "pageViews": 0.41,
+    "conversions": 0.45
+  }
+}
+```
+
+### Campos Explicados
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `conversions` | object | Correlações de conversões com outras métricas |
+| `engagementRate` | object | Correlações de engagement com outras métricas |
+| `averageSessionDuration` | object | Correlações de duração com outras métricas |
+| Valores | number | -1 a 1 (negativo = inverso, positivo = direto, 0 = sem correlação) |
+
+**Interpretação:**
+- `> 0.7`: Correlação forte
+- `0.3 a 0.7`: Correlação moderada
+- `< 0.3`: Correlação fraca
+- Valor negativo: relação inversa (uma aumenta, outra diminui)
+
+### Quando Usar no Frontend
+- **Página de Insights Estatísticos**
+- Heatmap de correlações
+- Identificação de relações entre métricas
+
+### Exemplo React
+```jsx
+function CorrelationMatrix() {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    fetch('https://siteup.onrender.com/api/v1/analysis/correlation_matrix')
+      .then(res => res.json())
+      .then(setData);
+  }, []);
+
+  if (!data) return <Loading />;
+
+  const getStrength = (value) => {
+    const abs = Math.abs(value);
+    if (abs > 0.7) return { text: 'Forte', color: 'green' };
+    if (abs > 0.3) return { text: 'Moderada', color: 'yellow' };
+    return { text: 'Fraca', color: 'red' };
+  };
+
+  return (
+    <div>
+      <h1>🔗 Matriz de Correlação</h1>
+      
+      <section>
+        <h2>Conversões</h2>
+        <CorrelationCard>
+          <Metric 
+            label="vs Sessões" 
+            value={data.conversions.sessions.toFixed(2)}
+            strength={getStrength(data.conversions.sessions)}
+          />
+          <Metric 
+            label="vs Page Views" 
+            value={data.conversions.pageViews.toFixed(2)}
+            strength={getStrength(data.conversions.pageViews)}
+          />
+          <Metric 
+            label="vs Duração" 
+            value={data.conversions.avgSessionDuration.toFixed(2)}
+            strength={getStrength(data.conversions.avgSessionDuration)}
+          />
+        </CorrelationCard>
+      </section>
+      
+      <section>
+        <h2>Engagement Rate</h2>
+        <CorrelationCard>
+          <Metric 
+            label="vs Sessões" 
+            value={data.engagementRate.sessions.toFixed(2)}
+            strength={getStrength(data.engagementRate.sessions)}
+          />
+          <Metric 
+            label="vs Page Views" 
+            value={data.engagementRate.pageViews.toFixed(2)}
+            strength={getStrength(data.engagementRate.pageViews)}
+          />
+          <Metric 
+            label="vs Duração" 
+            value={data.engagementRate.avgSessionDuration.toFixed(2)}
+            strength={getStrength(data.engagementRate.avgSessionDuration)}
+          />
+        </CorrelationCard>
+      </section>
     </div>
   );
 }
@@ -171,54 +259,60 @@ function DashboardKPIs() {
 
 ## 📍 ENDPOINT 3: Análise de Canais (Machine Learning)
 
-**Propósito:** Obter clusters de canais de tráfego agrupados por Machine Learning (K-Means) com métricas de performance.
+**Propósito:** Obter clusters de canais de tráfego agrupados por Machine Learning (K-Means).
 
 **Método:** `GET`  
-**URL:** `/api/v1/channel-clusters`  
+**URL:** `/api/v1/ml/channel_clusters`  
 **Autenticação:** Não requerida
+
+### Query Parameters
+
+| Parâmetro | Tipo | Obrigatório | Padrão | Descrição |
+|-----------|------|-------------|--------|-----------|
+| `n_clusters` | number | Não | 3 | Número de clusters (2-10) |
 
 ### Request
 ```http
-GET /api/v1/channel-clusters HTTP/1.1
-Host: localhost:8000
+GET https://siteup.onrender.com/api/v1/ml/channel_clusters?n_clusters=3 HTTP/1.1
 ```
 
 ### Response (200 OK)
 ```json
 {
-  "clusters": [
+  "algoritmo": "K-Means Clustering",
+  "n_clusters": 3,
+  "total_canais": 25,
+  "canais": [
     {
-      "cluster_id": 0,
-      "cluster_name": "High Engagement Channels",
-      "channels": ["google/organic", "facebook/social"],
-      "total_sessions": 15234,
-      "total_conversions": 4567,
-      "avg_bounce_rate": 23.5,
-      "conversion_rate": 29.97,
-      "characteristics": {
-        "engagement_level": "high",
-        "conversion_performance": "excellent"
-      }
+      "source": "google",
+      "medium": "organic",
+      "sessions": 15234,
+      "cluster": 0
     },
     {
-      "cluster_id": 1,
-      "cluster_name": "Low Performing Channels",
-      "channels": ["referral/referral", "email/email"],
-      "total_sessions": 8901,
-      "total_conversions": 1234,
-      "avg_bounce_rate": 45.2,
-      "conversion_rate": 13.86,
-      "characteristics": {
-        "engagement_level": "low",
-        "conversion_performance": "needs_improvement"
-      }
+      "source": "facebook",
+      "medium": "social",
+      "sessions": 8901,
+      "cluster": 1
     }
   ],
-  "summary": {
-    "total_clusters": 2,
-    "best_performing_cluster": "High Engagement Channels",
-    "recommendation": "Focus budget on Cluster 0 channels"
-  }
+  "cluster_centers": [
+    {
+      "cluster": 0,
+      "sessions_mean": 12500.5,
+      "activeUsers_mean": 10234.2,
+      "newUsers_mean": 8901.3
+    }
+  ],
+  "segment_summary": [
+    {
+      "cluster": 0,
+      "count": 8,
+      "sessions_sum": 100004,
+      "activeUsers_sum": 81873,
+      "performance_level": "high"
+    }
+  ]
 }
 ```
 
@@ -226,14 +320,10 @@ Host: localhost:8000
 
 | Campo | Tipo | Descrição |
 |-------|------|-----------|
-| `cluster_id` | number | ID único do cluster (0, 1, 2...) |
-| `cluster_name` | string | Nome descritivo do cluster |
-| `channels` | string[] | Lista de canais (formato: source/medium) |
-| `total_sessions` | number | Total de sessões deste cluster |
-| `total_conversions` | number | Total de conversões deste cluster |
-| `avg_bounce_rate` | number | Bounce rate médio do cluster (%) |
-| `conversion_rate` | number | Taxa de conversão do cluster (%) |
-| `characteristics` | object | Características qualitativas |
+| `canais` | array | Lista de canais com cluster_id atribuído |
+| `cluster_centers` | array | Centros dos clusters (médias das features) |
+| `segment_summary` | array | Resumo estatístico por cluster |
+| `performance_level` | string | high, medium, low (baseado em métricas) |
 
 ### Quando Usar no Frontend
 - **Página de Análise de Canais**
@@ -243,39 +333,52 @@ Host: localhost:8000
 
 ### Exemplo React
 ```jsx
-function ChannelClustersPage() {
-  const [clusters, setClusters] = useState([]);
+function ChannelClusters() {
+  const [data, setData] = useState(null);
+  const [nClusters, setNClusters] = useState(3);
+
+  const fetchData = () => {
+    fetch(`https://siteup.onrender.com/api/v1/ml/channel_clusters?n_clusters=${nClusters}`)
+      .then(res => res.json())
+      .then(setData);
+  };
 
   useEffect(() => {
-    fetch('/api/v1/channel-clusters')
-      .then(res => res.json())
-      .then(data => setClusters(data.clusters));
-  }, []);
+    fetchData();
+  }, [nClusters]);
+
+  if (!data) return <Loading />;
 
   return (
     <div>
       <h1>📊 Análise de Canais (Machine Learning)</h1>
       
-      {clusters.map(cluster => (
-        <ClusterCard key={cluster.cluster_id}>
-          <h3>{cluster.cluster_name}</h3>
-          <div className="metrics">
-            <Metric label="Sessões" value={cluster.total_sessions} />
-            <Metric label="Conversões" value={cluster.total_conversions} />
-            <Metric label="CVR" value={`${cluster.conversion_rate.toFixed(2)}%`} />
-            <Metric label="Bounce" value={`${cluster.avg_bounce_rate.toFixed(1)}%`} />
-          </div>
+      <ClusterSelector 
+        value={nClusters}
+        onChange={setNClusters}
+        min={2}
+        max={10}
+      />
+
+      <p>Algoritmo: {data.algoritmo} | Total de canais: {data.total_canais}</p>
+
+      {data.segment_summary.map(segment => (
+        <ClusterCard key={segment.cluster}>
+          <h3>Cluster {segment.cluster}</h3>
+          <Badge level={segment.performance_level}>{segment.performance_level}</Badge>
+          <p><strong>Canais:</strong> {segment.count}</p>
+          <p><strong>Sessões:</strong> {segment.sessions_sum.toLocaleString()}</p>
           
           <h4>Canais neste cluster:</h4>
           <ul>
-            {cluster.channels.map(ch => (
-              <li key={ch}>{ch}</li>
-            ))}
+            {data.canais
+              .filter(c => c.cluster === segment.cluster)
+              .map(c => (
+                <li key={`${c.source}/${c.medium}`}>
+                  {c.source}/{c.medium} ({c.sessions.toLocaleString()} sessões)
+                </li>
+              ))}
           </ul>
-          
-          <Badge color={cluster.characteristics.engagement_level}>
-            {cluster.characteristics.engagement_level}
-          </Badge>
         </ClusterCard>
       ))}
     </div>
@@ -287,64 +390,57 @@ function ChannelClustersPage() {
 
 ## 📍 ENDPOINT 4: Análise de Keywords (Machine Learning)
 
-**Propósito:** Obter clusters de keywords agrupadas por intenção de busca e performance (dados do Google Search Console).
+**Propósito:** Obter clusters de keywords agrupadas por performance (dados do Google Search Console).
 
 **Método:** `GET`  
-**URL:** `/api/v1/keyword-clusters`  
+**URL:** `/api/v1/ml/keyword_clusters`  
 **Autenticação:** Não requerida
+
+### Query Parameters
+
+| Parâmetro | Tipo | Obrigatório | Padrão | Descrição |
+|-----------|------|-------------|--------|-----------|
+| `n_clusters` | number | Não | 3 | Número de clusters (2-10) |
 
 ### Request
 ```http
-GET /api/v1/keyword-clusters HTTP/1.1
-Host: localhost:8000
+GET https://siteup.onrender.com/api/v1/ml/keyword_clusters?n_clusters=3 HTTP/1.1
 ```
 
 ### Response (200 OK)
 ```json
 {
-  "clusters": [
+  "algoritmo": "K-Means Clustering",
+  "n_clusters": 3,
+  "total_queries": 150,
+  "queries": [
     {
-      "cluster_id": 0,
-      "cluster_name": "Branded Queries",
-      "keywords": [
-        {
-          "query": "nome da marca",
-          "impressions": 12500,
-          "clicks": 8900,
-          "ctr": 71.2,
-          "position": 1.2
-        }
-      ],
-      "total_impressions": 12500,
-      "total_clicks": 8900,
-      "avg_ctr": 71.2,
-      "avg_position": 1.2,
-      "search_intent": "branded"
-    },
-    {
-      "cluster_id": 1,
-      "cluster_name": "Informational Queries",
-      "keywords": [
-        {
-          "query": "como fazer analytics",
-          "impressions": 45000,
-          "clicks": 3200,
-          "ctr": 7.11,
-          "position": 8.5
-        }
-      ],
-      "total_impressions": 45000,
-      "total_clicks": 3200,
-      "avg_ctr": 7.11,
-      "avg_position": 8.5,
-      "search_intent": "informational"
+      "query": "analytics dashboard",
+      "clicks": 1250,
+      "impressions": 15000,
+      "ctr": 8.33,
+      "position": 3.2,
+      "cluster": 0
     }
   ],
-  "summary": {
-    "total_clusters": 2,
-    "total_keywords": 150,
-    "best_ctr_cluster": "Branded Queries"
-  }
+  "cluster_centers": [
+    {
+      "cluster": 0,
+      "clicks_mean": 1100.5,
+      "impressions_mean": 12500.3,
+      "ctr_mean": 8.8,
+      "position_mean": 3.5
+    }
+  ],
+  "segment_summary": [
+    {
+      "cluster": 0,
+      "count": 45,
+      "clicks_sum": 49522,
+      "impressions_sum": 562635,
+      "intent_category": "transactional"
+    }
+  ]
 }
 ```
 
@@ -353,11 +449,11 @@ Host: localhost:8000
 | Campo | Tipo | Descrição |
 |-------|------|-----------|
 | `query` | string | Termo de busca (keyword) |
-| `impressions` | number | Número de vezes que apareceu no Google |
 | `clicks` | number | Número de cliques recebidos |
+| `impressions` | number | Número de vezes que apareceu no Google |
 | `ctr` | number | Click-Through Rate (%) |
 | `position` | number | Posição média no Google (1 = primeiro) |
-| `search_intent` | string | Intenção: branded, informational, transactional |
+| `intent_category` | string | transactional, informational, navigational |
 
 ### Quando Usar no Frontend
 - **Página de SEO / Keywords**
@@ -367,43 +463,62 @@ Host: localhost:8000
 
 ### Exemplo React
 ```jsx
-function KeywordClustersPage() {
-  const [clusters, setClusters] = useState([]);
-  const [selectedIntent, setSelectedIntent] = useState('all');
+function KeywordClusters() {
+  const [data, setData] = useState(null);
+  const [nClusters, setNClusters] = useState(3);
 
   useEffect(() => {
-    fetch('/api/v1/keyword-clusters')
+    fetch(`https://siteup.onrender.com/api/v1/ml/keyword_clusters?n_clusters=${nClusters}`)
       .then(res => res.json())
-      .then(data => setClusters(data.clusters));
-  }, []);
+      .then(setData);
+  }, [nClusters]);
 
-  const filteredClusters = selectedIntent === 'all' 
-    ? clusters 
-    : clusters.filter(c => c.search_intent === selectedIntent);
+  if (!data) return <Loading />;
 
   return (
     <div>
       <h1>🔍 Análise de Keywords (GSC + ML)</h1>
       
-      <Filter 
-        options={['all', 'branded', 'informational', 'transactional']}
-        value={selectedIntent}
-        onChange={setSelectedIntent}
+      <ClusterSelector 
+        value={nClusters}
+        onChange={setNClusters}
+        min={2}
+        max={10}
       />
 
-      {filteredClusters.map(cluster => (
-        <ClusterCard key={cluster.cluster_id}>
-          <h3>{cluster.cluster_name}</h3>
-          <Badge>{cluster.search_intent}</Badge>
-          
-          <MetricsRow>
-            <Metric label="Impressões" value={cluster.total_impressions.toLocaleString()} />
-            <Metric label="Cliques" value={cluster.total_clicks.toLocaleString()} />
-            <Metric label="CTR" value={`${cluster.avg_ctr.toFixed(2)}%`} />
-            <Metric label="Posição" value={cluster.avg_position.toFixed(1)} />
-          </MetricsRow>
+      <p>Total de queries: {data.total_queries}</p>
 
-          <KeywordsTable keywords={cluster.keywords} />
+      {data.segment_summary.map(segment => (
+        <ClusterCard key={segment.cluster}>
+          <h3>Cluster {segment.cluster}</h3>
+          <Badge>{segment.intent_category}</Badge>
+          <p><strong>Keywords:</strong> {segment.count}</p>
+          <p><strong>Cliques:</strong> {segment.clicks_sum.toLocaleString()}</p>
+          <p><strong>Impressões:</strong> {segment.impressions_sum.toLocaleString()}</p>
+          
+          <KeywordsTable>
+            <thead>
+              <tr>
+                <th>Query</th>
+                <th>Cliques</th>
+                <th>CTR</th>
+                <th>Posição</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.queries
+                .filter(q => q.cluster === segment.cluster)
+                .slice(0, 10)
+                .map(q => (
+                  <tr key={q.query}>
+                    <td>{q.query}</td>
+                    <td>{q.clicks.toLocaleString()}</td>
+                    <td>{q.ctr.toFixed(2)}%</td>
+                    <td>{q.position.toFixed(1)}</td>
+                  </tr>
+                ))}
+            </tbody>
+          </KeywordsTable>
         </ClusterCard>
       ))}
     </div>
@@ -415,46 +530,55 @@ function KeywordClustersPage() {
 
 ## 📍 ENDPOINT 5: Análise de Páginas (Machine Learning)
 
-**Propósito:** Obter clusters de páginas agrupadas por performance de engagement (tempo, bounce, conversões).
+**Propósito:** Obter clusters de páginas agrupadas por performance de engagement.
 
 **Método:** `GET`  
-**URL:** `/api/v1/page-clusters`  
+**URL:** `/api/v1/ml/page_clusters`  
 **Autenticação:** Não requerida
+
+### Query Parameters
+
+| Parâmetro | Tipo | Obrigatório | Padrão | Descrição |
+|-----------|------|-------------|--------|-----------|
+| `n_clusters` | number | Não | 5 | Número de clusters (2-10) |
 
 ### Request
 ```http
-GET /api/v1/page-clusters HTTP/1.1
-Host: localhost:8000
+GET https://siteup.onrender.com/api/v1/ml/page_clusters?n_clusters=5 HTTP/1.1
 ```
 
 ### Response (200 OK)
 ```json
 {
-  "clusters": [
+  "algoritmo": "K-Means Clustering",
+  "n_clusters": 5,
+  "total_paginas": 9,
+  "paginas": [
     {
-      "cluster_id": 0,
-      "cluster_name": "High Converting Pages",
-      "pages": [
-        {
-          "page": "/landing/promo",
-          "sessions": 5234,
-          "conversions": 2100,
-          "bounce_rate": 18.5,
-          "avg_time_on_page": 245.3,
-          "conversion_rate": 40.13
-        }
-      ],
-      "total_sessions": 5234,
-      "total_conversions": 2100,
-      "avg_bounce_rate": 18.5,
-      "avg_time_on_page": 245.3,
-      "performance_level": "excellent"
+      "page_path": "/landing/promo",
+      "engagement_rate": 0.85,
+      "event_count": 2500,
+      "average_session_duration": 245.3,
+      "cluster": 0
     }
   ],
-  "summary": {
-    "total_clusters": 3,
-    "total_pages": 9
-  }
+  "cluster_centers": [
+    {
+      "cluster": 0,
+      "engagement_rate_mean": 0.82,
+      "event_count_mean": 2200.5,
+      "average_session_duration_mean": 230.1
+    }
+  ],
+  "segment_summary": [
+    {
+      "cluster": 0,
+      "count": 2,
+      "engagement_rate_mean": 0.82,
+      "event_count_sum": 4401,
+      "performance_level": "excellent"
+    }
+  ]
 }
 ```
 
@@ -462,74 +586,74 @@ Host: localhost:8000
 
 | Campo | Tipo | Descrição |
 |-------|------|-----------|
-| `page` | string | URL/path da página |
-| `sessions` | number | Sessões que visitaram esta página |
-| `conversions` | number | Conversões originadas desta página |
-| `bounce_rate` | number | Taxa de rejeição da página (%) |
-| `avg_time_on_page` | number | Tempo médio na página (segundos) |
-| `conversion_rate` | number | Taxa de conversão da página (%) |
+| `page_path` | string | URL/path da página |
+| `engagement_rate` | number | Taxa de engajamento (0-1) |
+| `event_count` | number | Total de eventos na página |
+| `average_session_duration` | number | Duração média na página (segundos) |
 | `performance_level` | string | excellent, good, needs_improvement |
 
 ### Quando Usar no Frontend
 - **Página de Análise de Conteúdo**
 - Ranking de páginas por performance
-- Heatmap de conversões por página
 - Identificação de páginas problemáticas
 
 ### Exemplo React
 ```jsx
-function PageClustersPage() {
-  const [clusters, setClusters] = useState([]);
-  const [sortBy, setSortBy] = useState('conversion_rate');
+function PageClusters() {
+  const [data, setData] = useState(null);
+  const [nClusters, setNClusters] = useState(5);
 
   useEffect(() => {
-    fetch('/api/v1/page-clusters')
+    fetch(`https://siteup.onrender.com/api/v1/ml/page_clusters?n_clusters=${nClusters}`)
       .then(res => res.json())
-      .then(data => setClusters(data.clusters));
-  }, []);
+      .then(setData);
+  }, [nClusters]);
 
-  // Flatten all pages from all clusters
-  const allPages = clusters.flatMap(c => 
-    c.pages.map(p => ({ ...p, cluster_name: c.cluster_name }))
-  );
+  if (!data) return <Loading />;
 
-  // Sort pages
-  const sortedPages = [...allPages].sort((a, b) => 
-    b[sortBy] - a[sortBy]
-  );
+  // Flatten e ordenar páginas
+  const allPages = data.paginas
+    .map(p => ({
+      ...p,
+      cluster_level: data.segment_summary.find(s => s.cluster === p.cluster)?.performance_level
+    }))
+    .sort((a, b) => b.engagement_rate - a.engagement_rate);
 
   return (
     <div>
       <h1>📄 Análise de Páginas (ML)</h1>
       
-      <SortSelector 
-        options={['conversion_rate', 'sessions', 'bounce_rate']}
-        value={sortBy}
-        onChange={setSortBy}
+      <ClusterSelector 
+        value={nClusters}
+        onChange={setNClusters}
+        min={2}
+        max={10}
       />
+
+      <p>Total de páginas: {data.total_paginas}</p>
 
       <Table>
         <thead>
           <tr>
             <th>Página</th>
             <th>Cluster</th>
-            <th>Sessões</th>
-            <th>Conversões</th>
-            <th>CVR</th>
-            <th>Bounce</th>
-            <th>Tempo Médio</th>
+            <th>Engagement</th>
+            <th>Eventos</th>
+            <th>Duração</th>
           </tr>
         </thead>
         <tbody>
-          {sortedPages.map(page => (
-            <tr key={page.page}>
-              <td>{page.page}</td>
-              <td><Badge>{page.cluster_name}</Badge></td>
-              <td>{page.sessions.toLocaleString()}</td>
-              <td>{page.conversions.toLocaleString()}</td>
-              <td>{page.conversion_rate.toFixed(2)}%</td>
-              <td>{page.bounce_rate.toFixed(1)}%</td>
-              <td>{Math.round(page.avg_time_on_page)}s</td>
+          {allPages.map(page => (
+            <tr key={page.page_path}>
+              <td>{page.page_path}</td>
+              <td>
+                <Badge level={page.cluster_level}>
+                  Cluster {page.cluster}
+                </Badge>
+              </td>
+              <td>{(page.engagement_rate * 100).toFixed(1)}%</td>
+              <td>{page.event_count.toLocaleString()}</td>
+              <td>{Math.round(page.average_session_duration)}s</td>
             </tr>
           ))}
         </tbody>
@@ -541,181 +665,112 @@ function PageClustersPage() {
 
 ---
 
-## 📍 ENDPOINT 6: Matriz de Correlação
+## 📍 ENDPOINT 6: Análise de Página Específica
 
-**Propósito:** Obter correlações estatísticas entre métricas (ex: sessões vs conversões, bounce vs tempo).
+**Propósito:** Obter análise detalhada de uma página específica.
 
 **Método:** `GET`  
-**URL:** `/api/v1/correlation-matrix`  
+**URL:** `/api/v1/page_analysis`  
 **Autenticação:** Não requerida
+
+### Query Parameters
+
+| Parâmetro | Tipo | Obrigatório | Descrição |
+|-----------|------|------------|-----------|
+| `path` | string | Sim | Caminho da página (ex: `/produtos/item-1`) |
 
 ### Request
 ```http
-GET /api/v1/correlation-matrix HTTP/1.1
-Host: localhost:8000
+GET https://siteup.onrender.com/api/v1/page_analysis?path=/landing/promo HTTP/1.1
 ```
 
 ### Response (200 OK)
 ```json
 {
-  "correlation_matrix": {
-    "sessions_vs_conversions": 0.87,
-    "sessions_vs_bounce_rate": -0.34,
-    "bounce_rate_vs_time_on_page": -0.62,
-    "time_on_page_vs_conversions": 0.45
+  "page_path": "/landing/promo",
+  "engagement_metrics": {
+    "engagement_rate": 0.85,
+    "event_count": 2500,
+    "average_session_duration": 245.3,
+    "engaged_sessions": 2125
   },
-  "insights": [
+  "traffic_sources": [
     {
-      "pair": "sessions_vs_conversions",
-      "correlation": 0.87,
-      "strength": "strong_positive",
-      "interpretation": "Aumento de sessões está fortemente correlacionado com aumento de conversões"
+      "source": "google",
+      "medium": "organic",
+      "sessions": 1234
     }
   ],
-  "significant_correlations": [
-    {
-      "pair": "sessions_vs_conversions",
-      "value": 0.87,
-      "p_value": 0.001
-    }
+  "performance_classification": "high_performer",
+  "recommendations": [
+    "✅ Excelente engagement rate (85%)",
+    "💡 Replicar elementos desta página em outras landing pages"
   ]
 }
 ```
 
-### Campos Explicados
-
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `correlation` | number | Valor de -1 a 1 (negativo = inverso, positivo = direto) |
-| `strength` | string | strong_positive, weak_negative, etc |
-| `interpretation` | string | Texto explicativo da correlação |
-| `p_value` | number | Significância estatística (< 0.05 = significante) |
-
 ### Quando Usar no Frontend
-- **Página de Insights Estatísticos**
-- Heatmap de correlações
-- Gráficos de dispersão (scatter plots)
-- Identificação de relações causais
-
-### Exemplo React
-```jsx
-function CorrelationMatrixPage() {
-  const [data, setData] = useState(null);
-
-  useEffect(() => {
-    fetch('/api/v1/correlation-matrix')
-      .then(res => res.json())
-      .then(setData);
-  }, []);
-
-  if (!data) return <Loading />;
-
-  return (
-    <div>
-      <h1>🔗 Matriz de Correlação</h1>
-      
-      <Heatmap data={data.correlation_matrix} />
-
-      <section>
-        <h2>Insights Principais</h2>
-        {data.insights.map((insight, i) => (
-          <InsightCard key={i}>
-            <h3>{insight.pair.replace(/_/g, ' vs ')}</h3>
-            <CorrelationBadge value={insight.correlation} strength={insight.strength} />
-            <p>{insight.interpretation}</p>
-          </InsightCard>
-        ))}
-      </section>
-
-      <section>
-        <h2>Correlações Significativas</h2>
-        <Table>
-          <thead>
-            <tr>
-              <th>Variáveis</th>
-              <th>Correlação</th>
-              <th>P-value</th>
-              <th>Significância</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.significant_correlations.map(corr => (
-              <tr key={corr.pair}>
-                <td>{corr.pair}</td>
-                <td>{corr.value.toFixed(3)}</td>
-                <td>{corr.p_value.toFixed(4)}</td>
-                <td>{corr.p_value < 0.05 ? '✅ Sim' : '❌ Não'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      </section>
-    </div>
-  );
-}
-```
+- **Página de detalhes de uma página**
+- Drill-down após clicar em uma página na tabela
+- Análise detalhada de performance
 
 ---
 
-## 📍 ENDPOINT 7: Simulador de Performance de Página
+## 📍 ENDPOINT 7: Simulador de Performance
 
-**Propósito:** Prever métricas de performance (conversões, bounce, tempo) baseado em características da página usando Machine Learning.
+**Propósito:** Prever performance de uma página baseado em características de conteúdo.
 
 **Método:** `POST`  
-**URL:** `/api/v1/simulate-page-performance`  
+**URL:** `/api/v1/predict/simulator`  
 **Autenticação:** Não requerida
+
+### Request Body
+
+```json
+{
+  "contagemDePalavras": 1200,
+  "numeroDeImagens": 5,
+  "precoDoProduto": 299.90
+}
+```
+
+| Campo | Tipo | Obrigatório | Descrição |
+|-------|------|-------------|-----------|
+| `contagemDePalavras` | number | Sim | Número de palavras no conteúdo |
+| `numeroDeImagens` | number | Sim | Quantidade de imagens na página |
+| `precoDoProduto` | number | Sim | Preço do produto (0 se não aplicável) |
 
 ### Request
 ```http
-POST /api/v1/simulate-page-performance HTTP/1.1
-Host: localhost:8000
+POST https://siteup.onrender.com/api/v1/predict/simulator HTTP/1.1
 Content-Type: application/json
 
 {
   "contagemDePalavras": 1200,
   "numeroDeImagens": 5,
-  "tempoCarregamento": 2.3,
-  "numeroDeLinks": 15,
-  "temVideo": true,
-  "temFormulario": true
+  "precoDoProduto": 299.90
 }
 ```
-
-### Request Body Explicado
-
-| Campo | Tipo | Obrigatório | Descrição |
-|-------|------|-------------|-----------|
-| `contagemDePalavras` | number | ✅ Sim | Número de palavras no conteúdo (ex: 1200) |
-| `numeroDeImagens` | number | ✅ Sim | Quantidade de imagens na página (ex: 5) |
-| `tempoCarregamento` | number | ❌ Não | Tempo de carregamento em segundos (padrão: 3.0) |
-| `numeroDeLinks` | number | ❌ Não | Quantidade de links internos (padrão: 10) |
-| `temVideo` | boolean | ❌ Não | Se a página tem vídeo (padrão: false) |
-| `temFormulario` | boolean | ❌ Não | Se a página tem formulário (padrão: false) |
 
 ### Response (200 OK)
 ```json
 {
-  "predicao": {
-    "sessoes": 5234,
-    "conversoes": 892,
-    "taxaConversao": 17.04,
-    "bounceRate": 32.5,
-    "tempoMedioPagina": 185.6
-  },
-  "confianca": 0.82,
-  "recomendacoes": [
-    "Página com bom potencial de conversão (17.04%)",
-    "Tempo de carregamento adequado (2.3s)",
-    "Considere aumentar número de palavras para 1500+ para melhor SEO"
-  ],
-  "input_recebido": {
+  "inputFeatures": {
     "contagemDePalavras": 1200,
     "numeroDeImagens": 5,
-    "tempoCarregamento": 2.3,
-    "numeroDeLinks": 15,
-    "temVideo": true,
-    "temFormulario": true
-  }
+    "precoDoProduto": 299.90
+  },
+  "predictedPerformance": {
+    "estimativaEngagementRate": 0.75,
+    "estimativaBounceRate": 0.25,
+    "estimativaSessionDuration": 216.0,
+    "estimativaConversoesPorMilSessoes": 18.5
+  },
+  "recommendations": [
+    "✅ Excelente contagem de palavras para engajamento.",
+    "✅ Número adequado de imagens.",
+    "💰 Produto de valor médio. Destaque benefícios e diferenciais."
+  ]
 }
 ```
 
@@ -723,18 +778,14 @@ Content-Type: application/json
 - **Página de Otimização de Conteúdo**
 - Ferramenta "Preditor de Performance"
 - Planejamento de novas landing pages
-- A/B testing calculator
 
 ### Exemplo React
 ```jsx
-function PagePerformanceSimulator() {
+function PageSimulator() {
   const [input, setInput] = useState({
     contagemDePalavras: 1000,
     numeroDeImagens: 3,
-    tempoCarregamento: 3.0,
-    numeroDeLinks: 10,
-    temVideo: false,
-    temFormulario: false
+    precoDoProduto: 0
   });
   const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -742,7 +793,7 @@ function PagePerformanceSimulator() {
   const handleSimulate = async () => {
     setLoading(true);
     
-    const response = await fetch('/api/v1/simulate-page-performance', {
+    const response = await fetch('https://siteup.onrender.com/api/v1/predict/simulator', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input)
@@ -773,23 +824,11 @@ function PagePerformanceSimulator() {
         />
         
         <Input 
-          label="Tempo de Carregamento (segundos)"
+          label="Preço do Produto (R$)"
           type="number"
-          step="0.1"
-          value={input.tempoCarregamento}
-          onChange={v => setInput({...input, tempoCarregamento: v})}
-        />
-        
-        <Checkbox 
-          label="Tem Vídeo?"
-          checked={input.temVideo}
-          onChange={v => setInput({...input, temVideo: v})}
-        />
-        
-        <Checkbox 
-          label="Tem Formulário?"
-          checked={input.temFormulario}
-          onChange={v => setInput({...input, temFormulario: v})}
+          step="0.01"
+          value={input.precoDoProduto}
+          onChange={v => setInput({...input, precoDoProduto: v})}
         />
         
         <Button onClick={handleSimulate} disabled={loading}>
@@ -801,18 +840,27 @@ function PagePerformanceSimulator() {
         <ResultCard>
           <h2>📊 Predição</h2>
           <MetricsGrid>
-            <Metric label="Sessões Estimadas" value={prediction.predicao.sessoes.toLocaleString()} />
-            <Metric label="Conversões Estimadas" value={prediction.predicao.conversoes.toLocaleString()} />
-            <Metric label="Taxa de Conversão" value={`${prediction.predicao.taxaConversao.toFixed(2)}%`} />
-            <Metric label="Bounce Rate" value={`${prediction.predicao.bounceRate.toFixed(1)}%`} />
-            <Metric label="Tempo Médio" value={`${Math.round(prediction.predicao.tempoMedioPagina)}s`} />
+            <Metric 
+              label="Engagement Rate" 
+              value={`${(prediction.predictedPerformance.estimativaEngagementRate * 100).toFixed(1)}%`} 
+            />
+            <Metric 
+              label="Bounce Rate" 
+              value={`${(prediction.predictedPerformance.estimativaBounceRate * 100).toFixed(1)}%`} 
+            />
+            <Metric 
+              label="Duração" 
+              value={`${Math.round(prediction.predictedPerformance.estimativaSessionDuration)}s`} 
+            />
+            <Metric 
+              label="Conversões/1K" 
+              value={prediction.predictedPerformance.estimativaConversoesPorMilSessoes.toFixed(1)} 
+            />
           </MetricsGrid>
-          
-          <ConfidenceBar value={prediction.confianca} />
           
           <h3>💡 Recomendações</h3>
           <ul>
-            {prediction.recomendacoes.map((rec, i) => (
+            {prediction.recommendations.map((rec, i) => (
               <li key={i}>{rec}</li>
             ))}
           </ul>
@@ -825,20 +873,86 @@ function PagePerformanceSimulator() {
 
 ---
 
-## 📍 ENDPOINT 8: Relatórios Narrativos com IA ⭐ (PRINCIPAL)
+## 📍 ENDPOINT 8: Dados Brutos Completos
 
-**Propósito:** Gerar relatório executivo completo com análise narrativa gerada por GPT-4o-mini, insights estratégicos e recomendações priorizadas.
+**Propósito:** Obter todos os dados brutos das 4 tabelas (tráfego, engagement, conversões, GSC).
 
-**Método:** `POST`  
-**URL:** `/api/v1/reports/generate`  
-**Autenticação:** Não requerida (requer `OPENAI_API_KEY` configurada)
+**Método:** `GET`  
+**URL:** `/api/v1/data/all`  
+**Autenticação:** Não requerida
 
 ### Request
 ```http
-POST /api/v1/reports/generate HTTP/1.1
-Host: localhost:8000
-Content-Type: application/json
+GET https://siteup.onrender.com/api/v1/data/all HTTP/1.1
+```
 
+### Response (200 OK)
+```json
+{
+  "traffic": [...],
+  "engagement": [...],
+  "conversions": [...],
+  "gsc_query_performance": [...]
+}
+```
+
+### Quando Usar no Frontend
+- **Página de exploração de dados**
+- Exportação de dados brutos
+- Tabelas com paginação e filtros
+- Download CSV/Excel
+
+---
+
+## 📍 ENDPOINT 9: Resumo de Dados
+
+**Propósito:** Obter resumo estatístico de cada tabela (contagens, médias, min/max).
+
+**Método:** `GET`  
+**URL:** `/api/v1/data/summary`  
+**Autenticação:** Não requerida
+
+### Request
+```http
+GET https://siteup.onrender.com/api/v1/data/summary HTTP/1.1
+```
+
+### Response (200 OK)
+```json
+{
+  "traffic": {
+    "total_records": 1864,
+    "total_sessions": 31099,
+    "avg_session_duration": 108.9,
+    "date_range": {
+      "min": "2024-09-23",
+      "max": "2024-11-11"
+    }
+  },
+  "engagement": {...},
+  "conversions": {...},
+  "gsc_query_performance": {...}
+}
+```
+
+### Quando Usar no Frontend
+- **Dashboard de Admin**
+- Status do banco de dados
+- Verificação de dados antes de análises
+
+---
+
+## 📍 ENDPOINT 10: Relatórios Narrativos com IA ⭐ (PRINCIPAL)
+
+**Propósito:** Gerar relatório executivo completo com análise narrativa gerada por GPT-4o-mini.
+
+**Método:** `POST`  
+**URL:** `/api/v1/reports/generate`  
+**Autenticação:** Não requerida (requer `OPENAI_API_KEY` configurada no servidor)
+
+### Request Body
+
+```json
 {
   "period_days": 7,
   "detail_level": "executive",
@@ -847,14 +961,23 @@ Content-Type: application/json
 }
 ```
 
-### Request Body Explicado
-
 | Campo | Tipo | Obrigatório | Descrição |
 |-------|------|-------------|-----------|
-| `period_days` | number | ✅ Sim | Período de análise em dias (7, 30, 90) |
-| `detail_level` | string | ✅ Sim | executive, technical, detailed |
-| `focus_areas` | string[] | ❌ Não | conversions, traffic, engagement, keywords, seo |
-| `language` | string | ❌ Não | pt-br, en-us (padrão: pt-br) |
+| `period_days` | number | Sim | Período de análise em dias (1-365) |
+| `detail_level` | string | Sim | executive, technical, detailed |
+| `focus_areas` | string[] | Não | conversions, traffic, engagement, keywords, seo |
+| `language` | string | Não | pt-br, en-us (padrão: pt-br) |
+
+### Request
+```http
+POST https://siteup.onrender.com/api/v1/reports/generate HTTP/1.1
+Content-Type: application/json
+
+{
+  "period_days": 7,
+  "detail_level": "executive"
+}
+```
 
 ### Response (200 OK)
 ```json
@@ -866,14 +989,14 @@ Content-Type: application/json
     "end_date": "2025-11-11",
     "days": 7
   },
-  "executive_summary": "Visão executiva — Período 2025-11-04 a 2025-11-11 (7 dias): O conjunto de KPIs apresenta **31.099 sessões**, **94.652 conversões** e uma **taxa de conversão de 304,36%**... [texto completo gerado pela IA]",
+  "executive_summary": "Análise do período de 7 dias... [texto gerado pela IA]",
   "sections": [
     {
-      "title": "Seção 1 — Visão Geral de Performance 🎯",
-      "content": "Interpretação dos KPIs principais: [análise detalhada gerada pela IA]",
+      "title": "Visão Geral de Performance 🎯",
+      "content": "Durante o período analisado... [análise detalhada]",
       "key_insights": [
-        "94.652 conversões > 31.099 sessões sugere conversões múltiplas por sessão",
-        "Taxa de rejeição baixa (27%) indica bom engajamento"
+        "94.652 conversões com 31.099 sessões indica múltiplas conversões por sessão",
+        "Taxa de rejeição de 27% está abaixo da média do setor"
       ]
     }
   ],
@@ -881,15 +1004,15 @@ Content-Type: application/json
     {
       "priority": "high",
       "category": "conversions",
-      "action": "Executar auditoria completa de tracking (GA4): verificar eventos/objetivos duplicados",
-      "rationale": "Taxa de conversão de **304,36%** indica alto risco de dados inválidos"
+      "action": "Executar auditoria completa de tracking de conversões",
+      "rationale": "Taxa de conversão anormalmente alta indica possível erro de implementação"
     }
   ],
   "metadata": {
     "data_sources": ["kpis", "channel_clusters", "keyword_clusters"],
     "ml_models_used": ["channel_profiling", "keyword_clustering"],
     "agent_model": "gpt-4o-mini",
-    "confidence_score": 0.55,
+    "confidence_score": 0.75,
     "generation_timestamp": "2025-11-11T22:00:47.749622"
   }
 }
@@ -901,27 +1024,17 @@ Content-Type: application/json
 |-------|------|-----------|
 | `report_id` | string (UUID) | ID único do relatório |
 | `generated_at` | string (ISO 8601) | Data/hora de geração |
-| `executive_summary` | string | Resumo executivo narrativo (100-300 palavras) |
+| `executive_summary` | string | Resumo executivo narrativo |
 | `sections` | array | 5-6 seções detalhadas de análise |
 | `sections[].title` | string | Título da seção com emoji |
-| `sections[].content` | string | Análise narrativa da seção |
-| `sections[].key_insights` | string[] | 3-5 insights principais |
+| `sections[].content` | string | Análise narrativa (markdown) |
+| `sections[].key_insights` | string[] | 2-4 insights principais |
 | `recommendations` | array | 5-8 recomendações priorizadas |
 | `recommendations[].priority` | string | high, medium, low |
 | `recommendations[].category` | string | conversions, traffic, engagement, keywords, seo |
 | `recommendations[].action` | string | Ação específica a tomar |
 | `recommendations[].rationale` | string | Justificativa da recomendação |
 | `metadata.confidence_score` | number | 0.0 a 1.0 (confiabilidade da análise) |
-
-### Estrutura das Seções
-
-Sempre retorna 5-6 seções:
-1. **Visão Geral de Performance** - KPIs principais
-2. **Análise de Canais de Tráfego** - Clusters de canais
-3. **Performance de Keywords (GSC)** - SEO e busca orgânica
-4. **Segmentação de Páginas** - Performance de conteúdo
-5. **Correlações e Padrões** - Insights estatísticos
-6. **Metadata & Confidence** - Dados técnicos
 
 ### Quando Usar no Frontend
 - **Página de Relatórios** (principal)
@@ -942,7 +1055,7 @@ function ReportsPage() {
   const generateReport = async () => {
     setLoading(true);
     
-    const response = await fetch('/api/v1/reports/generate', {
+    const response = await fetch('https://siteup.onrender.com/api/v1/reports/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(config)
@@ -954,80 +1067,58 @@ function ReportsPage() {
   };
 
   return (
-    <div className="reports-page">
-      <header>
-        <h1>📊 Relatórios com IA</h1>
+    <div>
+      <h1>📊 Relatórios com IA</h1>
+      
+      <ConfigPanel>
+        <Select 
+          label="Período"
+          options={[
+            { value: 7, label: 'Últimos 7 dias' },
+            { value: 30, label: 'Últimos 30 dias' },
+            { value: 90, label: 'Últimos 90 dias' }
+          ]}
+          value={config.period_days}
+          onChange={v => setConfig({...config, period_days: v})}
+        />
         
-        <ConfigPanel>
-          <Select 
-            label="Período"
-            options={[
-              { value: 7, label: 'Últimos 7 dias' },
-              { value: 30, label: 'Últimos 30 dias' },
-              { value: 90, label: 'Últimos 90 dias' }
-            ]}
-            value={config.period_days}
-            onChange={v => setConfig({...config, period_days: v})}
-          />
-          
-          <Select 
-            label="Nível de Detalhe"
-            options={[
-              { value: 'executive', label: 'Executivo' },
-              { value: 'technical', label: 'Técnico' },
-              { value: 'detailed', label: 'Detalhado' }
-            ]}
-            value={config.detail_level}
-            onChange={v => setConfig({...config, detail_level: v})}
-          />
-          
-          <Button onClick={generateReport} disabled={loading}>
-            {loading ? '⏳ Gerando...' : '🚀 Gerar Relatório com IA'}
-          </Button>
-        </ConfigPanel>
-      </header>
+        <Button onClick={generateReport} disabled={loading}>
+          {loading ? '⏳ Gerando... (10-30s)' : '🚀 Gerar Relatório'}
+        </Button>
+      </ConfigPanel>
 
       {loading && (
         <LoadingState>
           <Spinner />
           <p>Analisando dados e gerando insights com GPT-4o-mini...</p>
-          <ProgressBar />
+          <p>Isso pode levar 10-30 segundos...</p>
         </LoadingState>
       )}
 
       {report && (
         <ReportView>
-          {/* Header do Relatório */}
           <ReportHeader>
-            <div>
-              <h2>Relatório Executivo</h2>
-              <p>Período: {report.period.start_date} a {report.period.end_date}</p>
-              <p>Gerado em: {new Date(report.generated_at).toLocaleString('pt-BR')}</p>
-            </div>
-            <div>
-              <ConfidenceBadge score={report.metadata.confidence_score} />
-              <Button onClick={() => exportToPDF(report)}>📄 Exportar PDF</Button>
-            </div>
+            <h2>Relatório Executivo</h2>
+            <p>Período: {report.period.start_date} a {report.period.end_date}</p>
+            <ConfidenceBadge score={report.metadata.confidence_score} />
           </ReportHeader>
 
-          {/* Resumo Executivo */}
           <ExecutiveSummary>
             <h3>📋 Resumo Executivo</h3>
-            <Markdown>{report.executive_summary}</Markdown>
+            <ReactMarkdown>{report.executive_summary}</ReactMarkdown>
           </ExecutiveSummary>
 
-          {/* Seções Detalhadas */}
-          {report.sections.map((section, index) => (
-            <Section key={index}>
+          {report.sections.map((section, i) => (
+            <Section key={i}>
               <h3>{section.title}</h3>
-              <Markdown>{section.content}</Markdown>
+              <ReactMarkdown>{section.content}</ReactMarkdown>
               
-              {section.key_insights && section.key_insights.length > 0 && (
+              {section.key_insights && (
                 <InsightsBox>
                   <h4>💡 Insights Principais</h4>
                   <ul>
-                    {section.key_insights.map((insight, i) => (
-                      <li key={i}>{insight}</li>
+                    {section.key_insights.map((insight, j) => (
+                      <li key={j}>{insight}</li>
                     ))}
                   </ul>
                 </InsightsBox>
@@ -1035,11 +1126,9 @@ function ReportsPage() {
             </Section>
           ))}
 
-          {/* Recomendações */}
           <RecommendationsSection>
-            <h3>🎯 Recomendações Priorizadas</h3>
+            <h3>🎯 Recomendações</h3>
             
-            {/* Agrupar por prioridade */}
             {['high', 'medium', 'low'].map(priority => {
               const recs = report.recommendations.filter(r => r.priority === priority);
               if (recs.length === 0) return null;
@@ -1054,242 +1143,19 @@ function ReportsPage() {
                   </h4>
                   
                   {recs.map((rec, i) => (
-                    <RecommendationCard key={i} priority={priority}>
-                      <CategoryBadge>{rec.category}</CategoryBadge>
+                    <RecommendationCard key={i}>
+                      <Badge>{rec.category}</Badge>
                       <h5>{rec.action}</h5>
-                      <p><strong>Por quê:</strong> {rec.rationale}</p>
+                      <p><strong>Justificativa:</strong> {rec.rationale}</p>
                     </RecommendationCard>
                   ))}
                 </PriorityGroup>
               );
             })}
           </RecommendationsSection>
-
-          {/* Metadata (Footer) */}
-          <ReportFooter>
-            <small>
-              Fontes de dados: {report.metadata.data_sources.join(', ')} |  
-              Modelos ML: {report.metadata.ml_models_used.join(', ')} | 
-              IA: {report.metadata.agent_model}
-            </small>
-          </ReportFooter>
         </ReportView>
       )}
     </div>
-  );
-}
-```
-
----
-
-## 📍 ENDPOINT 9: Popular Banco de Dados (ADMIN) 🔒
-
-**Propósito:** Gerar dados simulados no banco de dados para testes e desenvolvimento.
-
-**Método:** `POST`  
-**URL:** `/api/v1/admin/populate-database`  
-**Autenticação:** `ADMIN_KEY` (se configurada no .env)
-
-### Request
-```http
-POST /api/v1/admin/populate-database HTTP/1.1
-Host: localhost:8000
-Content-Type: application/json
-
-{
-  "days": 30,
-  "overwrite": false,
-  "admin_key": "sua_chave_secreta"
-}
-```
-
-### Request Body
-
-| Campo | Tipo | Obrigatório | Descrição |
-|-------|------|-------------|-----------|
-| `days` | number | ✅ Sim | Dias de dados (1-365) |
-| `overwrite` | boolean | ❌ Não | Se True, limpa antes (padrão: false) |
-| `admin_key` | string | ⚠️ Condicional | Obrigatório se `ADMIN_KEY` configurada no .env |
-
-### Response (200 OK)
-```json
-{
-  "status": "success",
-  "message": "Banco de dados populado com 30 dias de dados",
-  "statistics": {
-    "days_generated": 30,
-    "traffic_records": 1864,
-    "engagement_records": 1864,
-    "conversion_records": 1864,
-    "gsc_records": 1864,
-    "overwrite_mode": false
-  },
-  "next_steps": [
-    "Use GET /api/v1/kpis para visualizar KPIs",
-    "Use POST /api/v1/reports/generate para gerar relatórios"
-  ]
-}
-```
-
-### Quando Usar no Frontend
-- **Página de Admin** (protegida por senha)
-- Setup inicial da aplicação
-- Reset de dados de teste
-
-### Exemplo React
-```jsx
-function AdminPage() {
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
-  const [adminKey, setAdminKey] = useState('');
-  const [days, setDays] = useState(30);
-
-  const populateDatabase = async () => {
-    setLoading(true);
-    
-    try {
-      const response = await fetch('/api/v1/admin/populate-database', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          days,
-          overwrite: false,
-          admin_key: adminKey || undefined
-        })
-      });
-      
-      const data = await response.json();
-      
-      if (response.ok) {
-        setResult({ success: true, data });
-      } else {
-        setResult({ success: false, error: data.detail });
-      }
-    } catch (error) {
-      setResult({ success: false, error: error.message });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="admin-page">
-      <h1>🔒 Painel Administrativo</h1>
-      
-      <Card>
-        <h2>Popular Banco de Dados</h2>
-        
-        <Input 
-          label="Dias de dados"
-          type="number"
-          min="1"
-          max="365"
-          value={days}
-          onChange={setDays}
-        />
-        
-        <Input 
-          label="Admin Key (se configurada)"
-          type="password"
-          value={adminKey}
-          onChange={setAdminKey}
-          placeholder="Deixe vazio se não configurou ADMIN_KEY"
-        />
-        
-        <Button 
-          onClick={populateDatabase} 
-          disabled={loading}
-        >
-          {loading ? '⏳ Populando...' : '🚀 Popular Banco'}
-        </Button>
-      </Card>
-
-      {result && (
-        <ResultCard success={result.success}>
-          {result.success ? (
-            <>
-              <h3>✅ Sucesso!</h3>
-              <p>{result.data.message}</p>
-              <ul>
-                <li>Tráfego: {result.data.statistics.traffic_records} registros</li>
-                <li>Engagement: {result.data.statistics.engagement_records} registros</li>
-                <li>Conversões: {result.data.statistics.conversion_records} registros</li>
-                <li>GSC: {result.data.statistics.gsc_records} registros</li>
-              </ul>
-            </>
-          ) : (
-            <>
-              <h3>❌ Erro</h3>
-              <p>{result.error}</p>
-            </>
-          )}
-        </ResultCard>
-      )}
-    </div>
-  );
-}
-```
-
----
-
-## 📍 ENDPOINT 10: Estatísticas do Banco (ADMIN)
-
-**Propósito:** Ver quantos dados existem no banco e período disponível.
-
-**Método:** `GET`  
-**URL:** `/api/v1/admin/database-stats`  
-**Autenticação:** Não requerida
-
-### Request
-```http
-GET /api/v1/admin/database-stats HTTP/1.1
-Host: localhost:8000
-```
-
-### Response (200 OK)
-```json
-{
-  "database_file": "data/processed/ga4_data.duckdb",
-  "record_counts": {
-    "ga4_traffic": 1864,
-    "ga4_engagement": 1864,
-    "ga4_conversions": 1864,
-    "gsc_performance": 1864,
-    "total": 7456
-  },
-  "date_range": {
-    "start": "2024-10-13",
-    "end": "2024-11-11"
-  },
-  "status": "operational"
-}
-```
-
-### Quando Usar no Frontend
-- **Dashboard de Admin**
-- Status indicator (header/footer)
-- Verificação antes de popular
-
-### Exemplo React
-```jsx
-function DatabaseStats() {
-  const [stats, setStats] = useState(null);
-
-  useEffect(() => {
-    fetch('/api/v1/admin/database-stats')
-      .then(res => res.json())
-      .then(setStats);
-  }, []);
-
-  if (!stats) return <Loading />;
-
-  return (
-    <StatsCard>
-      <h3>📊 Estatísticas do Banco</h3>
-      <p><strong>Total:</strong> {stats.record_counts.total.toLocaleString()} registros</p>
-      <p><strong>Período:</strong> {stats.date_range.start} a {stats.date_range.end}</p>
-      <StatusBadge status={stats.status} />
-    </StatsCard>
   );
 }
 ```
@@ -1302,87 +1168,58 @@ function DatabaseStats() {
 
 ```
 /
-├── /dashboard              → KPIs principais (GET /kpis)
-├── /channels               → Análise de canais (GET /channel-clusters)
-├── /keywords               → Análise de keywords (GET /keyword-clusters)
-├── /pages                  → Análise de páginas (GET /page-clusters)
-├── /correlations           → Matriz de correlação (GET /correlation-matrix)
-├── /simulator              → Simulador de página (POST /simulate-page-performance)
-├── /reports                → Relatórios IA (POST /reports/generate) ⭐
-└── /admin                  → Popular dados (POST /admin/populate-database) 🔒
-```
-
-### Estrutura de Componentes
-
-```
-src/
-├── components/
-│   ├── common/
-│   │   ├── KPICard.jsx
-│   │   ├── MetricCard.jsx
-│   │   ├── Badge.jsx
-│   │   ├── Loading.jsx
-│   │   └── ErrorBoundary.jsx
-│   ├── charts/
-│   │   ├── BarChart.jsx
-│   │   ├── LineChart.jsx
-│   │   ├── ScatterPlot.jsx
-│   │   └── Heatmap.jsx
-│   ├── clusters/
-│   │   ├── ClusterCard.jsx
-│   │   └── ClusterTable.jsx
-│   ├── reports/
-│   │   ├── ReportView.jsx
-│   │   ├── ReportSection.jsx
-│   │   ├── RecommendationCard.jsx
-│   │   └── ExecutiveSummary.jsx
-│   └── admin/
-│       ├── PopulateForm.jsx
-│       └── DatabaseStats.jsx
-├── pages/
-│   ├── Dashboard.jsx
-│   ├── Channels.jsx
-│   ├── Keywords.jsx
-│   ├── Pages.jsx
-│   ├── Correlations.jsx
-│   ├── Simulator.jsx
-│   ├── Reports.jsx
-│   └── Admin.jsx
-├── services/
-│   └── api.js
-└── hooks/
-    ├── useKPIs.js
-    ├── useClusters.js
-    └── useReports.js
+├── /dashboard              → KPIs (GET /api/v1/overview/kpis)
+├── /channels               → Canais (GET /api/v1/ml/channel_clusters)
+├── /keywords               → Keywords (GET /api/v1/ml/keyword_clusters)
+├── /pages                  → Páginas (GET /api/v1/ml/page_clusters)
+├── /correlations           → Correlações (GET /api/v1/analysis/correlation_matrix)
+├── /simulator              → Simulador (POST /api/v1/predict/simulator)
+├── /reports                → Relatórios IA (POST /api/v1/reports/generate) ⭐
+└── /data                   → Dados brutos (GET /api/v1/data/all)
 ```
 
 ### Service API (api.js)
 
 ```javascript
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = 'https://siteup.onrender.com';
 
 export const api = {
-  // Health
-  health: () => fetch(`${API_BASE_URL}/api/v1/health`).then(r => r.json()),
-  
   // KPIs
-  getKPIs: () => fetch(`${API_BASE_URL}/api/v1/kpis`).then(r => r.json()),
-  
-  // Clusters
-  getChannelClusters: () => fetch(`${API_BASE_URL}/api/v1/channel-clusters`).then(r => r.json()),
-  getKeywordClusters: () => fetch(`${API_BASE_URL}/api/v1/keyword-clusters`).then(r => r.json()),
-  getPageClusters: () => fetch(`${API_BASE_URL}/api/v1/page-clusters`).then(r => r.json()),
+  getKPIs: () => 
+    fetch(`${API_BASE_URL}/api/v1/overview/kpis`).then(r => r.json()),
   
   // Correlations
-  getCorrelationMatrix: () => fetch(`${API_BASE_URL}/api/v1/correlation-matrix`).then(r => r.json()),
+  getCorrelationMatrix: () => 
+    fetch(`${API_BASE_URL}/api/v1/analysis/correlation_matrix`).then(r => r.json()),
+  
+  // ML Clusters
+  getChannelClusters: (nClusters = 3) => 
+    fetch(`${API_BASE_URL}/api/v1/ml/channel_clusters?n_clusters=${nClusters}`).then(r => r.json()),
+  
+  getKeywordClusters: (nClusters = 3) => 
+    fetch(`${API_BASE_URL}/api/v1/ml/keyword_clusters?n_clusters=${nClusters}`).then(r => r.json()),
+  
+  getPageClusters: (nClusters = 5) => 
+    fetch(`${API_BASE_URL}/api/v1/ml/page_clusters?n_clusters=${nClusters}`).then(r => r.json()),
+  
+  // Page Analysis
+  getPageAnalysis: (path) => 
+    fetch(`${API_BASE_URL}/api/v1/page_analysis?path=${encodeURIComponent(path)}`).then(r => r.json()),
   
   // Simulator
   simulatePagePerformance: (data) => 
-    fetch(`${API_BASE_URL}/api/v1/simulate-page-performance`, {
+    fetch(`${API_BASE_URL}/api/v1/predict/simulator`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     }).then(r => r.json()),
+  
+  // Data
+  getAllData: () => 
+    fetch(`${API_BASE_URL}/api/v1/data/all`).then(r => r.json()),
+  
+  getDataSummary: () => 
+    fetch(`${API_BASE_URL}/api/v1/data/summary`).then(r => r.json()),
   
   // Reports (IA)
   generateReport: (config) =>
@@ -1390,18 +1227,7 @@ export const api = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(config)
-    }).then(r => r.json()),
-  
-  // Admin
-  populateDatabase: (data) =>
-    fetch(`${API_BASE_URL}/api/v1/admin/populate-database`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    }).then(r => r.json()),
-  
-  getDatabaseStats: () => 
-    fetch(`${API_BASE_URL}/api/v1/admin/database-stats`).then(r => r.json())
+    }).then(r => r.json())
 };
 ```
 
@@ -1411,29 +1237,21 @@ export const api = {
 
 ### CORS Configurado
 
-A API aceita requisições de **qualquer origem** (útil para desenvolvimento):
+A API aceita requisições de **qualquer origem**:
 
 ```python
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Em produção, especifique domínios
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 ```
 
-### Headers Requeridos
-
-Todas requisições POST/PUT devem incluir:
-```
-Content-Type: application/json
-```
-
 ### Autenticação
 
-- **Maioria dos endpoints**: Não requer autenticação
-- **Endpoint `/admin/populate-database`**: Requer `admin_key` se `ADMIN_KEY` configurada no `.env`
+Todos os endpoints disponíveis para o frontend **não requerem autenticação**.
 
 ---
 
@@ -1441,14 +1259,11 @@ Content-Type: application/json
 
 ### Timeouts
 - Endpoints rápidos (KPIs, clusters): < 1 segundo
-- Relatórios com IA: 10-30 segundos (depende da OpenAI API)
-- Popular banco: 5-15 segundos (depende de `days`)
+- **Relatórios com IA**: 10-30 segundos (API OpenAI)
+- Popular banco: 5-15 segundos
 
 ### Rate Limiting
-Não implementado (adicione se necessário em produção)
-
-### Caching
-Não implementado (considere cachear KPIs e clusters)
+Não implementado
 
 ---
 
@@ -1459,9 +1274,8 @@ Não implementado (considere cachear KPIs e clusters)
 | Código | Significado | Quando Acontece |
 |--------|-------------|-----------------|
 | 200 | Success | Requisição bem-sucedida |
-| 400 | Bad Request | Dados inválidos no body |
+| 400 | Bad Request | Dados inválidos ou insuficientes |
 | 403 | Forbidden | ADMIN_KEY inválida |
-| 404 | Not Found | Endpoint não existe |
 | 500 | Internal Server Error | Erro no servidor/banco |
 
 ### Formato de Erro
@@ -1493,128 +1307,13 @@ async function fetchWithErrorHandling(url, options) {
 
 ---
 
-## 📦 Deploy e Configuração
-
-### Variáveis de Ambiente (Render)
-
-```bash
-# Obrigatório
-OPENAI_API_KEY=sk-proj-sua-chave
-
-# Recomendado
-ADMIN_KEY=sua_chave_secreta_forte
-
-# Opcional
-DATABASE_URL=postgresql://... (para PostgreSQL)
-```
-
-### Build e Start (Render)
-
-```bash
-# Build Command
-pip install -r requirements.txt
-
-# Start Command
-uvicorn app.main:app --host 0.0.0.0 --port $PORT
-```
-
----
-
-## 🎯 Prompt para IA Gerar Frontend
-
-Use o prompt abaixo para gerar o frontend:
-
----
-
-**PROMPT PARA IA:**
-
-```
-Crie um dashboard completo de analytics em React/Next.js que consome uma API REST.
-
-CONTEXTO:
-- A API fornece dados de marketing digital (GA4 + Google Search Console)
-- Possui análises de Machine Learning (clusters de canais, keywords, páginas)
-- Gera relatórios narrativos com IA (GPT-4o-mini)
-
-ENDPOINTS DISPONÍVEIS:
-
-1. GET /api/v1/health - Health check
-2. GET /api/v1/kpis - KPIs principais (sessões, conversões, bounce, etc)
-3. GET /api/v1/channel-clusters - Clusters de canais de tráfego (ML)
-4. GET /api/v1/keyword-clusters - Clusters de keywords (GSC + ML)
-5. GET /api/v1/page-clusters - Clusters de páginas por performance (ML)
-6. GET /api/v1/correlation-matrix - Matriz de correlação entre métricas
-7. POST /api/v1/simulate-page-performance - Simular performance de página
-8. POST /api/v1/reports/generate - Gerar relatório narrativo com IA ⭐
-9. POST /api/v1/admin/populate-database - Popular dados (admin)
-10. GET /api/v1/admin/database-stats - Estatísticas do banco
-
-REQUISITOS DO FRONTEND:
-
-PÁGINAS:
-1. Dashboard - Cards com KPIs principais (GET /kpis)
-2. Canais - Tabela/gráficos de clusters de canais (GET /channel-clusters)
-3. Keywords - Análise de SEO com keywords (GET /keyword-clusters)
-4. Páginas - Performance de páginas (GET /page-clusters)
-5. Insights - Matriz de correlação e insights estatísticos (GET /correlation-matrix)
-6. Simulador - Ferramenta para prever performance de páginas (POST /simulate-page-performance)
-7. Relatórios - Gerador de relatórios com IA ⭐ (POST /reports/generate)
-8. Admin - Painel para popular dados (POST /admin/populate-database)
-
-COMPONENTES PRINCIPAIS:
-- KPICard - Card para exibir métricas
-- ClusterCard - Card para exibir clusters
-- ReportView - Visualizador de relatórios com seções e recomendações
-- Charts - BarChart, LineChart, ScatterPlot, Heatmap
-- Forms - Formulários para simulador e geração de relatórios
-
-TECNOLOGIAS:
-- React 18+ ou Next.js 14+
-- TypeScript
-- Tailwind CSS ou styled-components
-- Recharts ou Chart.js para gráficos
-- React Query para data fetching
-- React Markdown para renderizar relatórios
-
-FEATURES IMPORTANTES:
-- Loading states para todas requisições
-- Error handling com mensagens amigáveis
-- Responsive design (mobile-first)
-- Dark mode (opcional)
-- Exportar relatórios para PDF (opcional)
-
-DETALHES DA API:
-- Base URL: http://localhost:8000 (dev) ou https://seu-app.onrender.com (prod)
-- CORS habilitado
-- Sem autenticação (exceto admin/populate-database que pode requerer admin_key)
-- Responses em JSON
-- Relatórios com IA levam 10-30s (mostrar loading)
-
-PRIORIDADE:
-1. Dashboard com KPIs
-2. Página de Relatórios com IA (principal feature)
-3. Análise de Canais
-4. Simulador de Performance
-5. Páginas restantes
-
-Gere o código completo com:
-- Estrutura de pastas
-- Componentes reutilizáveis
-- Service layer (api.js)
-- Hooks customizados (useKPIs, useReports)
-- Exemplos de uso de cada endpoint
-- Estilos modernos e profissionais
-```
-
----
-
 ## 🎉 Conclusão
 
 Você agora tem:
-✅ Documentação completa de 10 endpoints  
+✅ Documentação completa de **10 endpoints** para o frontend  
+✅ URLs de produção (`https://siteup.onrender.com`)  
 ✅ Exemplos de código React para cada endpoint  
-✅ Arquitetura sugerida para o frontend  
 ✅ Service layer completo (api.js)  
-✅ Prompt otimizado para gerar frontend com IA  
+✅ Tratamento de erros e CORS configurado  
 
-**Próximo passo:** Use o prompt acima com ChatGPT, Claude, ou outra IA para gerar o código do frontend completo! 🚀
+**Próximo passo:** Use esta documentação para desenvolver o frontend! 🚀
