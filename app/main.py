@@ -2,9 +2,19 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List
+from contextlib import asynccontextmanager
 import sys
 from pathlib import Path
 import numpy as np
+import uuid
+from datetime import datetime, timedelta
+import logging
+import asyncio
+import os
+from dotenv import load_dotenv
+
+# Carregar variáveis de ambiente do .env
+load_dotenv()
 
 # Adiciona src ao path
 sys.path.append(str(Path(__file__).parent.parent))
@@ -13,10 +23,52 @@ sys.path.append(str(Path(__file__).parent.parent))
 # db_storage acessa DuckDB diretamente, pronto para receber dados simulados
 from src.collectors.db_storage import GA4DatabaseStorage
 
+# ✅ MÓDULOS DE MACHINE LEARNING
+from src.ml import ChannelProfiler, KeywordClusterer, PageSegmenter
+
+# ✅ MÓDULOS DE RELATÓRIO AGNO
+from app.report_models import (
+    ReportRequest, 
+    AnalyticsReport,
+    format_kpis,
+    format_channel_clusters,
+    format_keyword_clusters,
+    format_page_clusters,
+    format_correlations,
+    calculate_confidence_score
+)
+from app.report_agent import create_report_agent
+
+# Logger
+logger = logging.getLogger(__name__)
+
+# ✅ Instância global do banco - PRONTA PARA DADOS SIMULADOS
+# Quando implementar o simulador, ele deve popular este mesmo banco
+db = None
+
+def get_db():
+    """Lazy initialization do banco de dados."""
+    global db
+    if db is None:
+        db = GA4DatabaseStorage()
+    return db
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Gerencia o ciclo de vida da aplicação."""
+    # Startup
+    yield
+    # Shutdown
+    if db is not None:
+        db.close()
+
+
 app = FastAPI(
     title="Dashboard Analytics API",
     description="API para análise de dados GA4 e GSC com ML predictions",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # CORS para frontend React
@@ -126,26 +178,25 @@ async def get_correlation_matrix():
     Retorna matriz de correlação entre features e métricas principais.
     
     Calcula correlações entre:
-    - Features: sessions, page_views, bounce_rate, session_duration
-    - Métricas de interesse: conversions, engagement_rate
+    - Features de engagement: engagement_rate, event_count, session_duration
+    - Métricas agregadas por data
     """
     try:
-        # Query agregada para análise de correlação
+        # Agregação por data (nível temporal - único relacionamento válido)
         df = get_db().query_df("""
             SELECT 
-                e.page_path,
-                SUM(t.sessions) as sessions,
-                SUM(t.screen_page_views) as page_views,
-                AVG(t.average_session_duration) as avg_session_duration,
+                e.date,
                 AVG(e.engagement_rate) as engagement_rate,
-                SUM(c.key_events) as conversions,
-                AVG(e.engaged_sessions::FLOAT / NULLIF(e.engaged_sessions + (1 - e.engagement_rate) * e.engaged_sessions, 0)) as bounce_rate_inv
+                SUM(e.event_count) as event_count,
+                AVG(e.average_session_duration) as avg_session_duration,
+                SUM(e.engaged_sessions) as engaged_sessions,
+                (SELECT SUM(sessions) FROM traffic t WHERE t.date = e.date) as sessions,
+                (SELECT SUM(screen_page_views) FROM traffic t WHERE t.date = e.date) as page_views,
+                (SELECT SUM(key_events) FROM conversions c WHERE c.date = e.date) as conversions
             FROM engagement e
-            LEFT JOIN traffic t ON e.date = t.date
-            LEFT JOIN conversions c ON e.date = c.date
-            WHERE e.page_path IS NOT NULL
-            GROUP BY e.page_path
-            HAVING SUM(t.sessions) > 10
+            WHERE e.date IS NOT NULL
+            GROUP BY e.date
+            HAVING SUM(e.event_count) > 5
         """)
         
         if df.empty or len(df) < 2:
@@ -185,73 +236,172 @@ async def get_correlation_matrix():
         raise HTTPException(status_code=500, detail=f"Erro ao calcular correlações: {str(e)}")
 
 
-@app.get("/api/v1/analysis/page_clusters", tags=["Análises"])
-async def get_page_clusters():
+# ===== MACHINE LEARNING ENDPOINTS =====
+
+@app.get("/api/v1/ml/channel_clusters", tags=["Machine Learning"])
+async def get_channel_clusters(n_clusters: int = Query(3, ge=2, le=10, description="Número de clusters")):
     """
-    Retorna clusters de páginas (arquétipos) baseados em performance.
+    Aplica clustering K-Means em canais de tráfego (source/medium).
     
-    Agrupa páginas por similaridade em:
-    - Engajamento (alto/médio/baixo)
-    - Conversão (boa/média/fraca)
-    - Tráfego (alto/médio/baixo)
+    Usa o módulo **ChannelProfiler** para agrupar canais por similaridade de performance.
+    
+    - **n_clusters**: Número de clusters desejado (padrão: 3)
+    
+    Retorna:
+    - Dados agregados com cluster_id
+    - Centros dos clusters
+    - Resumo estatístico dos segmentos
     """
     try:
-        # Query para segmentar páginas em clusters baseados em métricas
+        # Busca dados agregados de tráfego por source/medium
         df = get_db().query_df("""
             SELECT 
-                e.page_path,
-                SUM(t.sessions) as sessions,
-                AVG(t.average_session_duration) as avg_duration,
-                AVG(e.engagement_rate) as engagement_rate,
-                SUM(c.key_events) as conversions,
-                CASE 
-                    WHEN AVG(e.engagement_rate) > 0.6 AND SUM(c.key_events) > 50 THEN 0
-                    WHEN SUM(c.key_events) > 50 THEN 1
-                    WHEN AVG(e.engagement_rate) < 0.3 THEN 2
-                    ELSE 3
-                END as cluster_id
-            FROM engagement e
-            LEFT JOIN traffic t ON e.date = t.date AND e.page_path LIKE '%' || t.session_source || '%'
-            LEFT JOIN conversions c ON e.date = c.date
-            WHERE e.page_path IS NOT NULL
-            GROUP BY e.page_path
-            HAVING SUM(t.sessions) > 5
+                session_source as source,
+                session_medium as medium,
+                SUM(sessions) as sessions,
+                SUM(active_users) as activeUsers,
+                SUM(new_users) as newUsers,
+                SUM(screen_page_views) as screenPageViews,
+                AVG(average_session_duration) as averageSessionDuration
+            FROM traffic
+            WHERE session_source IS NOT NULL AND session_medium IS NOT NULL
+            GROUP BY session_source, session_medium
+            HAVING SUM(sessions) > 5
         """)
         
-        if df.empty:
-            return {"clusters": []}
+        if df.empty or len(df) < n_clusters:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Dados insuficientes para clustering. Necessário pelo menos {n_clusters} canais com mais de 5 sessões."
+            )
         
-        # Agrupa por cluster_id
-        clusters = []
-        cluster_names = {
-            0: "Páginas de Alto Engajamento e Conversão",
-            1: "Produtos de Sucesso (Boa Conversão)",
-            2: "Páginas Problemáticas (Baixo Engajamento)",
-            3: "Páginas Intermediárias"
+        # Aplica o ChannelProfiler
+        profiler = ChannelProfiler(n_clusters=n_clusters)
+        df_clustered = profiler.fit_transform(df)
+        
+        # Prepara resposta
+        return {
+            "algoritmo": "K-Means Clustering",
+            "n_clusters": n_clusters,
+            "total_canais": len(df_clustered),
+            "canais": df_clustered[['source', 'medium', 'sessions', 'cluster']].to_dict('records'),
+            "cluster_centers": profiler.get_cluster_centers().to_dict('records'),
+            "segment_summary": profiler.get_segment_summary(df_clustered).to_dict('records')
         }
         
-        import numpy as np
-        
-        def safe_mean(series):
-            """Calcula média e substitui NaN por 0."""
-            val = float(series.mean())
-            return 0.0 if (np.isnan(val) or np.isinf(val)) else val
-        
-        for cluster_id in df['cluster_id'].unique():
-            cluster_data = df[df['cluster_id'] == cluster_id]
-            clusters.append({
-                "clusterId": int(cluster_id),
-                "clusterName": cluster_names.get(cluster_id, f"Cluster {cluster_id}"),
-                "avgEngagementRate": round(safe_mean(cluster_data['engagement_rate']), 2),
-                "avgSessionDuration": round(safe_mean(cluster_data['avg_duration']), 2),
-                "avgConversions": int(safe_mean(cluster_data['conversions'])),
-                "totalPaginas": int(len(cluster_data))
-            })
-        
-        return {"clusters": sorted(clusters, key=lambda x: x['clusterId'])}
-        
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao calcular clusters: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro ao aplicar clustering de canais: {str(e)}")
+
+
+@app.get("/api/v1/ml/keyword_clusters", tags=["Machine Learning"])
+async def get_keyword_clusters(n_clusters: int = Query(4, ge=2, le=10, description="Número de clusters")):
+    """
+    Aplica clustering K-Means em palavras-chave do Google Search Console.
+    
+    Usa o módulo **KeywordClusterer** para agrupar queries por similaridade de performance.
+    
+    - **n_clusters**: Número de clusters desejado (padrão: 4)
+    
+    Retorna:
+    - Keywords com cluster_id
+    - Centros dos clusters
+    - Resumo estatístico dos segmentos
+    """
+    try:
+        # Busca dados agregados de queries do GSC
+        df = get_db().query_df("""
+            SELECT 
+                query,
+                SUM(clicks) as clicks,
+                SUM(impressions) as impressions,
+                AVG(ctr) as ctr,
+                AVG(position) as position
+            FROM gsc_query_performance
+            WHERE query IS NOT NULL
+            GROUP BY query
+            HAVING SUM(impressions) > 50
+        """)
+        
+        if df.empty or len(df) < n_clusters:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Dados insuficientes para clustering. Necessário pelo menos {n_clusters} queries com mais de 50 impressões."
+            )
+        
+        # Aplica o KeywordClusterer
+        clusterer = KeywordClusterer(n_clusters=n_clusters)
+        df_clustered = clusterer.fit_transform(df)
+        
+        # Prepara resposta
+        return {
+            "algoritmo": "K-Means Clustering",
+            "n_clusters": n_clusters,
+            "total_keywords": len(df_clustered),
+            "keywords": df_clustered[['query', 'clicks', 'impressions', 'ctr', 'position', 'cluster']].to_dict('records'),
+            "cluster_centers": clusterer.get_cluster_centers().to_dict('records'),
+            "segment_summary": clusterer.get_segment_summary(df_clustered).to_dict('records')
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao aplicar clustering de keywords: {str(e)}")
+
+
+@app.get("/api/v1/ml/page_clusters", tags=["Machine Learning"])
+async def get_page_clusters_ml(n_clusters: int = Query(5, ge=2, le=10, description="Número de clusters")):
+    """
+    Aplica clustering K-Means em páginas baseado em engajamento.
+    
+    Usa o módulo **PageSegmenter** para agrupar páginas por similaridade de performance.
+    
+    - **n_clusters**: Número de clusters desejado (padrão: 5)
+    
+    Retorna:
+    - Páginas com cluster_id
+    - Centros dos clusters
+    - Resumo estatístico dos segmentos
+    """
+    try:
+        # Busca dados agregados de páginas
+        df = get_db().query_df("""
+            SELECT 
+                page_path,
+                AVG(engagement_rate) as engagement_rate,
+                SUM(event_count) as event_count,
+                AVG(average_session_duration) as average_session_duration
+            FROM engagement
+            WHERE page_path IS NOT NULL
+            GROUP BY page_path
+            HAVING SUM(event_count) > 3
+        """)
+        
+        if df.empty or len(df) < n_clusters:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Dados insuficientes para clustering. Necessário pelo menos {n_clusters} páginas com mais de 3 eventos."
+            )
+        
+        # Aplica o PageSegmenter
+        segmenter = PageSegmenter(n_clusters=n_clusters)
+        df_clustered = segmenter.fit_transform(df)
+        
+        # Prepara resposta
+        return {
+            "algoritmo": "K-Means Clustering",
+            "n_clusters": n_clusters,
+            "total_paginas": len(df_clustered),
+            "paginas": df_clustered[['page_path', 'engagement_rate', 'event_count', 'average_session_duration', 'cluster']].to_dict('records'),
+            "cluster_centers": segmenter.get_cluster_centers().to_dict('records'),
+            "segment_summary": segmenter.get_segment_summary(df_clustered).to_dict('records')
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao aplicar clustering de páginas: {str(e)}")
 
 
 # ===== ANÁLISE DE PÁGINA ESPECÍFICA =====
@@ -259,27 +409,25 @@ async def get_page_clusters():
 @app.get("/api/v1/page_analysis", tags=["Análises Preditivas"])
 async def get_page_analysis(path: str = Query(..., description="Caminho da página (ex: /produtos/item-1)")):
     """
-    Retorna análise completa de uma página específica.
+    Retorna análise completa de uma página específica usando ML real.
     
     - **path**: Caminho da página (ex: /produtos/item-1)
     
-    Retorna dados reais + previsões ML.
+    Retorna dados reais + clustering ML com PageSegmenter.
     """
     try:
-        # Busca dados da página
+        # Busca dados de engajamento da página específica
         page_data = get_db().query_df(f"""
             SELECT 
-                e.page_path,
-                SUM(t.sessions) as sessions,
-                AVG(t.average_session_duration) as avg_session_duration,
-                AVG(e.engagement_rate) as engagement_rate,
-                SUM(t.screen_page_views) as page_views,
-                SUM(c.key_events) as conversions
-            FROM engagement e
-            LEFT JOIN traffic t ON e.date = t.date
-            LEFT JOIN conversions c ON e.date = c.date
-            WHERE e.page_path = '{path}'
-            GROUP BY e.page_path
+                page_path,
+                SUM(event_count) as total_events,
+                AVG(engagement_rate) as engagement_rate,
+                AVG(average_session_duration) as avg_session_duration,
+                SUM(engaged_sessions) as engaged_sessions,
+                COUNT(*) as num_records
+            FROM engagement
+            WHERE page_path = '{path}'
+            GROUP BY page_path
         """)
         
         if page_data.empty:
@@ -287,30 +435,99 @@ async def get_page_analysis(path: str = Query(..., description="Caminho da pági
         
         row = page_data.iloc[0]
         
+        # ===== CLUSTERING ML REAL =====
+        # Busca TODAS as páginas para fazer clustering
+        all_pages_df = get_db().query_df("""
+            SELECT 
+                page_path,
+                AVG(engagement_rate) as engagement_rate,
+                SUM(event_count) as event_count,
+                AVG(average_session_duration) as average_session_duration
+            FROM engagement
+            WHERE page_path IS NOT NULL
+            GROUP BY page_path
+            HAVING SUM(event_count) > 3
+        """)
+        
+        # Aplica PageSegmenter ML
+        if not all_pages_df.empty and len(all_pages_df) >= 3:
+            segmenter = PageSegmenter(n_clusters=min(3, len(all_pages_df)))
+            all_pages_clustered = segmenter.fit_transform(all_pages_df)
+            
+            # Encontra o cluster da página específica
+            page_cluster = all_pages_clustered[all_pages_clustered['page_path'] == path]
+            
+            if not page_cluster.empty:
+                cluster_id = int(page_cluster['cluster'].iloc[0])
+                
+                # Pega o resumo do cluster
+                summary = segmenter.get_segment_summary(all_pages_clustered)
+                cluster_info = summary[summary['cluster'] == cluster_id]
+                
+                if not cluster_info.empty:
+                    avg_eng = float(cluster_info['avg_engagement_rate'].iloc[0])
+                    avg_events = float(cluster_info['avg_event_count'].iloc[0])
+                    
+                    # Nomeia o cluster baseado nas características
+                    if avg_eng > 0.65 and avg_events > 150:
+                        cluster_name = f"Cluster {cluster_id}: Alto Engajamento Premium"
+                    elif avg_eng > 0.5 and avg_events > 80:
+                        cluster_name = f"Cluster {cluster_id}: Engajamento Médio-Alto"
+                    elif avg_eng > 0.4:
+                        cluster_name = f"Cluster {cluster_id}: Engajamento Médio"
+                    else:
+                        cluster_name = f"Cluster {cluster_id}: Baixo Engajamento"
+                    
+                    cluster_stats = {
+                        "avgEngagement": round(avg_eng, 2),
+                        "avgEvents": round(avg_events, 2),
+                        "totalPagesInCluster": int(cluster_info['count'].iloc[0])
+                    }
+                else:
+                    cluster_name = f"Cluster {cluster_id}"
+                    cluster_stats = {}
+            else:
+                cluster_name = "Página Única (sem cluster)"
+                cluster_id = -1
+                cluster_stats = {}
+        else:
+            cluster_name = "Dados insuficientes para clustering"
+            cluster_id = -1
+            cluster_stats = {}
+        
         # Classifica risco de rejeição baseado em engagement
         engagement = float(row['engagement_rate']) if row['engagement_rate'] else 0
         risco = "Baixo" if engagement > 0.6 else "Médio" if engagement > 0.4 else "Alto"
         
-        # Classifica tipo de página
-        conversions = int(row['conversions']) if row['conversions'] else 0
-        if conversions > 50:
-            cluster_name = "Produto de Sucesso"
-        elif engagement > 0.6:
-            cluster_name = "Conteúdo de Alto Engajamento"
-        else:
-            cluster_name = "Página com Potencial de Melhoria"
+        # Busca contexto geral do site
+        traffic_stats = get_db().query_df("""
+            SELECT 
+                AVG(sessions) as avg_sessions,
+                AVG(screen_page_views) as avg_page_views
+            FROM traffic
+        """)
+        
+        avg_sessions = int(traffic_stats['avg_sessions'].iloc[0]) if not traffic_stats.empty else 0
+        avg_page_views = int(traffic_stats['avg_page_views'].iloc[0]) if not traffic_stats.empty else 0
         
         return {
             "pagePath": path,
             "dadosReais": {
-                "sessions": int(row['sessions']) if row['sessions'] else 0,
-                "pageViews": int(row['page_views']) if row['page_views'] else 0,
-                "averageSessionDuration": round(float(row['avg_session_duration']), 2) if row['avg_session_duration'] else 0,
+                "totalEvents": int(row['total_events']) if row['total_events'] else 0,
                 "engagementRate": round(engagement, 2),
-                "conversions": conversions
+                "averageSessionDuration": round(float(row['avg_session_duration']), 2) if row['avg_session_duration'] else 0,
+                "engagedSessions": int(row['engaged_sessions']) if row['engaged_sessions'] else 0,
+                "numRecords": int(row['num_records'])
             },
-            "analisePreditiva": {
+            "contextGeral": {
+                "avgSessionsSite": avg_sessions,
+                "avgPageViewsSite": avg_page_views
+            },
+            "analiseML": {
+                "algoritmo": "K-Means (PageSegmenter)",
+                "clusterId": cluster_id,
                 "clusterName": cluster_name,
+                "clusterStats": cluster_stats,
                 "riscoDeRejeicao": risco
             }
         }
@@ -335,16 +552,23 @@ async def predict_simulator(input_data: PageSimulatorInput):
     - Recomendações de otimização
     """
     try:
-        # Busca dados históricos similares para baseline
-        similar_pages = get_db().query_df("""
+        # Busca baseline de cada tabela separadamente
+        engagement_baseline = get_db().query_df("""
+            SELECT AVG(engagement_rate) as avg_engagement
+            FROM engagement
+        """)
+        
+        traffic_baseline = get_db().query_df("""
+            SELECT AVG(average_session_duration) as avg_duration
+            FROM traffic
+            WHERE average_session_duration IS NOT NULL
+        """)
+        
+        conversion_baseline = get_db().query_df("""
             SELECT 
-                AVG(e.engagement_rate) as avg_engagement,
-                AVG(t.average_session_duration) as avg_duration,
-                AVG(c.key_events::FLOAT / NULLIF(t.sessions, 0)) as conversion_rate
-            FROM engagement e
-            LEFT JOIN traffic t ON e.date = t.date
-            LEFT JOIN conversions c ON e.date = c.date
-            WHERE t.sessions > 10
+                SUM(key_events) as total_conversions,
+                (SELECT SUM(sessions) FROM traffic) as total_sessions
+            FROM conversions
         """)
         
         # Modelo simplificado baseado em heurísticas
@@ -353,9 +577,14 @@ async def predict_simulator(input_data: PageSimulatorInput):
         preco = input_data.precoDoProduto
         
         # Baseline do banco
-        baseline_engagement = float(similar_pages['avg_engagement'].iloc[0]) if not similar_pages.empty else 0.5
-        baseline_duration = float(similar_pages['avg_duration'].iloc[0]) if not similar_pages.empty else 180
-        baseline_conversion = float(similar_pages['conversion_rate'].iloc[0]) if not similar_pages.empty else 0.02
+        baseline_engagement = float(engagement_baseline['avg_engagement'].iloc[0]) if not engagement_baseline.empty else 0.5
+        baseline_duration = float(traffic_baseline['avg_duration'].iloc[0]) if not traffic_baseline.empty else 180
+        
+        # Calcula taxa de conversão
+        if not conversion_baseline.empty and conversion_baseline['total_sessions'].iloc[0]:
+            baseline_conversion = float(conversion_baseline['total_conversions'].iloc[0]) / float(conversion_baseline['total_sessions'].iloc[0])
+        else:
+            baseline_conversion = 0.02
         
         # Ajustes baseados em features
         # Contagem de palavras: mais palavras = maior duração, melhor engagement
@@ -657,10 +886,415 @@ async def get_data_summary():
         raise HTTPException(status_code=500, detail=f"Erro ao gerar resumo: {str(e)}")
 
 
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Fecha conexão com banco ao desligar."""
-    db.close()
+
+
+# ===== RELATÓRIOS INTELIGENTES COM AGNO =====
+
+@app.post("/api/v1/reports/generate", tags=["Reports"], response_model=dict)
+async def generate_report(request: ReportRequest):
+    """
+    🤖 Gera relatório analítico narrativo usando IA (Agno + OpenAI).
+    
+    Este endpoint coleta dados de todas as análises disponíveis e usa um agente de IA
+    para gerar um relatório compreensível com insights acionáveis e recomendações.
+    
+    **Parâmetros:**
+    - **period_days**: Período de análise (padrão: 30 dias)
+    - **focus_areas**: Áreas de foco opcionais (traffic, conversions, engagement, keywords)
+    - **detail_level**: Nível de detalhe (executive, detailed, technical)
+    - **language**: Idioma do relatório (padrão: pt-br)
+    
+    **Retorna:**
+    - Executive summary narrativo
+    - Seções detalhadas com insights por área
+    - Recomendações priorizadas (high/medium/low)
+    - Metadata com confidence score
+    
+    **Tempo de resposta esperado:** 7-15 segundos
+    """
+    try:
+        logger.info(f"Iniciando geração de relatório: period_days={request.period_days}, detail_level={request.detail_level}")
+        
+        # ETAPA 1: Coleta paralela de dados de todos os endpoints
+        logger.info("Coletando dados dos endpoints...")
+        
+        async def collect_all_data():
+            """Coleta dados de todos os endpoints em paralelo."""
+            tasks = {
+                'kpis': get_kpis(),
+                'channel_clusters': get_channel_clusters(n_clusters=3),
+                'keyword_clusters': get_keyword_clusters(n_clusters=3),
+                'page_clusters': get_page_clusters_ml(n_clusters=3),
+                'correlations': get_correlation_matrix()
+            }
+            
+            results = {}
+            for key, task in tasks.items():
+                try:
+                    results[key] = await task
+                except Exception as e:
+                    logger.warning(f"Erro ao coletar {key}: {str(e)}")
+                    results[key] = {}
+            
+            return results
+        
+        data_collection = await collect_all_data()
+        
+        # Adicionar informações de período
+        end_date = datetime.now().date()
+        start_date = end_date - timedelta(days=request.period_days)
+        data_collection['period'] = {
+            'start_date': start_date.isoformat(),
+            'end_date': end_date.isoformat(),
+            'days': request.period_days
+        }
+        
+        logger.info("Dados coletados com sucesso")
+        
+        # ETAPA 2: Preparar contexto estruturado para o agente
+        context_prompt = f"""
+Gere um relatório analítico completo baseado nos seguintes dados de marketing digital:
+
+## 📅 Período de Análise
+- **Início**: {data_collection['period']['start_date']}
+- **Fim**: {data_collection['period']['end_date']}
+- **Duração**: {data_collection['period']['days']} dias
+
+## 📊 KPIs Gerais
+{format_kpis(data_collection.get('kpis', {}))}
+
+## 🚀 Clusters de Canais de Tráfego
+{format_channel_clusters(data_collection.get('channel_clusters', {}))}
+
+## 🔍 Clusters de Keywords (Google Search Console)
+{format_keyword_clusters(data_collection.get('keyword_clusters', {}))}
+
+## 📄 Clusters de Páginas (Por Engajamento)
+{format_page_clusters(data_collection.get('page_clusters', {}))}
+
+## 🔗 Matriz de Correlação entre Métricas
+{format_correlations(data_collection.get('correlations', {}))}
+
+---
+
+## 🎯 Instruções Específicas para este Relatório
+
+- **Nível de Detalhe**: {request.detail_level}
+- **Áreas de Foco**: {', '.join(request.focus_areas) if request.focus_areas else 'Análise completa de todas as áreas'}
+- **Idioma**: {request.language}
+- **Tom**: {'Executivo e estratégico' if request.detail_level == 'executive' else 'Detalhado e técnico' if request.detail_level == 'technical' else 'Balanceado'}
+
+## 📋 Lembre-se de:
+1. Dar nomes significativos aos clusters (não usar apenas números)
+2. Incluir 2-4 key insights por seção
+3. Gerar 5-8 recomendações priorizadas
+4. Sempre citar dados específicos
+5. Usar linguagem clara para stakeholders não-técnicos
+"""
+        
+        logger.info("Contexto preparado, invocando agente Agno...")
+        
+        # ETAPA 3: Invocar agente Agno para geração do relatório
+        try:
+            # Criar agente (lazy initialization)
+            logger.info("Criando agente Agno...")
+            agent = create_report_agent(debug_mode=True)  # Debug ativado temporariamente
+            logger.info("Agente criado com sucesso")
+            
+            # Executar geração do relatório
+            logger.info("Executando agent.run()...")
+            response = agent.run(context_prompt)
+            logger.info(f"Response recebido: type={type(response)}")
+            logger.info(f"Response.__class__.__name__: {response.__class__.__name__}")
+            logger.info(f"hasattr(response, 'content'): {hasattr(response, 'content')}")
+            if hasattr(response, 'content'):
+                logger.info(f"type(response.content): {type(response.content)}")
+                logger.info(f"response.content.__class__.__name__: {response.content.__class__.__name__}")
+            
+            # O Agno retorna o objeto diretamente quando usa output_schema
+            if hasattr(response, 'content') and isinstance(response.content, AnalyticsReport):
+                logger.info("✅ Response.content é AnalyticsReport (Pydantic model)")
+                report_data = {
+                    "executive_summary": response.content.executive_summary,
+                    "sections": [s.dict() for s in response.content.sections],
+                    "recommendations": [r.dict() for r in response.content.recommendations]
+                }
+                logger.info(f"Relatório parseado: {len(report_data['sections'])} seções, {len(report_data['recommendations'])} recomendações")
+            elif hasattr(response, 'content') and isinstance(response.content, str):
+                logger.info(f"Response tem content (string)")
+                # Tentar parsear como JSON
+                import json
+                try:
+                    report_data = json.loads(response.content)
+                    logger.info("JSON parseado com sucesso")
+                except Exception as json_error:
+                    logger.warning(f"Resposta não é JSON válido: {str(json_error)}")
+                    # Se não for JSON válido, criar estrutura básica
+                    report_data = {
+                        "executive_summary": str(response.content)[:500],
+                        "sections": [],
+                        "recommendations": []
+                    }
+            else:
+                logger.error(f"Tipo não reconhecido! response type: {type(response)}")
+                raise Exception(f"Resposta do agente em formato não esperado: {type(response)}")
+            
+            logger.info("Relatório gerado com sucesso pelo agente")
+            
+        except Exception as e:
+            logger.error(f"Erro ao invocar agente Agno: {str(e)}", exc_info=True)
+            # Fallback: gerar relatório simplificado
+            logger.info("Usando fallback: relatório simplificado")
+            report_data = generate_simple_fallback_report(data_collection)
+        
+        # ETAPA 4: Calcular confidence score
+        confidence = calculate_confidence_score(data_collection)
+        
+        # ETAPA 5: Estruturar resposta final
+        report = {
+            "report_id": str(uuid.uuid4()),
+            "generated_at": datetime.now().isoformat(),
+            "period": data_collection['period'],
+            "executive_summary": report_data.get("executive_summary", ""),
+            "sections": report_data.get("sections", []),
+            "recommendations": report_data.get("recommendations", []),
+            "metadata": {
+                "data_sources": list(data_collection.keys()),
+                "ml_models_used": ["channel_profiling", "keyword_clustering", "page_segmentation"],
+                "agent_model": "gpt-4o-mini",
+                "confidence_score": confidence,
+                "generation_timestamp": datetime.now().isoformat(),
+                "request_parameters": {
+                    "period_days": request.period_days,
+                    "detail_level": request.detail_level,
+                    "focus_areas": request.focus_areas,
+                    "language": request.language
+                }
+            }
+        }
+        
+        logger.info(f"Relatório completo gerado: report_id={report['report_id']}, confidence={confidence}")
+        
+        return report
+        
+    except Exception as e:
+        logger.error(f"Erro ao gerar relatório: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Erro ao gerar relatório: {str(e)}"
+        )
+
+
+def generate_simple_fallback_report(data: dict) -> dict:
+    """
+    Gera relatório simplificado quando Agno falha.
+    Não usa IA, apenas formata os dados coletados.
+    """
+    kpis = data.get('kpis', {})
+    
+    # Mapear campos para formato correto
+    total_pages = kpis.get('totalPaginas', 0)
+    total_sessions = kpis.get('sessoesTotais', 0)
+    total_conversions = kpis.get('conversoesTotais', 0)
+    bounce_rate = kpis.get('mediaBounceRate', 0) * 100
+    
+    conversion_rate = (total_conversions / total_sessions * 100) if total_sessions > 0 else 0
+    
+    return {
+        "executive_summary": f"""
+Relatório gerado em modo simplificado (sem IA).
+
+Durante o período analisado, foram registradas {total_sessions:,} sessões 
+com {total_conversions:,} conversões, resultando em uma taxa de conversão 
+de {conversion_rate:.2f}%. A taxa de rejeição foi de {bounce_rate:.2f}%.
+
+Dados completos disponíveis nos endpoints individuais de análise.
+""".strip(),
+        "sections": [
+            {
+                "title": "📊 KPIs Principais",
+                "content": format_kpis(kpis),
+                "key_insights": ["Relatório em modo simplificado", "Configure OPENAI_API_KEY para relatórios completos"]
+            }
+        ],
+        "recommendations": []
+    }
+
+
+# ===== ENDPOINT ADMINISTRATIVO - POPULAR DADOS =====
+
+class PopulateDatabaseRequest(BaseModel):
+    """Request para popular o banco de dados com dados simulados."""
+    days: int = Field(default=30, ge=1, le=365, description="Número de dias de dados a gerar")
+    overwrite: bool = Field(default=False, description="Se True, limpa dados existentes antes de popular")
+    admin_key: Optional[str] = Field(default=None, description="Chave de administrador (configurar em .env)")
+
+
+@app.post("/api/v1/admin/populate-database")
+async def populate_database(request: PopulateDatabaseRequest):
+    """
+    🔒 ENDPOINT ADMINISTRATIVO - Popular banco de dados com dados simulados
+    
+    Este endpoint permite gerar dados sintéticos realistas para testes e desenvolvimento.
+    
+    **IMPORTANTE**: Em produção, configure ADMIN_KEY no .env para proteger este endpoint.
+    
+    Parâmetros:
+    - days: Número de dias de dados históricos (1-365)
+    - overwrite: Se True, limpa dados existentes
+    - admin_key: Chave de segurança (obrigatória em produção)
+    
+    Exemplo:
+    ```bash
+    curl -X POST "http://localhost:8000/api/v1/admin/populate-database" \\
+      -H "Content-Type: application/json" \\
+      -d '{"days": 30, "overwrite": false, "admin_key": "sua_chave_secreta"}'
+    ```
+    """
+    
+    # 🔒 Verificação de segurança em produção
+    admin_key_env = os.getenv("ADMIN_KEY", None)
+    if admin_key_env:  # Se ADMIN_KEY está configurada no .env
+        if not request.admin_key or request.admin_key != admin_key_env:
+            raise HTTPException(
+                status_code=403,
+                detail="Acesso negado. ADMIN_KEY inválida ou ausente."
+            )
+    
+    try:
+        # Importa o simulador
+        from tests.simulador_dados import DataSimulator
+        
+        logger.info(f"🔄 Iniciando população do banco de dados: {request.days} dias")
+        
+        # Instancia o simulador
+        simulator = DataSimulator(days=request.days)
+        
+        # Se overwrite=True, limpa dados existentes
+        db_instance = get_db()
+        if request.overwrite:
+            logger.warning("⚠️ Limpando dados existentes do banco...")
+            # Aqui você pode adicionar lógica para limpar tabelas específicas
+            # Por enquanto vamos apenas logar o aviso
+        
+        # Gera dados simulados
+        logger.info("📊 Gerando dados simulados...")
+        ga4_traffic = simulator.generate_ga4_traffic()
+        ga4_engagement = simulator.generate_ga4_engagement()
+        ga4_conversions = simulator.generate_ga4_conversions()
+        gsc_data = simulator.generate_gsc_performance()
+        
+        # Salva no banco
+        logger.info("💾 Salvando no banco de dados...")
+        
+        # Traffic
+        for record in ga4_traffic:
+            db_instance.store_ga4_traffic(record)
+        
+        # Engagement
+        for record in ga4_engagement:
+            db_instance.store_ga4_engagement(record)
+        
+        # Conversions
+        for record in ga4_conversions:
+            db_instance.store_ga4_conversions(record)
+        
+        # GSC
+        for record in gsc_data:
+            db_instance.store_gsc_performance(record)
+        
+        logger.info("✅ População do banco concluída com sucesso!")
+        
+        # Retorna estatísticas
+        return {
+            "status": "success",
+            "message": f"Banco de dados populado com {request.days} dias de dados",
+            "statistics": {
+                "days_generated": request.days,
+                "traffic_records": len(ga4_traffic),
+                "engagement_records": len(ga4_engagement),
+                "conversion_records": len(ga4_conversions),
+                "gsc_records": len(gsc_data),
+                "overwrite_mode": request.overwrite
+            },
+            "next_steps": [
+                "Use GET /api/v1/kpis para visualizar KPIs",
+                "Use POST /api/v1/reports/generate para gerar relatórios",
+                "Use GET /api/v1/channel-clusters para análise de canais"
+            ]
+        }
+        
+    except ImportError as e:
+        logger.error(f"❌ Erro ao importar simulador: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Módulo simulador não encontrado. Certifique-se de que tests/simulador_dados.py existe."
+        )
+    except Exception as e:
+        logger.error(f"❌ Erro ao popular banco: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao popular banco de dados: {str(e)}"
+        )
+
+
+@app.get("/api/v1/admin/database-stats")
+async def get_database_stats():
+    """
+    📊 Estatísticas do banco de dados
+    
+    Retorna informações sobre os dados armazenados no DuckDB.
+    """
+    try:
+        db_instance = get_db()
+        
+        # Consulta contagens
+        traffic_count = db_instance.conn.execute(
+            "SELECT COUNT(*) FROM ga4_traffic"
+        ).fetchone()[0]
+        
+        engagement_count = db_instance.conn.execute(
+            "SELECT COUNT(*) FROM ga4_engagement"
+        ).fetchone()[0]
+        
+        conversions_count = db_instance.conn.execute(
+            "SELECT COUNT(*) FROM ga4_conversions"
+        ).fetchone()[0]
+        
+        gsc_count = db_instance.conn.execute(
+            "SELECT COUNT(*) FROM gsc_performance"
+        ).fetchone()[0]
+        
+        # Período de dados
+        date_range = db_instance.conn.execute("""
+            SELECT 
+                MIN(date) as min_date,
+                MAX(date) as max_date
+            FROM ga4_traffic
+        """).fetchone()
+        
+        return {
+            "database_file": "data/processed/ga4_data.duckdb",
+            "record_counts": {
+                "ga4_traffic": traffic_count,
+                "ga4_engagement": engagement_count,
+                "ga4_conversions": conversions_count,
+                "gsc_performance": gsc_count,
+                "total": traffic_count + engagement_count + conversions_count + gsc_count
+            },
+            "date_range": {
+                "start": str(date_range[0]) if date_range[0] else None,
+                "end": str(date_range[1]) if date_range[1] else None
+            },
+            "status": "operational"
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao obter estatísticas: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao consultar banco de dados: {str(e)}"
+        )
 
 
 if __name__ == "__main__":

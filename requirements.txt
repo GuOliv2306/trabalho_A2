@@ -19,6 +19,13 @@ duckdb>=0.10.0
 pandas>=2.0.0
 numpy>=1.24.0
 
+# Machine Learning
+scikit-learn>=1.3.0
+
+# AI/ML Report Generation
+agno>=0.3.0
+openai>=1.0.0
+
 # Testing
 pytest>=7.4.0
 httpx>=0.24.0
