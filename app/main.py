@@ -1299,10 +1299,14 @@ async def get_database_stats():
 
 if __name__ == "__main__":
     import uvicorn
+    import os
+    
+    # Usar 0.0.0.0 para aceitar conexões externas (Render, produção)
+    # Usar porta do ambiente ou 8000 como padrão
     uvicorn.run(
         "app.main:app",
-        host="localhost",
-        port=8000,
+        host="0.0.0.0",  # ✅ Aceita conexões de qualquer IP (necessário para Render)
+        port=int(os.getenv("PORT", 8000)),  # ✅ Render define PORT automaticamente
         reload=True,
         log_level="info"
     )
