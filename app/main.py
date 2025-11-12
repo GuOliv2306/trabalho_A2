@@ -1277,21 +1277,21 @@ async def get_database_stats():
     try:
         db_instance = get_db()
         
-        # Consulta contagens
+        # Consulta contagens (nomes corretos das tabelas)
         traffic_count = db_instance.conn.execute(
-            "SELECT COUNT(*) FROM ga4_traffic"
+            "SELECT COUNT(*) FROM traffic"
         ).fetchone()[0]
         
         engagement_count = db_instance.conn.execute(
-            "SELECT COUNT(*) FROM ga4_engagement"
+            "SELECT COUNT(*) FROM engagement"
         ).fetchone()[0]
         
         conversions_count = db_instance.conn.execute(
-            "SELECT COUNT(*) FROM ga4_conversions"
+            "SELECT COUNT(*) FROM conversions"
         ).fetchone()[0]
         
         gsc_count = db_instance.conn.execute(
-            "SELECT COUNT(*) FROM gsc_performance"
+            "SELECT COUNT(*) FROM gsc_query_performance"
         ).fetchone()[0]
         
         # Período de dados
@@ -1299,16 +1299,16 @@ async def get_database_stats():
             SELECT 
                 MIN(date) as min_date,
                 MAX(date) as max_date
-            FROM ga4_traffic
+            FROM traffic
         """).fetchone()
         
         return {
             "database_file": "data/processed/ga4_data.duckdb",
             "record_counts": {
-                "ga4_traffic": traffic_count,
-                "ga4_engagement": engagement_count,
-                "ga4_conversions": conversions_count,
-                "gsc_performance": gsc_count,
+                "traffic": traffic_count,
+                "engagement": engagement_count,
+                "conversions": conversions_count,
+                "gsc_query_performance": gsc_count,
                 "total": traffic_count + engagement_count + conversions_count + gsc_count
             },
             "date_range": {
