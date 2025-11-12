@@ -1173,9 +1173,20 @@ async def populate_database(request: PopulateDatabaseRequest):
         # Se overwrite=True, limpa dados existentes
         db_instance = get_db()
         if request.overwrite:
-            logger.warning("⚠️ Limpando dados existentes do banco...")
-            # Aqui você pode adicionar lógica para limpar tabelas específicas
-            # Por enquanto vamos apenas logar o aviso
+            logger.warning("⚠️ Modo overwrite ativado - limpando dados existentes...")
+            try:
+                # Limpar tabelas GA4
+                db_instance.conn.execute("DELETE FROM ga4_traffic")
+                db_instance.conn.execute("DELETE FROM ga4_engagement")
+                db_instance.conn.execute("DELETE FROM ga4_conversions")
+                db_instance.conn.execute("DELETE FROM gsc_performance")
+                logger.info("✅ Dados antigos removidos com sucesso")
+            except Exception as e:
+                logger.error(f"❌ Erro ao limpar dados: {e}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Erro ao limpar dados existentes: {str(e)}"
+                )
         
         # Gera dados simulados
         logger.info("📊 Gerando dados simulados...")
