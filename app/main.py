@@ -1216,21 +1216,21 @@ async def populate_database(request: PopulateDatabaseRequest):
         # Salva no banco
         logger.info("💾 Salvando no banco de dados...")
         
-        # Traffic
-        for record in ga4_traffic:
-            db_instance.store_ga4_traffic(record)
+        # Traffic (inserir em lote é mais rápido)
+        db_instance.insert_traffic_data(ga4_traffic)
+        logger.info(f"   ✅ {len(ga4_traffic)} registros de tráfego salvos")
         
         # Engagement
-        for record in ga4_engagement:
-            db_instance.store_ga4_engagement(record)
+        db_instance.insert_engagement_data(ga4_engagement)
+        logger.info(f"   ✅ {len(ga4_engagement)} registros de engagement salvos")
         
         # Conversions
-        for record in ga4_conversions:
-            db_instance.store_ga4_conversions(record)
+        db_instance.insert_conversions_data(ga4_conversions)
+        logger.info(f"   ✅ {len(ga4_conversions)} registros de conversões salvos")
         
         # GSC
-        for record in gsc_data:
-            db_instance.store_gsc_performance(record)
+        db_instance.insert_gsc_query_data(gsc_data)
+        logger.info(f"   ✅ {len(gsc_data)} registros GSC salvos")
         
         logger.info("✅ População do banco concluída com sucesso!")
         
