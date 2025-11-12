@@ -1181,11 +1181,11 @@ async def populate_database(request: PopulateDatabaseRequest):
         if request.overwrite:
             logger.warning("⚠️ Modo overwrite ativado - limpando dados existentes...")
             try:
-                # Limpar tabelas GA4
-                db_instance.conn.execute("DELETE FROM ga4_traffic")
-                db_instance.conn.execute("DELETE FROM ga4_engagement")
-                db_instance.conn.execute("DELETE FROM ga4_conversions")
-                db_instance.conn.execute("DELETE FROM gsc_performance")
+                # Limpar tabelas
+                db_instance.conn.execute("DELETE FROM traffic")
+                db_instance.conn.execute("DELETE FROM engagement")
+                db_instance.conn.execute("DELETE FROM conversions")
+                db_instance.conn.execute("DELETE FROM gsc_query_performance")
                 logger.info("✅ Dados antigos removidos com sucesso")
             except Exception as e:
                 logger.error(f"❌ Erro ao limpar dados: {e}")
