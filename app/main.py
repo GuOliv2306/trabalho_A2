@@ -1162,13 +1162,19 @@ async def populate_database(request: PopulateDatabaseRequest):
             )
     
     try:
-        # Importa o simulador
-        from tests.simulador_dados import DataSimulator
+        # Importa os simuladores (GA4 e GSC)
+        from tests.simulador_dados import GA4Simulator, GSCSimulator
+        from datetime import datetime, timedelta
         
         logger.info(f"🔄 Iniciando população do banco de dados: {request.days} dias")
         
-        # Instancia o simulador
-        simulator = DataSimulator(days=request.days)
+        # Calcular período
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=request.days)
+        
+        # Instancia os simuladores
+        ga4_sim = GA4Simulator()
+        gsc_sim = GSCSimulator()
         
         # Se overwrite=True, limpa dados existentes
         db_instance = get_db()
@@ -1190,10 +1196,22 @@ async def populate_database(request: PopulateDatabaseRequest):
         
         # Gera dados simulados
         logger.info("📊 Gerando dados simulados...")
-        ga4_traffic = simulator.generate_ga4_traffic()
-        ga4_engagement = simulator.generate_ga4_engagement()
-        ga4_conversions = simulator.generate_ga4_conversions()
-        gsc_data = simulator.generate_gsc_performance()
+        
+        # GA4 Traffic
+        ga4_traffic = ga4_sim.generate_traffic_data(start_date, request.days)
+        logger.info(f"   → {len(ga4_traffic)} registros de tráfego")
+        
+        # GA4 Engagement  
+        ga4_engagement = ga4_sim.generate_engagement_data(start_date, request.days)
+        logger.info(f"   → {len(ga4_engagement)} registros de engagement")
+        
+        # GA4 Conversions
+        ga4_conversions = ga4_sim.generate_conversions_data(start_date, request.days)
+        logger.info(f"   → {len(ga4_conversions)} registros de conversões")
+        
+        # GSC Performance
+        gsc_data = gsc_sim.generate_query_performance(start_date, end_date)
+        logger.info(f"   → {len(gsc_data)} registros GSC")
         
         # Salva no banco
         logger.info("💾 Salvando no banco de dados...")
