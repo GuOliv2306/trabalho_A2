@@ -4,3 +4,7 @@ __pycache__/
 .env
 .vscode/
 .DS_Store
+credentials.json
+*-credentials.json
+service-account*.json
+service_account*.json
