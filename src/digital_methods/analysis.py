@@ -7,6 +7,7 @@ sobre o tema E sobre a plataforma que produziu o dado; por isso as rotas devolve
 junto uma `leitura_do_meio`.
 """
 
+import math
 import re
 from itertools import combinations
 from typing import Any, Dict, List
@@ -15,6 +16,8 @@ import pandas as pd
 
 REVERTING_TAGS = {"mw-undo", "mw-rollback", "mw-manual-revert"}
 REVERTED_TAG = "mw-reverted"
+# as duas tags chegaram juntas ao MediaWiki: a primeira vista de qualquer uma data a "era das tags"
+ERA_TAGS = {REVERTED_TAG, "mw-manual-revert"}
 
 STOPWORDS = {
     "a", "o", "as", "os", "de", "da", "do", "das", "dos", "e", "em", "no", "na", "nos", "nas",
@@ -25,13 +28,15 @@ LEITURAS = {
     "edit_history": [
         "A amostra são as N revisões mais recentes do artigo, não o histórico inteiro: a janela de tempo muda de artigo para artigo.",
         "Reversão é medida pelas tags do MediaWiki (mw-reverted, mw-undo, mw-rollback). Essas tags são recentes; edições antigas parecem 'calmas' porque o meio ainda não as marcava. Use revert_rate_tagged_era (só conta edições desde tagged_era_start) para comparar.",
+        "tagged_era_start é a primeira tag de reversão observada no corpus coletado: é um limite superior para a data em que a plataforma passou a etiquetar, não a data oficial. Corpus maior aproxima melhor.",
         "'Bot' é quem tem hoje a flag de bot. Robôs sem flag ou desativados contam como humanos registrados.",
         "Anônimos são IPs ou contas temporárias: um mesmo endereço pode ser várias pessoas, e uma pessoa vários endereços. 'Editores únicos' conta contas, não gente.",
         "Quem é revertido (reverted_by_actor) mostra como a plataforma distribui confiança, não só quem 'erra'.",
     ],
     "controversy": [
         "O ranking ordena por taxa de reversão: é uma medida de disputa registrada pela plataforma, não de discordância social sobre o tema.",
-        "A taxa só conta edições desde plataforma.tag_era_start (primeira tag mw-reverted do corpus): antes disso o meio não registrava o objeto 'edição revertida'.",
+        "Todas as colunas (reversão, anônimos, robôs, concentração) contam só edições desde plataforma.tag_era_start, a primeira tag de reversão observada no corpus. Antes disso não há como saber se uma edição foi revertida; a data é a observada na amostra, não a oficial da plataforma.",
+        "Artigos com low_sample=true têm menos edições na era do que min_edits: a taxa deles é instável (2 reversões em 15 edições já dão 13%) e eles vão para o fim do ranking.",
         "Compare plataforma.last_anon_edit com tag_era_start: se a edição anônima some perto de quando as reversões passam a ser marcadas, 'anônimo não é revertido' é efeito de regras da plataforma (quem pode editar, o que é etiquetado), não comportamento.",
         "O recorte de artigos veio dos links recíprocos da página-semente, ordenados por pageviews: o conjunto já é moldado pela estrutura de links e pela atenção.",
         "Artigos protegidos contra edição têm menos reversões por regra da plataforma, não por consenso.",
@@ -72,21 +77,23 @@ def edit_history_profile(revs: pd.DataFrame, tagged_era_start: Any = None) -> Di
     """
     Perfil do histórico de edições de um artigo (quem edita, quanto, quem é revertido, quando).
 
-    `tagged_era_start`: desde quando o meio marca reversões (tag mw-reverted). Sem valor, usa a
-    primeira ocorrência no próprio artigo; ao comparar artigos, passe a primeira do corpus.
+    `tagged_era_start`: desde quando se observa o meio marcando reversões (tags mw-reverted /
+    mw-manual-revert). Sem valor, usa a primeira ocorrência no próprio artigo; ao comparar
+    artigos, passe a primeira do corpus.
     """
     if revs.empty:
         return {"total_edits": 0}
 
     df = revs.copy()
     df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True)
-    df["tags"] = df["tags"].map(lambda t: t.split("|") if isinstance(t, str) else list(t))
+    df["tags"] = df["tags"].map(
+        lambda t: t.split("|") if isinstance(t, str) else list(t) if isinstance(t, (list, tuple)) else [])
     df["reverting"] = df["tags"].map(lambda t: bool(REVERTING_TAGS & set(t)))
     df["reverted"] = df["tags"].map(lambda t: REVERTED_TAG in t)
     total = len(df)
 
     per_editor = df.groupby("user").size().sort_values(ascending=False)
-    top_n = max(1, round(len(per_editor) * 0.1))
+    top_n = max(1, math.ceil(len(per_editor) * 0.1))
     actor_of = df.dropna(subset=["user"]).drop_duplicates("user").set_index("user")["actor_type"]
 
     month = df["timestamp"].dt.tz_localize(None).dt.to_period("M")
@@ -95,8 +102,9 @@ def edit_history_profile(revs: pd.DataFrame, tagged_era_start: Any = None) -> Di
     reverted = month[df["reverted"]].value_counts().reindex(months, fill_value=0)
     threshold = edits.mean() + 2 * edits.std(ddof=0)
 
+    has_era_tag = df["tags"].map(lambda t: bool(ERA_TAGS & set(t)))
     era = pd.to_datetime(tagged_era_start, utc=True) if tagged_era_start is not None else (
-        df.loc[df["reverted"], "timestamp"].min() if df["reverted"].any() else None)
+        df.loc[has_era_tag, "timestamp"].min() if has_era_tag.any() else None)
     in_era = df[df["timestamp"] >= era] if era is not None else df.iloc[0:0]
 
     return {
@@ -164,7 +172,9 @@ def rank_effect(queries: pd.DataFrame) -> Dict[str, Any]:
         return {"curve": [], "top3_click_share": None, "top3_impression_share": None,
                 "spearman_position_ctr": None}
 
-    df = queries.copy()
+    df = queries.dropna(subset=["query", "position", "impressions", "clicks"]).copy()
+    if df.empty:
+        return rank_effect(df)
     df["pos"] = df["position"].round().clip(lower=1).astype(int)
     curve = df.groupby("pos").agg(
         queries=("query", "count"), impressions=("impressions", "sum"), clicks=("clicks", "sum")
@@ -192,7 +202,7 @@ def query_term_network(queries: pd.DataFrame) -> Dict[str, Any]:
     """Rede de coocorrência de termos nas consultas de busca."""
     nodes: Dict[str, Dict[str, int]] = {}
     edges: Dict[tuple, Dict[str, int]] = {}
-    for row in queries.itertuples():
+    for row in queries.dropna(subset=["query"]).fillna(0).itertuples():
         terms = sorted({t for t in re.findall(r"\w+", str(row.query).lower()) if t not in STOPWORDS and len(t) > 1})
         for t in terms:
             n = nodes.setdefault(t, {"queries": 0, "impressions": 0, "clicks": 0})

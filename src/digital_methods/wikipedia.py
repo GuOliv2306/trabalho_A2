@@ -6,6 +6,7 @@ histórico de edições, links entre os artigos, e as edições em outros idioma
 """
 
 import os
+import re
 import time
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Sequence, Set
 
@@ -124,13 +125,17 @@ def parse_revisions(raw: List[Dict[str, Any]], bots: Set[str]) -> List[Dict[str,
         user = r.get("user")
         if r.get("userhidden") or user is None:
             user, actor = None, "hidden"
-        elif r.get("anon") or user.startswith("~"):  # "~AAAA-N" = conta temporária (IP mascarado)
+        elif r.get("anon") or re.match(r"~\d{4}-", user):  # "~AAAA-N" = conta temporária (IP mascarado)
             actor = "anon"
         elif user in bots:
             actor = "bot"
         else:
             actor = "registered"
         older = raw[i + 1] if i + 1 < len(raw) else None
+        if older:
+            size_diff = r.get("size", 0) - older.get("size", 0)
+        else:  # sem pai = criação do artigo; com pai fora da amostra, não dá para saber
+            size_diff = r.get("size", 0) if not r.get("parentid") else None
         rows.append({
             "revid": r["revid"],
             "parentid": r.get("parentid"),
@@ -138,7 +143,7 @@ def parse_revisions(raw: List[Dict[str, Any]], bots: Set[str]) -> List[Dict[str,
             "user": user,
             "actor_type": actor,
             "size": r.get("size", 0),
-            "size_diff": r.get("size", 0) - older.get("size", 0) if older else None,
+            "size_diff": size_diff,
             "minor": bool(r.get("minor")),
             "comment": r.get("comment", ""),
             "tags": list(r.get("tags", [])),

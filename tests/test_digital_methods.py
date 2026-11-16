@@ -97,6 +97,22 @@ def test_edit_history_interfaces():
     assert p["interface_shares"]["mobile"] == 0.1
 
 
+def test_edit_history_null_tags_and_top10_rounding():
+    df = pd.DataFrame([rev(i, "2024-01-01T00:00:00Z", f"u{i}") for i in range(25)])
+    df["tags"] = None
+    p = analysis.edit_history_profile(df)
+    assert p["reverts"]["reverted_edits"] == 0
+    assert p["concentration"]["top10pct_share"] == 0.12   # 10% de 25 editores arredonda para cima: 3
+
+
+def test_edit_history_era_starts_at_first_revert_tag_of_any_kind():
+    revs = [rev(2, "2024-02-01T00:00:00Z", "a", tags=["mw-reverted"]),
+            rev(1, "2024-01-01T00:00:00Z", "b", tags=["mw-manual-revert"])]
+    p = analysis.edit_history_profile(pd.DataFrame(revs))
+    assert p["reverts"]["tagged_era_start"].startswith("2024-01-01")
+    assert p["reverts"]["revert_rate_tagged_era"] == 0.5
+
+
 def test_edit_history_empty():
     assert analysis.edit_history_profile(pd.DataFrame())["total_edits"] == 0
 
@@ -135,6 +151,24 @@ def test_rank_effect():
     assert r["spearman_position_ctr"] == -1.0   # pior posição, menor CTR
 
 
+def test_rank_effect_ignores_null_rows():
+    dirty = pd.concat([QUERIES, pd.DataFrame([{"query": None, "clicks": 5, "impressions": 10, "position": None}])])
+    assert analysis.rank_effect(dirty) == analysis.rank_effect(QUERIES)
+    assert "none" not in {n["id"] for n in analysis.query_term_network(dirty)["nodes"]}
+
+
+def test_format_digital_methods_survives_empty_values():
+    from app.report_models import format_digital_methods
+    text = format_digital_methods({
+        "rank_effect": {"curve": [{"position": 1, "queries": 1, "impressions": 10, "clicks": 0, "ctr": 0.0}],
+                        "top3_click_share": None, "top3_impression_share": 1.0, "spearman_position_ctr": None},
+        "controversy": {"articles": [{"title": "T", "revert_rate": None, "edits_in_tag_era": 0, "anon_share": None,
+                                      "bot_share": None, "top_editor_share": None, "pageviews_30d": 3,
+                                      "low_sample": True}]},
+    })
+    assert "T" in text and "amostra pequena" in text
+
+
 def test_rank_effect_empty():
     assert analysis.rank_effect(pd.DataFrame())["curve"] == []
 
@@ -158,12 +192,17 @@ def test_parse_revisions_actor_and_diff():
         {"revid": 3, "parentid": 2, "user": "RoboBot", "timestamp": "2024-01-03T00:00:00Z", "size": 120, "tags": []},
         {"revid": 2, "parentid": 1, "user": "9.9.9.9", "anon": True, "timestamp": "2024-01-02T00:00:00Z", "size": 150, "tags": ["mw-reverted"]},
         {"revid": 1, "parentid": 0, "user": "~2024-77", "timestamp": "2024-01-01T00:00:00Z", "size": 100, "tags": []},
-        {"revid": 0, "parentid": 0, "userhidden": True, "timestamp": "2023-12-31T00:00:00Z", "size": 90, "tags": []},
+        {"revid": 0, "parentid": 7, "userhidden": True, "timestamp": "2023-12-31T00:00:00Z", "size": 90, "tags": []},
     ]
     rows = wikipedia.parse_revisions(raw, bots={"RoboBot"})
     assert [r["actor_type"] for r in rows] == ["bot", "anon", "anon", "hidden"]
+    # última da amostra com pai desconhecido: variação indefinida
     assert [r["size_diff"] for r in rows] == [-30, 50, 10, None]
     assert rows[3]["user"] is None
+    # revisão de criação (sem pai): a variação é o próprio tamanho; "~nome" antigo não é conta temporária
+    first = wikipedia.parse_revisions(
+        [{"revid": 1, "parentid": 0, "user": "~riley", "timestamp": "2010-01-01T00:00:00Z", "size": 40, "tags": []}], bots=set())
+    assert first[0]["size_diff"] == 40 and first[0]["actor_type"] == "registered"
 
 
 def test_reciprocal_neighbors_ranked_by_views():
@@ -259,6 +298,11 @@ def test_wikipedia_flow(client, monkeypatch):
     rank = r.json()["articles"]
     assert [a["title"] for a in rank] == ["Tema", "Vizinho"]
     assert rank[0]["revert_rate"] == 0.4 and rank[0]["edits_in_tag_era"] == 5
+    # mesma régua e mesmo denominador (5 edições da era) em todas as colunas e nas duas rotas
+    assert rank[0]["anon_share"] == 0.2 and rank[0]["low_sample"] is True
+    assert body["reverts"]["revert_rate_tagged_era"] == rank[0]["revert_rate"]
+    ok = client.get("/api/v1/digital-methods/wikipedia/controversy", params={"min_edits": 5}).json()["articles"]
+    assert ok[0]["low_sample"] is False
     assert rank[0]["pageviews_30d"] == 50
     # Vizinho só tem edição anterior à era das tags: sem taxa, vai para o fim
     assert rank[1]["revert_rate"] is None and rank[1]["edits_in_tag_era"] == 0
@@ -283,6 +327,46 @@ def test_recollect_same_seed_replaces_corpus(client, monkeypatch):
     assert db.query_df("SELECT title FROM wiki_pages")["title"].tolist() == ["Tema"]
     assert db.query_df("SELECT COUNT(*) AS n FROM wiki_revisions")["n"][0] == 10
     assert db.query_df("SELECT COUNT(*) AS n FROM wiki_links")["n"][0] == 0
+
+
+def test_overlapping_seeds_do_not_corrupt_each_other(client, monkeypatch):
+    other = {"lang": "pt", "seed": "Outro",
+             "pages": [{"title": "Outro", "pageid": 3, "length": 1, "pageviews_30d": 1}, FAKE["pages"][1]],
+             "revisions": {"Outro": [], "Vizinho": FAKE["revisions"]["Vizinho"]},
+             "links": [("Outro", "Vizinho"), ("Vizinho", "Outro")], "editions": []}
+    net = "/api/v1/digital-methods/wikipedia/link-network"
+    for data in (FAKE, other, FAKE):   # coleta Tema, depois Outro, depois recoleta Tema
+        monkeypatch.setattr(wikipedia, "collect_topic", lambda data=data, **kw: data)
+        assert client.post("/api/v1/digital-methods/wikipedia/collect", json={"seed": data["seed"]}).status_code == 200
+        tema = client.get(net, params={"seed": "Tema"}).json()
+        assert (tema["node_count"], tema["edge_count"]) == (2, 2)
+    outro = client.get(net, params={"seed": "Outro"}).json()
+    assert (outro["node_count"], outro["edge_count"]) == (2, 2)
+    todos = client.get("/api/v1/digital-methods/wikipedia/controversy").json()["articles"]
+    assert sorted(a["title"] for a in todos) == ["Tema", "Vizinho"]   # "Outro" não tem revisões; Vizinho aparece uma vez
+    assert main.get_db().query_df("SELECT COUNT(*) AS n FROM wiki_revisions")["n"][0] == 11
+
+
+def test_collect_rejects_pipe_in_titles(client, monkeypatch):
+    """'|' separa títulos na API da Wikipedia: aceitar burlaria o limite de 24 artigos."""
+    monkeypatch.setattr(wikipedia, "collect_topic", lambda **kw: FAKE)
+    url = "/api/v1/digital-methods/wikipedia/collect"
+    assert client.post(url, json={"seed": "Tema", "titles": ["A|B"]}).status_code == 422
+    assert client.post(url, json={"seed": "A|B"}).status_code == 422
+    assert client.post(url, json={"seed": "Tema", "lang": "zh-min-nan"}).status_code == 200
+
+
+def test_report_gets_digital_methods_even_without_ai(client, monkeypatch):
+    """Sem OPENAI_API_KEY o relatório cai no modo simples, mas a leitura do meio tem de estar lá."""
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setattr(wikipedia, "collect_topic", lambda **kw: FAKE)
+    client.post("/api/v1/digital-methods/wikipedia/collect", json={"seed": "Tema"})
+    r = client.post("/api/v1/reports/generate", json={"period_days": 7})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert "digital_methods" in body["metadata"]["data_sources"]
+    section = next(s for s in body["sections"] if "Métodos Digitais" in s["title"])
+    assert "Tema" in section["content"] and "reversão 40.0%" in section["content"]
 
 
 def test_wikipedia_missing_article_404(client):

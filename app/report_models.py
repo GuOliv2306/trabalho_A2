@@ -140,25 +140,31 @@ def format_digital_methods(dm: dict) -> str:
     if not dm:
         return "Dados de métodos digitais não disponíveis."
 
+    def pct(value, digits=0):
+        return "s/d" if value is None else f"{value:.{digits}%}"
+
     output = []
     rank = dm.get("rank_effect") or {}
     if rank.get("curve"):
         output.append("**Busca — o ranking produz o clique:**")
-        output.append(f"- Top 3 posições concentram {rank['top3_click_share']:.0%} dos cliques "
-                      f"com {rank['top3_impression_share']:.0%} das impressões")
-        output.append(f"- Correlação de postos posição x CTR: {rank['spearman_position_ctr']}")
-        output.extend(f"- Posição {b['position']}: CTR {b['ctr']:.1%} ({b['queries']} consultas)" for b in rank["curve"][:10])
+        output.append(f"- Top 3 posições concentram {pct(rank.get('top3_click_share'))} dos cliques "
+                      f"com {pct(rank.get('top3_impression_share'))} das impressões")
+        output.append(f"- Correlação de postos posição x CTR: {rank.get('spearman_position_ctr')}")
+        output.extend(f"- Posição {b['position']}: CTR {pct(b['ctr'], 1)} ({b['queries']} consultas)" for b in rank["curve"][:10])
         output.extend(f"- Ressalva: {n}" for n in rank.get("leitura_do_meio", []))
 
-    articles = (dm.get("controversy") or {}).get("articles", [])
+    controversy = dm.get("controversy") or {}
+    articles = controversy.get("articles", [])
     if articles:
-        output.append("\n**Wikipedia — cartografia de controvérsia (dados reais coletados):**")
+        era = (controversy.get("plataforma") or {}).get("tag_era_start")
+        output.append(f"\n**Wikipedia — cartografia de controvérsia (dados reais; edições desde {era}):**")
         output.extend(
-            f"- {a['title']}: reversão {(a['revert_rate'] or 0):.1%} em {a['edits_in_tag_era']} edições, anônimos {a['anon_share']:.0%}, robôs {a['bot_share']:.0%}, "
-            f"editor mais ativo {a['top_editor_share']:.0%} das edições, {a['pageviews_30d']:,} pageviews/30d"
+            f"- {a['title']} ({a['edits_in_tag_era']} edições{', amostra pequena' if a.get('low_sample') else ''}): "
+            f"reversão {pct(a['revert_rate'], 1)}, anônimos {pct(a['anon_share'])}, robôs {pct(a['bot_share'])}, "
+            f"editor mais ativo {pct(a['top_editor_share'])}, {a['pageviews_30d']:,} pageviews/30d"
             for a in articles[:10]
         )
-        output.extend(f"- Ressalva: {n}" for n in dm["controversy"].get("leitura_do_meio", []))
+        output.extend(f"- Ressalva: {n}" for n in controversy.get("leitura_do_meio", []))
 
     return "\n".join(output) or "Dados de métodos digitais não disponíveis."
 
@@ -222,7 +228,7 @@ def calculate_confidence_score(data_collection: dict) -> float:
     
     # Volume de dados: baseado em sessões
     kpis = data_collection.get('kpis', {})
-    total_sessions = kpis.get('total_sessions', 0)
+    total_sessions = kpis.get('sessoesTotais', kpis.get('total_sessions', 0))
     data_volume = min(total_sessions / 1000, 1.0)  # Normaliza para 0-1
     
     # Fórmula final

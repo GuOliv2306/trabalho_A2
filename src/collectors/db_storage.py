@@ -239,7 +239,7 @@ class GA4DatabaseStorage:
             CREATE TABLE IF NOT EXISTS wiki_pages (
                 lang VARCHAR, title VARCHAR, seed VARCHAR, pageid BIGINT,
                 length BIGINT, pageviews_30d BIGINT, collected_at TIMESTAMP,
-                PRIMARY KEY (lang, title)
+                PRIMARY KEY (lang, seed, title)  -- um artigo pode estar no recorte de várias sementes
             )
         """)
         self.conn.execute("""
@@ -253,8 +253,8 @@ class GA4DatabaseStorage:
         """)
         self.conn.execute("""
             CREATE TABLE IF NOT EXISTS wiki_links (
-                lang VARCHAR, source VARCHAR, target VARCHAR,
-                PRIMARY KEY (lang, source, target)
+                lang VARCHAR, seed VARCHAR, source VARCHAR, target VARCHAR,
+                PRIMARY KEY (lang, seed, source, target)
             )
         """)
         self.conn.execute("""
@@ -269,9 +269,9 @@ class GA4DatabaseStorage:
 
     def save_wiki(self, data: Dict[str, Any]) -> Dict[str, int]:
         """
-        Grava o resultado de `wikipedia.collect_topic`, substituindo o que já
-        existia para os mesmos artigos e para a mesma semente (recoletar não
-        duplica nem deixa artigos de um recorte anterior).
+        Grava o resultado de `wikipedia.collect_topic`. Páginas e links pertencem
+        à semente (recoletar substitui o recorte dela sem tocar no de outras);
+        revisões pertencem ao artigo e são atualizadas para os artigos coletados.
 
         Returns:
             Contagem de linhas gravadas por tabela.
@@ -280,8 +280,6 @@ class GA4DatabaseStorage:
 
         lang, seed = data["lang"], data["seed"]
         titles = [p["title"] for p in data["pages"]]
-        old = self.conn.execute("SELECT title FROM wiki_pages WHERE lang = ? AND seed = ?", [lang, seed]).fetchall()
-        stale = sorted({t for (t,) in old} | set(titles))
 
         pages = pd.DataFrame(data["pages"]).assign(lang=lang, seed=seed, collected_at=datetime.now())
         revisions = pd.DataFrame([
@@ -290,14 +288,14 @@ class GA4DatabaseStorage:
         ])
         if not revisions.empty:
             revisions["timestamp"] = pd.to_datetime(revisions["timestamp"], utc=True).dt.tz_localize(None)
-        links = pd.DataFrame(data["links"], columns=["source", "target"]).assign(lang=lang)
+        links = pd.DataFrame(data["links"], columns=["source", "target"]).assign(lang=lang, seed=seed)
         editions = pd.DataFrame(data["editions"]).assign(seed_lang=lang, seed_title=seed)
 
         self.conn.execute("BEGIN")
         try:
-            self.conn.execute("DELETE FROM wiki_pages WHERE lang = ? AND title IN (SELECT unnest(?))", [lang, stale])
-            self.conn.execute("DELETE FROM wiki_revisions WHERE lang = ? AND title IN (SELECT unnest(?))", [lang, stale])
-            self.conn.execute("DELETE FROM wiki_links WHERE lang = ? AND (source IN (SELECT unnest(?)) OR target IN (SELECT unnest(?)))", [lang, stale, stale])
+            self.conn.execute("DELETE FROM wiki_pages WHERE lang = ? AND seed = ?", [lang, seed])
+            self.conn.execute("DELETE FROM wiki_links WHERE lang = ? AND seed = ?", [lang, seed])
+            self.conn.execute("DELETE FROM wiki_revisions WHERE lang = ? AND title IN (SELECT unnest(?))", [lang, titles])
             self.conn.execute("DELETE FROM wiki_editions WHERE seed_lang = ? AND seed_title = ?", [lang, seed])
             for table, df in [("wiki_pages", pages), ("wiki_revisions", revisions),
                               ("wiki_links", links), ("wiki_editions", editions)]:
@@ -305,6 +303,10 @@ class GA4DatabaseStorage:
                     self.conn.register("_wiki_df", df)
                     self.conn.execute(f"INSERT INTO {table} BY NAME SELECT * FROM _wiki_df")
                     self.conn.unregister("_wiki_df")
+            # revisões de artigos que saíram de todos os recortes
+            self.conn.execute(
+                "DELETE FROM wiki_revisions WHERE lang = ? AND title NOT IN (SELECT title FROM wiki_pages WHERE lang = ?)",
+                [lang, lang])
             self.conn.execute("COMMIT")
         except Exception:
             self.conn.execute("ROLLBACK")

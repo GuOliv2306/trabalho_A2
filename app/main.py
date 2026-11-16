@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, Dict, Any, List
 from contextlib import asynccontextmanager
 import re
@@ -71,7 +71,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Dashboard Analytics API",
-    description="API para análise de dados GA4 e GSC com ML predictions",
+    description="API de analytics e métodos digitais (Wikipedia real + GA4/GSC simulados)",
     version="1.0.0",
     lifespan=lifespan
 )
@@ -622,11 +622,14 @@ async def get_data_summary():
 # Objetos nativos do meio (revisões, reversões, links, ranking). Toda resposta traz
 # `leitura_do_meio`: o que o dado diz sobre a plataforma que o produziu.
 
+# vira hostname ({lang}.wikipedia.org): só letras e hífens, nunca ponto ou barra
+WIKI_LANG = r"^[a-z]{2,12}(-[a-z]{2,12}){0,2}$"
+
+
 class WikipediaCollectRequest(BaseModel):
     """Request para coletar um tema na Wikipedia a partir de uma página-semente."""
     seed: str = Field(..., min_length=1, max_length=255, description="Título do artigo-semente")
-    # lang vira hostname ({lang}.wikipedia.org): validar para não apontar a coleta para outro host
-    lang: str = Field(default="pt", pattern=r"^[a-z]{2,3}(-[a-z]{2,12})?$", description="Edição linguística")
+    lang: str = Field(default="pt", pattern=WIKI_LANG, description="Edição linguística")
     max_pages: int = Field(default=10, ge=1, le=25, description="Semente + vizinhos de link recíproco")
     titles: Optional[List[str]] = Field(default=None, max_length=24,
                                         description="Corpus curado: substitui a descoberta automática de vizinhos")
@@ -634,9 +637,29 @@ class WikipediaCollectRequest(BaseModel):
     edition_langs: List[str] = Field(default=["en", "es", "fr", "de"], max_length=10)
     admin_key: Optional[str] = Field(default=None, description="Chave de administrador (configurar em .env)")
 
+    @field_validator("seed")
+    @classmethod
+    def _one_title(cls, v: str) -> str:
+        # "|" separa títulos na API da Wikipedia: aceitar burlaria os limites de artigos por coleta
+        if "|" in v or not v.strip():
+            raise ValueError("título inválido (vazio ou com '|')")
+        return v
+
+    @field_validator("titles")
+    @classmethod
+    def _titles(cls, v):
+        return None if v is None else [cls._one_title(t) for t in v]
+
 
 def _wiki_df(sql: str, params: list) -> pd.DataFrame:
     return get_db().conn.execute(sql, params).fetchdf()
+
+
+def _wiki_tag_era(lang: str):
+    """Primeira tag de reversão observada no corpus do idioma (None se não houver)."""
+    return get_db().conn.execute(
+        """SELECT MIN("timestamp") FROM wiki_revisions
+           WHERE lang = ? AND (tags LIKE '%mw-reverted%' OR tags LIKE '%mw-manual-revert%')""", [lang]).fetchone()[0]
 
 
 @app.post("/api/v1/digital-methods/wikipedia/collect", tags=["Métodos Digitais"])
@@ -653,7 +676,7 @@ async def collect_wikipedia(request: WikipediaCollectRequest):
     if admin_key_env and request.admin_key != admin_key_env:
         raise HTTPException(status_code=403, detail="Acesso negado. ADMIN_KEY inválida ou ausente.")
 
-    langs = [l for l in request.edition_langs if re.fullmatch(r"[a-z]{2,3}(-[a-z]{2,12})?", l)]
+    langs = [l for l in request.edition_langs if re.fullmatch(WIKI_LANG, l)]
     try:
         # rede fora do event loop; escrita no banco de volta nele (uma conexão DuckDB só)
         data = await asyncio.to_thread(
@@ -689,62 +712,69 @@ async def wikipedia_edit_history(title: str = Query(..., description="Título do
     """
     try:
         revs = _wiki_df("SELECT * FROM wiki_revisions WHERE lang = ? AND title = ?", [lang, title])
+        if revs.empty:
+            raise HTTPException(status_code=404, detail=f"Artigo '{title}' ({lang}) não coletado. Use POST /wikipedia/collect.")
+        # mesma régua da rota /controversy: era das tags do corpus, não só deste artigo
+        profile = analysis.edit_history_profile(revs, tagged_era_start=_wiki_tag_era(lang))
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao consultar histórico: {str(e)}")
-    if revs.empty:
-        raise HTTPException(status_code=404, detail=f"Artigo '{title}' ({lang}) não coletado. Use POST /wikipedia/collect.")
-    return {"title": title, "lang": lang, **analysis.edit_history_profile(revs),
-            "leitura_do_meio": analysis.LEITURAS["edit_history"]}
+    return {"title": title, "lang": lang, **profile, "leitura_do_meio": analysis.LEITURAS["edit_history"]}
 
 
 @app.get("/api/v1/digital-methods/wikipedia/controversy", tags=["Métodos Digitais"])
 async def wikipedia_controversy(lang: str = Query("pt"),
-                                seed: Optional[str] = Query(None, description="Filtra por página-semente")):
+                                seed: Optional[str] = Query(None, description="Filtra por página-semente"),
+                                min_edits: int = Query(20, ge=1, description="Abaixo disso a taxa é marcada low_sample")):
     """
-    Cartografia de controvérsia: artigos coletados ordenados por taxa de reversão
-    (medida só desde que a plataforma passou a etiquetar reversões), com quem edita
-    e quanta atenção (pageviews) cada um recebe.
+    Cartografia de controvérsia: artigos coletados ordenados por taxa de reversão, com quem
+    edita e quanta atenção (pageviews) cada um recebe. Todas as colunas contam só edições
+    desde a primeira tag de reversão observada no corpus (`plataforma.tag_era_start`).
     """
     try:
-        pages = _wiki_df(
-            "SELECT title, seed, pageviews_30d, length FROM wiki_pages WHERE lang = ? AND (? IS NULL OR seed = ?)",
-            [lang, seed, seed])
+        pages = _wiki_df("""
+            SELECT title, MIN(seed) AS seed, MAX(pageviews_30d) AS pageviews_30d, MAX(length) AS length
+            FROM wiki_pages WHERE lang = ? AND (? IS NULL OR seed = ?) GROUP BY title
+        """, [lang, seed, seed])
         revs = _wiki_df("SELECT * FROM wiki_revisions WHERE lang = ?", [lang])
+        era = _wiki_tag_era(lang)
+        anon = revs[revs["actor_type"] == "anon"]
+
+        articles = []
+        for page in pages.itertuples():
+            sampled = revs[revs["title"] == page.title]
+            if sampled.empty:
+                continue
+            in_era = sampled[sampled["timestamp"] >= era] if era is not None else sampled.iloc[0:0]
+            p = analysis.edit_history_profile(in_era, tagged_era_start=era)
+            has = bool(p["total_edits"])
+            articles.append({
+                "title": page.title,
+                "seed": page.seed,
+                "edits_sampled": len(sampled),
+                "edits_in_tag_era": len(in_era),
+                "low_sample": len(in_era) < min_edits,
+                "revert_rate": p["reverts"]["revert_rate"] if has else None,
+                "unique_editors": p["unique_editors"] if has else None,
+                "anon_share": p["actor_shares"].get("anon", 0.0) if has else None,
+                "bot_share": p["actor_shares"].get("bot", 0.0) if has else None,
+                "top_editor_share": p["concentration"]["top_editor_share"] if has else None,
+                "bursts": len(p["bursts"]) if has else None,
+                "pageviews_30d": int(page.pageviews_30d),
+                "length": int(page.length),
+            })
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao consultar coleta: {str(e)}")
 
-    # era das tags no corpus inteiro: mesma régua para todos os artigos
-    reverted = revs[revs["tags"].str.contains(analysis.REVERTED_TAG, regex=False)] if not revs.empty else revs
-    era = reverted["timestamp"].min() if not reverted.empty else None
-    anon = revs[revs["actor_type"] == "anon"] if not revs.empty else revs
-
-    articles = []
-    for page in pages.itertuples():
-        p = analysis.edit_history_profile(revs[revs["title"] == page.title], tagged_era_start=era)
-        if not p["total_edits"]:
-            continue
-        articles.append({
-            "title": page.title,
-            "seed": page.seed,
-            "edits_sampled": p["total_edits"],
-            "sample_window": p["sample_window"],
-            "unique_editors": p["unique_editors"],
-            "revert_rate": p["reverts"]["revert_rate_tagged_era"],
-            "edits_in_tag_era": p["reverts"]["edits_in_tagged_era"],
-            "anon_share": p["actor_shares"].get("anon", 0.0),
-            "bot_share": p["actor_shares"].get("bot", 0.0),
-            "top_editor_share": p["concentration"]["top_editor_share"],
-            "bursts": len(p["bursts"]),
-            "pageviews_30d": int(page.pageviews_30d),
-            "length": int(page.length),
-        })
-    articles.sort(key=lambda a: (a["revert_rate"] is None, -(a["revert_rate"] or 0), -a["edits_sampled"], a["title"]))
+    articles.sort(key=lambda a: (a["low_sample"], -(a["revert_rate"] or 0), -a["edits_in_tag_era"], a["title"]))
     return {
         "lang": lang,
         "plataforma": {
             "tag_era_start": pd.Timestamp(era, tz="UTC").isoformat() if era is not None else None,
             "last_anon_edit": pd.Timestamp(anon["timestamp"].max(), tz="UTC").isoformat() if not anon.empty else None,
         },
+        "min_edits": min_edits,
         "articles": articles,
         "leitura_do_meio": analysis.LEITURAS["controversy"],
     }
@@ -755,12 +785,14 @@ async def wikipedia_link_network(lang: str = Query("pt"),
                                  seed: Optional[str] = Query(None, description="Filtra por página-semente")):
     """Rede dirigida de hiperlinks entre os artigos coletados (nós com grau, arestas, densidade, reciprocidade)."""
     try:
-        nodes = _wiki_df("SELECT title FROM wiki_pages WHERE lang = ? AND (? IS NULL OR seed = ?)",
+        nodes = _wiki_df("SELECT DISTINCT title FROM wiki_pages WHERE lang = ? AND (? IS NULL OR seed = ?)",
                          [lang, seed, seed])["title"].tolist()
-        edges = _wiki_df("SELECT source, target FROM wiki_links WHERE lang = ?", [lang])
+        edges = _wiki_df("SELECT DISTINCT source, target FROM wiki_links WHERE lang = ? AND (? IS NULL OR seed = ?)",
+                         [lang, seed, seed])
+        network = analysis.link_network(edges, nodes)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao consultar rede: {str(e)}")
-    return {"lang": lang, **analysis.link_network(edges, nodes), "leitura_do_meio": analysis.LEITURAS["link_network"]}
+    return {"lang": lang, **network, "leitura_do_meio": analysis.LEITURAS["link_network"]}
 
 
 @app.get("/api/v1/digital-methods/wikipedia/editions", tags=["Métodos Digitais"])
@@ -793,9 +825,10 @@ async def search_rank_effect():
     """
     try:
         df = get_db().query_df("SELECT query, clicks, impressions, position FROM gsc_query_performance")
+        result = analysis.rank_effect(df)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao consultar buscas: {str(e)}")
-    return {**analysis.rank_effect(df), "leitura_do_meio": analysis.LEITURAS["rank_effect"]}
+    return {**result, "leitura_do_meio": analysis.LEITURAS["rank_effect"]}
 
 
 @app.get("/api/v1/digital-methods/search/query-network", tags=["Métodos Digitais"])
@@ -803,16 +836,18 @@ async def search_query_network():
     """Rede de coocorrência de termos nas consultas de busca (nós = termos, arestas = aparecem na mesma consulta)."""
     try:
         df = get_db().query_df("SELECT query, clicks, impressions FROM gsc_query_performance")
+        result = analysis.query_term_network(df)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao consultar buscas: {str(e)}")
-    return {**analysis.query_term_network(df), "leitura_do_meio": analysis.LEITURAS["query_network"]}
+    return {**result, "leitura_do_meio": analysis.LEITURAS["query_network"]}
 
 
 async def collect_digital_methods() -> dict:
     """Resumo de métodos digitais para o relatório de IA (efeito do ranking + controvérsia na Wikipedia)."""
     return {
         "rank_effect": await search_rank_effect(),
-        "controversy": await wikipedia_controversy(lang="pt", seed=None),
+        # chamada direta: os defaults Query() não se resolvem, passar tudo explícito
+        "controversy": await wikipedia_controversy(lang="pt", seed=None, min_edits=20),
     }
 
 
@@ -1052,6 +1087,11 @@ de {conversion_rate:.2f}%. A taxa de rejeição foi de {bounce_rate:.2f}%.
 Dados completos disponíveis nos endpoints individuais de análise.
 """.strip(),
         "sections": [
+            {
+                "title": "🧭 Métodos Digitais — leitura do meio",
+                "content": format_digital_methods(data.get('digital_methods', {})),
+                "key_insights": ["Cada métrica é produzida pela plataforma: leia as ressalvas antes de concluir"]
+            },
             {
                 "title": "📊 KPIs Principais",
                 "content": format_kpis(kpis),

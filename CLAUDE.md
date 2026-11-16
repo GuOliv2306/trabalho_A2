@@ -1,12 +1,44 @@
 # CLAUDE.md
 
-## Codebase Overview
+# O PROJETO É SEU
 
-FastAPI analytics API (Portuguese-language project) serving KPIs, correlations, K-Means clusters and AI-generated reports over a local DuckDB file. Real GA4/Search Console collection is disabled; data comes from a synthetic simulator (`tests/simulador_dados.py`), loaded via `POST /api/v1/admin/populate-database`. API deployed on Render; the Next.js frontend is a separate project deployed on Vercel that consumes this API.
+**Você é dono deste backend.** Pode sofisticar, sempre pensando em melhoria e no melhor resultado.
+Termine o que começar, do início ao fim:
 
-**Stack**: Python, FastAPI, DuckDB, pandas, scikit-learn, Agno + OpenAI (`gpt-5-mini`), pytest.
-**Structure**: `app/` (all HTTP routes in `app/main.py`, AI report agent), `src/collectors/db_storage.py` (DuckDB storage), `src/ml/` (clustering), `src/cleaning/` (cleaners), `src/ga`, `src/gsc` (disabled stubs), `tests/` (simulator + tests), `docs/` (many stale).
+- Comece pelas partes difíceis.
+- Não pare enquanto faltar algo que foi pedido.
+- Só diga que funciona se viu funcionando (teste rodado, servidor no ar, dado real).
+- TDD: teste antes do código. De tempos em tempos, peça a um agente de contexto limpo para auditar.
+- Mantenha a essência e a estrutura do projeto; adicione antes de modernizar o que já funciona.
+- Corte o que atrapalha (código morto, ML de enchimento, docs velhos).
 
-Run from the repo root: `python -m uvicorn app.main:app --reload --port 8000`; tests: `python -m pytest tests/test_api.py -v` (needs a populated DB).
+## O que é
 
-For detailed architecture, see [docs/CODEBASE_MAP.md](docs/CODEBASE_MAP.md).
+API FastAPI (projeto em português) sobre um DuckDB local, para a disciplina de **Métodos Digitais**.
+Duas frentes: painel de marketing com dados sintéticos (GA4 / Search Console simulados) e
+**métodos nativamente digitais** com dados reais da Wikipedia. A tese que guia as features:
+o dado é produzido pela plataforma, então toda análise devolve `leitura_do_meio` — o que o
+número diz sobre o meio e o limite do que diz sobre o tema.
+
+**Stack**: Python, FastAPI, DuckDB, pandas, scikit-learn, requests, Agno + OpenAI, pytest.
+
+**Estrutura**: `app/main.py` (todas as rotas), `app/report_*` (relatório por IA),
+`src/digital_methods/` (coletor da Wikipedia + análises puras), `src/collectors/db_storage.py`
+(DuckDB), `src/ml/` (clusters), `src/cleaning/`, `tests/`.
+
+## Comandos (da raiz do repositório)
+
+```bash
+python -m uvicorn app.main:app --reload --port 8000
+python -m pytest tests/test_api.py tests/test_digital_methods.py -v
+RUN_NETWORK=1 python -m pytest tests/test_digital_methods.py -k live   # Wikipedia real
+```
+
+## Regras da casa
+
+- Entrada do usuário em SQL sempre por parâmetro, nunca f-string.
+- Chamadas à Wikipedia só por `_query`/`_get` em `src/digital_methods/wikipedia.py` (limite de requisições).
+- Mudou formato de resposta de rota? O frontend na Vercel (outro repositório) depende disso — avise.
+- Commits locais por etapa testada; sem push sem pedir.
+
+Detalhes: [docs/CODEBASE_MAP.md](docs/CODEBASE_MAP.md) · [docs/METODOS_DIGITAIS.md](docs/METODOS_DIGITAIS.md)
