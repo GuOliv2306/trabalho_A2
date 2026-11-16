@@ -353,6 +353,8 @@ def test_collect_rejects_pipe_in_titles(client, monkeypatch):
     url = "/api/v1/digital-methods/wikipedia/collect"
     assert client.post(url, json={"seed": "Tema", "titles": ["A|B"]}).status_code == 422
     assert client.post(url, json={"seed": "A|B"}).status_code == 422
+    # U+001F é o separador alternativo de valores múltiplos do MediaWiki
+    assert client.post(url, json={"seed": "Tema", "titles": ["\x1fA\x1fB"]}).status_code == 422
     assert client.post(url, json={"seed": "Tema", "lang": "zh-min-nan"}).status_code == 200
 
 
@@ -367,6 +369,15 @@ def test_report_gets_digital_methods_even_without_ai(client, monkeypatch):
     assert "digital_methods" in body["metadata"]["data_sources"]
     section = next(s for s in body["sections"] if "Métodos Digitais" in s["title"])
     assert "Tema" in section["content"] and "reversão 40.0%" in section["content"]
+
+
+def test_controversy_survives_null_page_metadata(client, monkeypatch):
+    monkeypatch.setattr(wikipedia, "collect_topic", lambda **kw: FAKE)
+    client.post("/api/v1/digital-methods/wikipedia/collect", json={"seed": "Tema"})
+    main.get_db().conn.execute("UPDATE wiki_pages SET pageviews_30d = NULL, length = NULL")
+    r = client.get("/api/v1/digital-methods/wikipedia/controversy")
+    assert r.status_code == 200, r.text
+    assert r.json()["articles"][0]["pageviews_30d"] == 0
 
 
 def test_wikipedia_missing_article_404(client):

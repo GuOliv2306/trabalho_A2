@@ -4,7 +4,7 @@
 
 Métodos nativamente digitais (Rogers, *follow the medium*) usam os objetos do próprio meio
 — edições, reversões, links, posição no ranking — e tratam o dado como algo **produzido pela
-plataforma**, não como retrato neutro do mundo. Por isso toda rota abaixo devolve, junto dos
+plataforma**, não como retrato neutro do mundo. Por isso toda rota de análise abaixo devolve, junto dos
 números, uma lista `leitura_do_meio`: o que aquele número diz sobre a plataforma e o limite
 do que ele diz sobre o tema.
 
@@ -82,6 +82,8 @@ na amostra, um limite superior para quando a plataforma passou a etiquetar — n
 ### `GET /wikipedia/link-network?lang=pt&seed=`
 
 `nodes` (id, in_degree, out_degree), `edges` (source, target, reciprocal), `density`, `reciprocity`.
+Use sempre com `seed`: links só são coletados dentro do recorte de cada semente, então a
+rede sem filtro junta recortes e subestima a densidade.
 
 ### `GET /wikipedia/editions?title=&lang=pt`
 
@@ -93,7 +95,8 @@ A semente em cada edição linguística: `length`, `pageviews_30d`, `pageviews_s
 
 ### `GET /search/query-network`
 
-`nodes` (termo, queries, impressions, clicks) e `edges` (termos na mesma consulta, `weight`).
+`nodes` (`id` = termo, queries, impressions, clicks) e `edges` (source, target, `weight` =
+consultas em que aparecem juntos, impressions).
 
 ## O que os dados reais já mostraram
 

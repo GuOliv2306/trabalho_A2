@@ -640,9 +640,9 @@ class WikipediaCollectRequest(BaseModel):
     @field_validator("seed")
     @classmethod
     def _one_title(cls, v: str) -> str:
-        # "|" separa títulos na API da Wikipedia: aceitar burlaria os limites de artigos por coleta
-        if "|" in v or not v.strip():
-            raise ValueError("título inválido (vazio ou com '|')")
+        # "|" e U+001F separam títulos na API da Wikipedia: aceitar burlaria os limites de artigos por coleta
+        if "|" in v or not v.strip() or any(ord(c) < 32 for c in v):
+            raise ValueError("título inválido (vazio, com '|' ou com caractere de controle)")
         return v
 
     @field_validator("titles")
@@ -734,7 +734,8 @@ async def wikipedia_controversy(lang: str = Query("pt"),
     """
     try:
         pages = _wiki_df("""
-            SELECT title, MIN(seed) AS seed, MAX(pageviews_30d) AS pageviews_30d, MAX(length) AS length
+            SELECT title, MIN(seed) AS seed, COALESCE(MAX(pageviews_30d), 0) AS pageviews_30d,
+                   COALESCE(MAX(length), 0) AS length
             FROM wiki_pages WHERE lang = ? AND (? IS NULL OR seed = ?) GROUP BY title
         """, [lang, seed, seed])
         revs = _wiki_df("SELECT * FROM wiki_revisions WHERE lang = ?", [lang])

@@ -44,6 +44,7 @@ LEITURAS = {
     "link_network": [
         "Um link na Wikipedia é uma decisão editorial (e muitas vezes vem de predefinições/navboxes), não uma medida de proximidade conceitual.",
         "A rede só contém os artigos coletados: grau e densidade valem dentro do recorte, não na enciclopédia.",
+        "Links são coletados dentro do recorte de cada semente. Sem o filtro `seed`, a rede junta recortes e pares de artigos de sementes diferentes aparecem sem link porque nunca foram verificados: a densidade fica subestimada. Analise uma semente por vez.",
         "No recorte automático os vizinhos são escolhidos por terem link recíproco com a semente: a centralidade da semente e a alta reciprocidade são consequência do critério, não achado.",
     ],
     "editions": [
