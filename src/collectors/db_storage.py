@@ -234,7 +234,83 @@ class GA4DatabaseStorage:
             )
         """)
 
+        # ===== TABELAS MÉTODOS DIGITAIS (WIKIPEDIA) =====
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS wiki_pages (
+                lang VARCHAR, title VARCHAR, seed VARCHAR, pageid BIGINT,
+                length BIGINT, pageviews_30d BIGINT, collected_at TIMESTAMP,
+                PRIMARY KEY (lang, title)
+            )
+        """)
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS wiki_revisions (
+                lang VARCHAR, title VARCHAR, revid BIGINT, parentid BIGINT,
+                "timestamp" TIMESTAMP, "user" VARCHAR, actor_type VARCHAR,
+                size BIGINT, size_diff BIGINT, minor BOOLEAN, comment VARCHAR,
+                tags VARCHAR,  -- separadas por '|'
+                PRIMARY KEY (lang, revid)
+            )
+        """)
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS wiki_links (
+                lang VARCHAR, source VARCHAR, target VARCHAR,
+                PRIMARY KEY (lang, source, target)
+            )
+        """)
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS wiki_editions (
+                seed_lang VARCHAR, seed_title VARCHAR, lang VARCHAR, title VARCHAR,
+                length BIGINT, pageviews_30d BIGINT,
+                PRIMARY KEY (seed_lang, seed_title, lang)
+            )
+        """)
+
         print("OK Tabelas criadas/verificadas no banco de dados (GA4 + GSC)")
+
+    def save_wiki(self, data: Dict[str, Any]) -> Dict[str, int]:
+        """
+        Grava o resultado de `wikipedia.collect_topic`, substituindo o que já
+        existia para os mesmos artigos e para a mesma semente (recoletar não
+        duplica nem deixa artigos de um recorte anterior).
+
+        Returns:
+            Contagem de linhas gravadas por tabela.
+        """
+        import pandas as pd
+
+        lang, seed = data["lang"], data["seed"]
+        titles = [p["title"] for p in data["pages"]]
+        old = self.conn.execute("SELECT title FROM wiki_pages WHERE lang = ? AND seed = ?", [lang, seed]).fetchall()
+        stale = sorted({t for (t,) in old} | set(titles))
+
+        pages = pd.DataFrame(data["pages"]).assign(lang=lang, seed=seed, collected_at=datetime.now())
+        revisions = pd.DataFrame([
+            {**r, "lang": lang, "title": t, "tags": "|".join(r["tags"])}
+            for t, revs in data["revisions"].items() for r in revs
+        ])
+        if not revisions.empty:
+            revisions["timestamp"] = pd.to_datetime(revisions["timestamp"], utc=True).dt.tz_localize(None)
+        links = pd.DataFrame(data["links"], columns=["source", "target"]).assign(lang=lang)
+        editions = pd.DataFrame(data["editions"]).assign(seed_lang=lang, seed_title=seed)
+
+        self.conn.execute("BEGIN")
+        try:
+            self.conn.execute("DELETE FROM wiki_pages WHERE lang = ? AND title IN (SELECT unnest(?))", [lang, stale])
+            self.conn.execute("DELETE FROM wiki_revisions WHERE lang = ? AND title IN (SELECT unnest(?))", [lang, stale])
+            self.conn.execute("DELETE FROM wiki_links WHERE lang = ? AND (source IN (SELECT unnest(?)) OR target IN (SELECT unnest(?)))", [lang, stale, stale])
+            self.conn.execute("DELETE FROM wiki_editions WHERE seed_lang = ? AND seed_title = ?", [lang, seed])
+            for table, df in [("wiki_pages", pages), ("wiki_revisions", revisions),
+                              ("wiki_links", links), ("wiki_editions", editions)]:
+                if not df.empty:
+                    self.conn.register("_wiki_df", df)
+                    self.conn.execute(f"INSERT INTO {table} BY NAME SELECT * FROM _wiki_df")
+                    self.conn.unregister("_wiki_df")
+            self.conn.execute("COMMIT")
+        except Exception:
+            self.conn.execute("ROLLBACK")
+            raise
+
+        return {"pages": len(pages), "revisions": len(revisions), "links": len(links), "editions": len(editions)}
 
     def insert_from_json(self, json_filepath: str) -> int:
         """
