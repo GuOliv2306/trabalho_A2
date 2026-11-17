@@ -1,0 +1,4982 @@
+[
+{
+"corpus": "seo_consultas",
+"unit_id": "barraca de camping barato",
+"variable": "intencao",
+"category": "transacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "barraca de camping como funciona",
+"variable": "intencao",
+"category": "informacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "bicicleta ergométrica",
+"variable": "intencao",
+"category": "indefinida"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "bicicleta ergométrica barato",
+"variable": "intencao",
+"category": "transacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "bicicleta ergométrica ou jaqueta impermeável",
+"variable": "intencao",
+"category": "comercial"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "bota de trekking",
+"variable": "intencao",
+"category": "indefinida"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "bota de trekking frete grátis",
+"variable": "intencao",
+"category": "transacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "bota de trekking preço",
+"variable": "intencao",
+"category": "transacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "campobase",
+"variable": "intencao",
+"category": "navegacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "colchonete de yoga",
+"variable": "intencao",
+"category": "indefinida"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "como escolher barraca de camping",
+"variable": "intencao",
+"category": "informacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "como escolher garrafa térmica",
+"variable": "intencao",
+"category": "informacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "como escolher jaqueta impermeável",
+"variable": "intencao",
+"category": "informacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "como escolher saco de dormir",
+"variable": "intencao",
+"category": "informacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "como usar garrafa térmica",
+"variable": "intencao",
+"category": "informacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "como usar mochila de trilha",
+"variable": "intencao",
+"category": "informacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "comprar bicicleta ergométrica",
+"variable": "intencao",
+"category": "transacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "comprar bota de trekking",
+"variable": "intencao",
+"category": "transacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "comprar saco de dormir",
+"variable": "intencao",
+"category": "transacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "corremais login",
+"variable": "intencao",
+"category": "navegacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "corremais site oficial",
+"variable": "intencao",
+"category": "navegacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "dicas de barraca de camping",
+"variable": "intencao",
+"category": "informacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "dicas de bota de trekking",
+"variable": "intencao",
+"category": "informacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "dicas de garrafa térmica",
+"variable": "intencao",
+"category": "informacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "dicas de mochila de trilha",
+"variable": "intencao",
+"category": "informacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "dicas de saco de dormir",
+"variable": "intencao",
+"category": "informacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "fone bluetooth como funciona",
+"variable": "intencao",
+"category": "informacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "fone bluetooth frete grátis",
+"variable": "intencao",
+"category": "transacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "garrafa térmica",
+"variable": "intencao",
+"category": "indefinida"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "garrafa térmica como funciona",
+"variable": "intencao",
+"category": "informacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "garrafa térmica promoção",
+"variable": "intencao",
+"category": "transacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "garrafa térmica vale a pena",
+"variable": "intencao",
+"category": "comercial"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "jaqueta impermeável frete grátis",
+"variable": "intencao",
+"category": "transacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "jaqueta impermeável ou barraca de camping",
+"variable": "intencao",
+"category": "comercial"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "jaqueta impermeável preço",
+"variable": "intencao",
+"category": "transacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "lanterna de cabeça avaliação",
+"variable": "intencao",
+"category": "comercial"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "lanterna de cabeça como funciona",
+"variable": "intencao",
+"category": "informacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "lanterna de cabeça promoção",
+"variable": "intencao",
+"category": "transacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "loja corremais",
+"variable": "intencao",
+"category": "navegacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "melhor colchonete de yoga",
+"variable": "intencao",
+"category": "comercial"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "melhor lanterna de cabeça",
+"variable": "intencao",
+"category": "comercial"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "melhor mochila de trilha",
+"variable": "intencao",
+"category": "comercial"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "melhor saco de dormir",
+"variable": "intencao",
+"category": "comercial"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "mochila de trilha promoção",
+"variable": "intencao",
+"category": "transacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "o que é bicicleta ergométrica",
+"variable": "intencao",
+"category": "informacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "o que é jaqueta impermeável",
+"variable": "intencao",
+"category": "informacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "o que é mochila de trilha",
+"variable": "intencao",
+"category": "informacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "onde comprar saco de dormir",
+"variable": "intencao",
+"category": "transacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "para que serve bota de trekking",
+"variable": "intencao",
+"category": "informacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "para que serve fone bluetooth",
+"variable": "intencao",
+"category": "informacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "para que serve jaqueta impermeável",
+"variable": "intencao",
+"category": "informacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "para que serve saco de dormir",
+"variable": "intencao",
+"category": "informacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "relógio esportivo promoção",
+"variable": "intencao",
+"category": "transacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "saco de dormir",
+"variable": "intencao",
+"category": "indefinida"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "top 10 bota de trekking",
+"variable": "intencao",
+"category": "comercial"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "top 10 lanterna de cabeça",
+"variable": "intencao",
+"category": "comercial"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "top 10 saco de dormir",
+"variable": "intencao",
+"category": "comercial"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "trilhamax",
+"variable": "intencao",
+"category": "navegacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "tênis de corrida preço",
+"variable": "intencao",
+"category": "transacional"
+},
+{
+"corpus": "seo_consultas",
+"unit_id": "tênis de corrida promoção",
+"variable": "intencao",
+"category": "transacional"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-02",
+"variable": "tipo_pagina",
+"category": "post"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-02",
+"variable": "profundidade",
+"category": "profunda"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-02",
+"variable": "autoria",
+"category": "autor_identificado"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-05",
+"variable": "tipo_pagina",
+"category": "post"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-05",
+"variable": "profundidade",
+"category": "media"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-05",
+"variable": "autoria",
+"category": "sem_autoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-11",
+"variable": "tipo_pagina",
+"category": "post"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-11",
+"variable": "profundidade",
+"category": "rasa"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-11",
+"variable": "autoria",
+"category": "sem_autoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-12",
+"variable": "tipo_pagina",
+"category": "post"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-12",
+"variable": "profundidade",
+"category": "media"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-12",
+"variable": "autoria",
+"category": "sem_autoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-13",
+"variable": "tipo_pagina",
+"category": "post"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-13",
+"variable": "profundidade",
+"category": "profunda"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-13",
+"variable": "autoria",
+"category": "autor_com_credenciais"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-15",
+"variable": "tipo_pagina",
+"category": "post"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-15",
+"variable": "profundidade",
+"category": "rasa"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-15",
+"variable": "autoria",
+"category": "autor_com_credenciais"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-17",
+"variable": "tipo_pagina",
+"category": "post"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-17",
+"variable": "profundidade",
+"category": "media"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-17",
+"variable": "autoria",
+"category": "sem_autoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-18",
+"variable": "tipo_pagina",
+"category": "post"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-18",
+"variable": "profundidade",
+"category": "rasa"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-18",
+"variable": "autoria",
+"category": "autor_identificado"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-20",
+"variable": "tipo_pagina",
+"category": "post"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-20",
+"variable": "profundidade",
+"category": "rasa"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-20",
+"variable": "autoria",
+"category": "autor_com_credenciais"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-21",
+"variable": "tipo_pagina",
+"category": "post"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-21",
+"variable": "profundidade",
+"category": "rasa"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-21",
+"variable": "autoria",
+"category": "sem_autoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-22",
+"variable": "tipo_pagina",
+"category": "post"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-22",
+"variable": "profundidade",
+"category": "media"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-22",
+"variable": "autoria",
+"category": "autor_identificado"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-26",
+"variable": "tipo_pagina",
+"category": "post"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-26",
+"variable": "profundidade",
+"category": "media"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-26",
+"variable": "autoria",
+"category": "autor_identificado"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-27",
+"variable": "tipo_pagina",
+"category": "post"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-27",
+"variable": "profundidade",
+"category": "profunda"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-27",
+"variable": "autoria",
+"category": "autor_identificado"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-30",
+"variable": "tipo_pagina",
+"category": "post"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-30",
+"variable": "profundidade",
+"category": "rasa"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/blog/artigo-30",
+"variable": "autoria",
+"category": "sem_autoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/politica-de-privacidade",
+"variable": "tipo_pagina",
+"category": "institucional"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/politica-de-privacidade",
+"variable": "profundidade",
+"category": "profunda"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/politica-de-privacidade",
+"variable": "autoria",
+"category": "sem_autoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-01",
+"variable": "tipo_pagina",
+"category": "categoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-01",
+"variable": "profundidade",
+"category": "media"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-01",
+"variable": "autoria",
+"category": "sem_autoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-04",
+"variable": "tipo_pagina",
+"category": "categoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-04",
+"variable": "profundidade",
+"category": "profunda"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-04",
+"variable": "autoria",
+"category": "sem_autoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-05",
+"variable": "tipo_pagina",
+"category": "categoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-05",
+"variable": "profundidade",
+"category": "profunda"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-05",
+"variable": "autoria",
+"category": "sem_autoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-08",
+"variable": "tipo_pagina",
+"category": "categoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-08",
+"variable": "profundidade",
+"category": "media"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-08",
+"variable": "autoria",
+"category": "sem_autoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-11",
+"variable": "tipo_pagina",
+"category": "categoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-11",
+"variable": "profundidade",
+"category": "media"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-11",
+"variable": "autoria",
+"category": "sem_autoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-13",
+"variable": "tipo_pagina",
+"category": "categoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-13",
+"variable": "profundidade",
+"category": "profunda"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-13",
+"variable": "autoria",
+"category": "sem_autoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-17",
+"variable": "tipo_pagina",
+"category": "categoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-17",
+"variable": "profundidade",
+"category": "media"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-17",
+"variable": "autoria",
+"category": "sem_autoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-18",
+"variable": "tipo_pagina",
+"category": "categoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-18",
+"variable": "profundidade",
+"category": "profunda"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-18",
+"variable": "autoria",
+"category": "sem_autoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-19",
+"variable": "tipo_pagina",
+"category": "categoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-19",
+"variable": "profundidade",
+"category": "profunda"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-19",
+"variable": "autoria",
+"category": "sem_autoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-20",
+"variable": "tipo_pagina",
+"category": "categoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-20",
+"variable": "profundidade",
+"category": "media"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-20",
+"variable": "autoria",
+"category": "sem_autoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-22",
+"variable": "tipo_pagina",
+"category": "categoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-22",
+"variable": "profundidade",
+"category": "media"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/categoria-22",
+"variable": "autoria",
+"category": "sem_autoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-02",
+"variable": "tipo_pagina",
+"category": "produto"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-02",
+"variable": "profundidade",
+"category": "rasa"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-02",
+"variable": "autoria",
+"category": "autor_com_credenciais"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-03",
+"variable": "tipo_pagina",
+"category": "produto"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-03",
+"variable": "profundidade",
+"category": "media"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-03",
+"variable": "autoria",
+"category": "sem_autoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-06",
+"variable": "tipo_pagina",
+"category": "produto"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-06",
+"variable": "profundidade",
+"category": "rasa"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-06",
+"variable": "autoria",
+"category": "autor_identificado"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-09",
+"variable": "tipo_pagina",
+"category": "produto"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-09",
+"variable": "profundidade",
+"category": "media"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-09",
+"variable": "autoria",
+"category": "autor_identificado"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-14",
+"variable": "tipo_pagina",
+"category": "produto"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-14",
+"variable": "profundidade",
+"category": "media"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-14",
+"variable": "autoria",
+"category": "sem_autoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-21",
+"variable": "tipo_pagina",
+"category": "produto"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-21",
+"variable": "profundidade",
+"category": "media"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-21",
+"variable": "autoria",
+"category": "sem_autoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-23",
+"variable": "tipo_pagina",
+"category": "produto"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-23",
+"variable": "profundidade",
+"category": "media"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-23",
+"variable": "autoria",
+"category": "sem_autoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-28",
+"variable": "tipo_pagina",
+"category": "produto"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-28",
+"variable": "profundidade",
+"category": "media"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-28",
+"variable": "autoria",
+"category": "sem_autoria"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-29",
+"variable": "tipo_pagina",
+"category": "produto"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-29",
+"variable": "profundidade",
+"category": "profunda"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-29",
+"variable": "autoria",
+"category": "autor_identificado"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-31",
+"variable": "tipo_pagina",
+"category": "produto"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-31",
+"variable": "profundidade",
+"category": "media"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-31",
+"variable": "autoria",
+"category": "autor_com_credenciais"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-32",
+"variable": "tipo_pagina",
+"category": "produto"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-32",
+"variable": "profundidade",
+"category": "profunda"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-32",
+"variable": "autoria",
+"category": "autor_identificado"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-39",
+"variable": "tipo_pagina",
+"category": "produto"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-39",
+"variable": "profundidade",
+"category": "profunda"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-39",
+"variable": "autoria",
+"category": "autor_com_credenciais"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-40",
+"variable": "tipo_pagina",
+"category": "produto"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-40",
+"variable": "profundidade",
+"category": "profunda"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/produtos/item-40",
+"variable": "autoria",
+"category": "autor_com_credenciais"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/sobre",
+"variable": "tipo_pagina",
+"category": "institucional"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/sobre",
+"variable": "profundidade",
+"category": "profunda"
+},
+{
+"corpus": "seo_paginas",
+"unit_id": "https://example.com/sobre",
+"variable": "autoria",
+"category": "sem_autoria"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "10204477",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "10204477",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "11074044",
+"variable": "tipo_edicao",
+"category": "forma",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "11074044",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "11074265",
+"variable": "tipo_edicao",
+"category": "conteudo",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "11074265",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "11077185",
+"variable": "tipo_edicao",
+"category": "forma",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "11077185",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "11860600",
+"variable": "tipo_edicao",
+"category": "reversao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "11860600",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "14322483",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "14322483",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "14403266",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "14403266",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "15346969",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "15346969",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "25407798",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "25407798",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "27070062",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "27070062",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "2813284",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "2813284",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "2814351",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "2814351",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "29845056",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "29845056",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "3023794",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "3023794",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "3025724",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "3025724",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "3026718",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "3026718",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "3105629",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "3105629",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "3105706",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "3105706",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "3120009",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "3120009",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "3124848",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "3124848",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "37173844",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "37173844",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "37859520",
+"variable": "tipo_edicao",
+"category": "forma",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "37859520",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "45296526",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "45296526",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "45770337",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "45770337",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "45962143",
+"variable": "tipo_edicao",
+"category": "reversao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "45962143",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "46976667",
+"variable": "tipo_edicao",
+"category": "conteudo",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "46976667",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "47151028",
+"variable": "tipo_edicao",
+"category": "conteudo",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "47151028",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "47716265",
+"variable": "tipo_edicao",
+"category": "forma",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "47716265",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "48239784",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "48239784",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "48257138",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "48257138",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "48469566",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "48469566",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "48582189",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "48582189",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "49398583",
+"variable": "tipo_edicao",
+"category": "forma",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "49398583",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "50533995",
+"variable": "tipo_edicao",
+"category": "conteudo",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "50533995",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "50534599",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "50534599",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "51105773",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "51105773",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "51200470",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "51200470",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "51917722",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "51917722",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "52345321",
+"variable": "tipo_edicao",
+"category": "reversao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "52345321",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "52696816",
+"variable": "tipo_edicao",
+"category": "forma",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "52696816",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "52836743",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "52836743",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "52969136",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "52969136",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "53164299",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "53164299",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "53749217",
+"variable": "tipo_edicao",
+"category": "reversao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "53749217",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "53918377",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "53918377",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "53995948",
+"variable": "tipo_edicao",
+"category": "conteudo",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "53995948",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "54227357",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "54227357",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "54257125",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "54257125",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "54291189",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "54291189",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "55213521",
+"variable": "tipo_edicao",
+"category": "reversao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "55213521",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "56150900",
+"variable": "tipo_edicao",
+"category": "forma",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "56150900",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "56706272",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "56706272",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "56879573",
+"variable": "tipo_edicao",
+"category": "forma",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "56879573",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "58186800",
+"variable": "tipo_edicao",
+"category": "conteudo",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "58186800",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "5882666",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "5882666",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "58933981",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "58933981",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "59684780",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "59684780",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "59684957",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "59684957",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "60337685",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "60337685",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "61294879",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "61294879",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "61865580",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "61865580",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "63222599",
+"variable": "tipo_edicao",
+"category": "forma",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "63222599",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "63379087",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "63379087",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "63521561",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "63521561",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "63671232",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "63671232",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "64124126",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "64124126",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "64947305",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "64947305",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65162244",
+"variable": "tipo_edicao",
+"category": "fontes",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65162244",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65224396",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65224396",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65224952",
+"variable": "tipo_edicao",
+"category": "reversao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65224952",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65258410",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65258410",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65265445",
+"variable": "tipo_edicao",
+"category": "reversao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65265445",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65266233",
+"variable": "tipo_edicao",
+"category": "reversao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65266233",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65279191",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65279191",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65287674",
+"variable": "tipo_edicao",
+"category": "conteudo",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65287674",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65363229",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65363229",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65363364",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65363364",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65489947",
+"variable": "tipo_edicao",
+"category": "conteudo",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65489947",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65541481",
+"variable": "tipo_edicao",
+"category": "fontes",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65541481",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65541973",
+"variable": "tipo_edicao",
+"category": "conteudo",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65541973",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65584756",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65584756",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66023846",
+"variable": "tipo_edicao",
+"category": "fontes",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66023846",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66185651",
+"variable": "tipo_edicao",
+"category": "conteudo",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66185651",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66233675",
+"variable": "tipo_edicao",
+"category": "forma",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66233675",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66337328",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66337328",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66399481",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66399481",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66878954",
+"variable": "tipo_edicao",
+"category": "conteudo",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66878954",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66903509",
+"variable": "tipo_edicao",
+"category": "conteudo",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66903509",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66931195",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66931195",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66965519",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66965519",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66995790",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66995790",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67024871",
+"variable": "tipo_edicao",
+"category": "conteudo",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67024871",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67106420",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67106420",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67134045",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67134045",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67264192",
+"variable": "tipo_edicao",
+"category": "reversao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67264192",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67352765",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67352765",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67998164",
+"variable": "tipo_edicao",
+"category": "administrativa",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67998164",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68146220",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68146220",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68146327",
+"variable": "tipo_edicao",
+"category": "reversao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68146327",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68418014",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68418014",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68430243",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68430243",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68430247",
+"variable": "tipo_edicao",
+"category": "reversao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68430247",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68438130",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68438130",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68488840",
+"variable": "tipo_edicao",
+"category": "fontes",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68488840",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68708756",
+"variable": "tipo_edicao",
+"category": "forma",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68708756",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68787599",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68787599",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68792974",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68792974",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68858199",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68858199",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "69161435",
+"variable": "tipo_edicao",
+"category": "forma",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "69161435",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "69448166",
+"variable": "tipo_edicao",
+"category": "conteudo",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "69448166",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "69532883",
+"variable": "tipo_edicao",
+"category": "reversao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "69532883",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "69644849",
+"variable": "tipo_edicao",
+"category": "reversao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "69644849",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70048226",
+"variable": "tipo_edicao",
+"category": "forma",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70048226",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70065793",
+"variable": "tipo_edicao",
+"category": "reversao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70065793",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70151142",
+"variable": "tipo_edicao",
+"category": "fontes",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70151142",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70262521",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70262521",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70343176",
+"variable": "tipo_edicao",
+"category": "forma",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70343176",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70432476",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70432476",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70768114",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70768114",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70768166",
+"variable": "tipo_edicao",
+"category": "fontes",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70768166",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70831179",
+"variable": "tipo_edicao",
+"category": "fontes",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70831179",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70832134",
+"variable": "tipo_edicao",
+"category": "reversao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70832134",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70904575",
+"variable": "tipo_edicao",
+"category": "conteudo",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70904575",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71100450",
+"variable": "tipo_edicao",
+"category": "forma",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71100450",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71100473",
+"variable": "tipo_edicao",
+"category": "forma",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71100473",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71211296",
+"variable": "tipo_edicao",
+"category": "conteudo",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71211296",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71357144",
+"variable": "tipo_edicao",
+"category": "reversao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71357144",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71370937",
+"variable": "tipo_edicao",
+"category": "fontes",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71370937",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71399597",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71399597",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71403095",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71403095",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71940088",
+"variable": "tipo_edicao",
+"category": "conteudo",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71940088",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71997787",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71997787",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72042444",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72042444",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72228151",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72228151",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72284134",
+"variable": "tipo_edicao",
+"category": "conteudo",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72284134",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72358039",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72358039",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72403242",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72403242",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72412508",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72412508",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72422925",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72422925",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72427445",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72427445",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72615927",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72615927",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72759265",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72759265",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72775107",
+"variable": "tipo_edicao",
+"category": "conteudo",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72775107",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72784165",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72784165",
+"variable": "origem_do_resumo",
+"category": "em_branco",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72835621",
+"variable": "tipo_edicao",
+"category": "fontes",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72835621",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72923735",
+"variable": "tipo_edicao",
+"category": "fontes",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72923735",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "73129243",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "73129243",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "73136693",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "73136693",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "73271024",
+"variable": "tipo_edicao",
+"category": "forma",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "73271024",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "7468206",
+"variable": "tipo_edicao",
+"category": "sem_informacao",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "7468206",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software",
+"coder": "referencia_ia_desenvolvimento"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "10927299",
+"variable": "tipo_edicao",
+"category": "conteudo"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "10927299",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "11051720",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "11051720",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "11846404",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "11846404",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "11857407",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "11857407",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "12732840",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "12732840",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "14890524",
+"variable": "tipo_edicao",
+"category": "conteudo"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "14890524",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "16668722",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "16668722",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "17780967",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "17780967",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "23154212",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "23154212",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "24163625",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "24163625",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "24947902",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "24947902",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "2813549",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "2813549",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "29006415",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "29006415",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "29856381",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "29856381",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "3023392",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "3023392",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "3026652",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "3026652",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "3032183",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "3032183",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "3105575",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "3105575",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "3124693",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "3124693",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "33609317",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "33609317",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "3432388",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "3432388",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "37173792",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "37173792",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "38845162",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "38845162",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "4014659",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "4014659",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "45614165",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "45614165",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "46657936",
+"variable": "tipo_edicao",
+"category": "conteudo"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "46657936",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "46657986",
+"variable": "tipo_edicao",
+"category": "reversao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "46657986",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "47217842",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "47217842",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "47268505",
+"variable": "tipo_edicao",
+"category": "conteudo"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "47268505",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "47717779",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "47717779",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "47765976",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "47765976",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "48257123",
+"variable": "tipo_edicao",
+"category": "conteudo"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "48257123",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "48397853",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "48397853",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "48421424",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "48421424",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "48489107",
+"variable": "tipo_edicao",
+"category": "reversao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "48489107",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "48813543",
+"variable": "tipo_edicao",
+"category": "reversao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "48813543",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "49140035",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "49140035",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "49975451",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "49975451",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "50281252",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "50281252",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "50281260",
+"variable": "tipo_edicao",
+"category": "reversao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "50281260",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "50840356",
+"variable": "tipo_edicao",
+"category": "reversao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "50840356",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "51320279",
+"variable": "tipo_edicao",
+"category": "reversao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "51320279",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "51778701",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "51778701",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "52266501",
+"variable": "tipo_edicao",
+"category": "reversao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "52266501",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "52344521",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "52344521",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "52646258",
+"variable": "tipo_edicao",
+"category": "fontes"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "52646258",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "52713468",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "52713468",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "52981854",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "52981854",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "52990237",
+"variable": "tipo_edicao",
+"category": "reversao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "52990237",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "53452868",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "53452868",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "53567880",
+"variable": "tipo_edicao",
+"category": "reversao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "53567880",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "53580561",
+"variable": "tipo_edicao",
+"category": "reversao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "53580561",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "53743126",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "53743126",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "53748624",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "53748624",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "53913325",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "53913325",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "54302070",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "54302070",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "54395426",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "54395426",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "54422476",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "54422476",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "55213073",
+"variable": "tipo_edicao",
+"category": "conteudo"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "55213073",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "56120830",
+"variable": "tipo_edicao",
+"category": "reversao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "56120830",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "56706284",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "56706284",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "57591124",
+"variable": "tipo_edicao",
+"category": "reversao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "57591124",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "58186827",
+"variable": "tipo_edicao",
+"category": "conteudo"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "58186827",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "59020984",
+"variable": "tipo_edicao",
+"category": "reversao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "59020984",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "60337375",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "60337375",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "60848124",
+"variable": "tipo_edicao",
+"category": "fontes"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "60848124",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "61708136",
+"variable": "tipo_edicao",
+"category": "conteudo"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "61708136",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "61866413",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "61866413",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "63433442",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "63433442",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "63664758",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "63664758",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "64995962",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "64995962",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65259093",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65259093",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65272416",
+"variable": "tipo_edicao",
+"category": "fontes"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65272416",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65277590",
+"variable": "tipo_edicao",
+"category": "reversao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65277590",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65401858",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65401858",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65579852",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65579852",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65915236",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65915236",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65987239",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65987239",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65987288",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "65987288",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66002939",
+"variable": "tipo_edicao",
+"category": "reversao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66002939",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66223075",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66223075",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "6627833",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "6627833",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66676165",
+"variable": "tipo_edicao",
+"category": "reversao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66676165",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66890489",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66890489",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66908783",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66908783",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66960020",
+"variable": "tipo_edicao",
+"category": "conteudo"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "66960020",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67023566",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67023566",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67043532",
+"variable": "tipo_edicao",
+"category": "reversao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67043532",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67068861",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67068861",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67069915",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67069915",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67100664",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67100664",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67314817",
+"variable": "tipo_edicao",
+"category": "conteudo"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67314817",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67314868",
+"variable": "tipo_edicao",
+"category": "reversao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67314868",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67350855",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67350855",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67350869",
+"variable": "tipo_edicao",
+"category": "reversao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67350869",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67453123",
+"variable": "tipo_edicao",
+"category": "conteudo"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67453123",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67575148",
+"variable": "tipo_edicao",
+"category": "reversao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67575148",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67605013",
+"variable": "tipo_edicao",
+"category": "conteudo"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67605013",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67609824",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67609824",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67798466",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67798466",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67805648",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67805648",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67833314",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "67833314",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68085999",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68085999",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68132849",
+"variable": "tipo_edicao",
+"category": "conteudo"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68132849",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68358273",
+"variable": "tipo_edicao",
+"category": "fontes"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68358273",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68367865",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68367865",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68386628",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68386628",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68486098",
+"variable": "tipo_edicao",
+"category": "conteudo"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68486098",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68580594",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68580594",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68819350",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68819350",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68869648",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68869648",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68869650",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68869650",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68988651",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "68988651",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "69307045",
+"variable": "tipo_edicao",
+"category": "reversao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "69307045",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "69332073",
+"variable": "tipo_edicao",
+"category": "conteudo"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "69332073",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "69426535",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "69426535",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "69428717",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "69428717",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "69499531",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "69499531",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "69510450",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "69510450",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70233261",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70233261",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70338850",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70338850",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70521341",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70521341",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70522045",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70522045",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70583812",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70583812",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70583859",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70583859",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70629332",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70629332",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70891875",
+"variable": "tipo_edicao",
+"category": "conteudo"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70891875",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70966206",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "70966206",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71089224",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71089224",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71292786",
+"variable": "tipo_edicao",
+"category": "conteudo"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71292786",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71292818",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71292818",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71374898",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71374898",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71909788",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71909788",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71989404",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71989404",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71997850",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "71997850",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72116258",
+"variable": "tipo_edicao",
+"category": "conteudo"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72116258",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72162402",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72162402",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72191939",
+"variable": "tipo_edicao",
+"category": "conteudo"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72191939",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72281831",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72281831",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72293952",
+"variable": "tipo_edicao",
+"category": "conteudo"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72293952",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72648239",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72648239",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72648809",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72648809",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72862390",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "72862390",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "73130187",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "73130187",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "73147851",
+"variable": "tipo_edicao",
+"category": "forma"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "73147851",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "73211846",
+"variable": "tipo_edicao",
+"category": "fontes"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "73211846",
+"variable": "origem_do_resumo",
+"category": "escrito_pelo_editor"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "73271986",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "73271986",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "73337201",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "73337201",
+"variable": "origem_do_resumo",
+"category": "em_branco"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "73430079",
+"variable": "tipo_edicao",
+"category": "manutencao_assistida"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "73430079",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "7921248",
+"variable": "tipo_edicao",
+"category": "sem_informacao"
+},
+{
+"corpus": "wikipedia_resumos",
+"unit_id": "7921248",
+"variable": "origem_do_resumo",
+"category": "gerado_pelo_software"
+}
+]

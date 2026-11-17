@@ -1,14 +1,16 @@
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any, List
+from pydantic import BaseModel, Field, field_validator
+from typing import Optional, Dict, Any, List, Literal
 from contextlib import asynccontextmanager
+import json
+import re
 import sys
 from pathlib import Path
 import numpy as np
 import pandas as pd
 import uuid
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import logging
 import asyncio
 import os
@@ -25,7 +27,17 @@ sys.path.append(str(Path(__file__).parent.parent))
 from src.collectors.db_storage import GA4DatabaseStorage
 
 # ✅ MÓDULOS DE MACHINE LEARNING
-from src.ml import ChannelProfiler, KeywordClusterer, PageSegmenter
+from src.ml import ChannelProfiler, KeywordClusterer
+
+# ✅ MÉTODOS DIGITAIS
+from src.digital_methods import analysis, wikipedia
+
+# ✅ QUASE-EXPERIMENTOS
+from src.quasi_experiments import analysis as quasi, natural
+
+# ✅ ANÁLISE DE CONTEÚDO
+from src.content_analysis import coder as content_coder, reliability as content_reliability_metrics
+from src.content_analysis.codebooks import CODEBOOKS, LEITURA_DO_MEIO as CONTENT_LEITURA
 
 # ✅ MÓDULOS DE RELATÓRIO AGNO
 from app.report_models import (
@@ -34,7 +46,7 @@ from app.report_models import (
     format_kpis,
     format_channel_clusters,
     format_keyword_clusters,
-    format_page_clusters,
+    format_digital_methods,
     format_correlations,
     calculate_confidence_score
 )
@@ -67,7 +79,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Dashboard Analytics API",
-    description="API para análise de dados GA4 e GSC com ML predictions",
+    description="API de analytics e métodos digitais (Wikipedia real + GA4/GSC simulados)",
     version="1.0.0",
     lifespan=lifespan
 )
@@ -80,27 +92,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# ✅ Instância global do banco - PRONTA PARA DADOS SIMULADOS
-# Quando implementar o simulador, ele deve popular este mesmo banco
-db = None
-
-def get_db():
-    """Lazy initialization do banco de dados."""
-    global db
-    if db is None:
-        db = GA4DatabaseStorage()
-    return db
-
-
-# ===== MODELS =====
-
-class PageSimulatorInput(BaseModel):
-    """Input para simulação de performance de página."""
-    contagemDePalavras: int = Field(..., ge=0, description="Contagem de palavras do conteúdo")
-    numeroDeImagens: int = Field(..., ge=0, description="Número de imagens na página")
-    precoDoProduto: float = Field(..., ge=0, description="Preço do produto (0 se não é produto)")
-
 
 # ===== HEALTH CHECK =====
 
@@ -392,320 +383,6 @@ async def get_keyword_clusters(n_clusters: int = Query(4, ge=2, le=10, descripti
         raise HTTPException(status_code=500, detail=f"Erro ao aplicar clustering de keywords: {str(e)}")
 
 
-@app.get("/api/v1/ml/page_clusters", tags=["Machine Learning"])
-async def get_page_clusters_ml(n_clusters: int = Query(5, ge=2, le=10, description="Número de clusters")):
-    """
-    Aplica clustering K-Means em páginas baseado em engajamento.
-    
-    Usa o módulo **PageSegmenter** para agrupar páginas por similaridade de performance.
-    
-    - **n_clusters**: Número de clusters desejado (padrão: 5)
-    
-    Retorna:
-    - Páginas com cluster_id
-    - Centros dos clusters
-    - Resumo estatístico dos segmentos
-    """
-    try:
-        # Busca dados agregados de páginas
-        df = get_db().query_df("""
-            SELECT 
-                page_path,
-                AVG(engagement_rate) as engagement_rate,
-                SUM(event_count) as event_count,
-                AVG(average_session_duration) as average_session_duration
-            FROM engagement
-            WHERE page_path IS NOT NULL
-            GROUP BY page_path
-            HAVING SUM(event_count) > 3
-        """)
-        
-        if df.empty or len(df) < n_clusters:
-            # Para geração de relatórios, retorna estrutura vazia ao invés de erro
-            logger.warning(f"Dados insuficientes para clustering de páginas: {len(df)} páginas encontradas (mínimo: {n_clusters})")
-            return {
-                "algoritmo": "K-Means Clustering",
-                "n_clusters": n_clusters,
-                "total_paginas": 0,
-                "clusters": {},
-                "warning": f"Dados insuficientes. Necessário pelo menos {n_clusters} páginas com mais de 3 eventos."
-            }
-        
-        # Aplica o PageSegmenter
-        segmenter = PageSegmenter(n_clusters=n_clusters)
-        df_clustered = segmenter.fit_transform(df)
-        
-        # Prepara resposta com estrutura compatível com report_models.py
-        clusters_dict = {}
-        for cluster_id in range(n_clusters):
-            cluster_data = df_clustered[df_clustered['cluster'] == cluster_id]
-            clusters_dict[str(cluster_id)] = {
-                'count': len(cluster_data),
-                'pages': cluster_data['page_path'].tolist(),
-                'avg_metrics': {
-                    'engagement_rate': float(cluster_data['engagement_rate'].mean() * 100),  # Converter para %
-                    'event_count': float(cluster_data['event_count'].mean()),
-                    'avg_duration': float(cluster_data['average_session_duration'].mean())
-                }
-            }
-        
-        return {
-            "algoritmo": "K-Means Clustering",
-            "n_clusters": n_clusters,
-            "total_paginas": len(df_clustered),
-            "clusters": clusters_dict,
-            "paginas": df_clustered[['page_path', 'engagement_rate', 'event_count', 'average_session_duration', 'cluster']].to_dict('records'),
-            "cluster_centers": segmenter.get_cluster_centers().to_dict('records'),
-            "segment_summary": segmenter.get_segment_summary(df_clustered).to_dict('records')
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao aplicar clustering de páginas: {str(e)}")
-
-
-# ===== ANÁLISE DE PÁGINA ESPECÍFICA =====
-
-@app.get("/api/v1/page_analysis", tags=["Análises Preditivas"])
-async def get_page_analysis(path: str = Query(..., description="Caminho da página (ex: /produtos/item-1)")):
-    """
-    Retorna análise completa de uma página específica usando ML real.
-    
-    - **path**: Caminho da página (ex: /produtos/item-1)
-    
-    Retorna dados reais + clustering ML com PageSegmenter.
-    """
-    try:
-        # Busca dados de engajamento da página específica
-        page_data = get_db().query_df(f"""
-            SELECT 
-                page_path,
-                SUM(event_count) as total_events,
-                AVG(engagement_rate) as engagement_rate,
-                AVG(average_session_duration) as avg_session_duration,
-                SUM(engaged_sessions) as engaged_sessions,
-                COUNT(*) as num_records
-            FROM engagement
-            WHERE page_path = '{path}'
-            GROUP BY page_path
-        """)
-        
-        if page_data.empty:
-            raise HTTPException(status_code=404, detail=f"Página '{path}' não encontrada")
-        
-        row = page_data.iloc[0]
-        
-        # ===== CLUSTERING ML REAL =====
-        # Busca TODAS as páginas para fazer clustering
-        all_pages_df = get_db().query_df("""
-            SELECT 
-                page_path,
-                AVG(engagement_rate) as engagement_rate,
-                SUM(event_count) as event_count,
-                AVG(average_session_duration) as average_session_duration
-            FROM engagement
-            WHERE page_path IS NOT NULL
-            GROUP BY page_path
-            HAVING SUM(event_count) > 3
-        """)
-        
-        # Aplica PageSegmenter ML
-        if not all_pages_df.empty and len(all_pages_df) >= 3:
-            segmenter = PageSegmenter(n_clusters=min(3, len(all_pages_df)))
-            all_pages_clustered = segmenter.fit_transform(all_pages_df)
-            
-            # Encontra o cluster da página específica
-            page_cluster = all_pages_clustered[all_pages_clustered['page_path'] == path]
-            
-            if not page_cluster.empty:
-                cluster_id = int(page_cluster['cluster'].iloc[0])
-                
-                # Pega o resumo do cluster
-                summary = segmenter.get_segment_summary(all_pages_clustered)
-                cluster_info = summary[summary['cluster'] == cluster_id]
-                
-                if not cluster_info.empty:
-                    avg_eng = float(cluster_info['avg_engagement_rate'].iloc[0])
-                    avg_events = float(cluster_info['avg_event_count'].iloc[0])
-                    
-                    # Nomeia o cluster baseado nas características
-                    if avg_eng > 0.65 and avg_events > 150:
-                        cluster_name = f"Cluster {cluster_id}: Alto Engajamento Premium"
-                    elif avg_eng > 0.5 and avg_events > 80:
-                        cluster_name = f"Cluster {cluster_id}: Engajamento Médio-Alto"
-                    elif avg_eng > 0.4:
-                        cluster_name = f"Cluster {cluster_id}: Engajamento Médio"
-                    else:
-                        cluster_name = f"Cluster {cluster_id}: Baixo Engajamento"
-                    
-                    cluster_stats = {
-                        "avgEngagement": round(avg_eng, 2),
-                        "avgEvents": round(avg_events, 2),
-                        "totalPagesInCluster": int(cluster_info['count'].iloc[0])
-                    }
-                else:
-                    cluster_name = f"Cluster {cluster_id}"
-                    cluster_stats = {}
-            else:
-                cluster_name = "Página Única (sem cluster)"
-                cluster_id = -1
-                cluster_stats = {}
-        else:
-            cluster_name = "Dados insuficientes para clustering"
-            cluster_id = -1
-            cluster_stats = {}
-        
-        # Classifica risco de rejeição baseado em engagement
-        engagement = float(row['engagement_rate']) if row['engagement_rate'] else 0
-        risco = "Baixo" if engagement > 0.6 else "Médio" if engagement > 0.4 else "Alto"
-        
-        # Busca contexto geral do site
-        traffic_stats = get_db().query_df("""
-            SELECT 
-                AVG(sessions) as avg_sessions,
-                AVG(screen_page_views) as avg_page_views
-            FROM traffic
-        """)
-        
-        avg_sessions = int(traffic_stats['avg_sessions'].iloc[0]) if not traffic_stats.empty else 0
-        avg_page_views = int(traffic_stats['avg_page_views'].iloc[0]) if not traffic_stats.empty else 0
-        
-        return {
-            "pagePath": path,
-            "dadosReais": {
-                "totalEvents": int(row['total_events']) if row['total_events'] else 0,
-                "engagementRate": round(engagement, 2),
-                "averageSessionDuration": round(float(row['avg_session_duration']), 2) if row['avg_session_duration'] else 0,
-                "engagedSessions": int(row['engaged_sessions']) if row['engaged_sessions'] else 0,
-                "numRecords": int(row['num_records'])
-            },
-            "contextGeral": {
-                "avgSessionsSite": avg_sessions,
-                "avgPageViewsSite": avg_page_views
-            },
-            "analiseML": {
-                "algoritmo": "K-Means (PageSegmenter)",
-                "clusterId": cluster_id,
-                "clusterName": cluster_name,
-                "clusterStats": cluster_stats,
-                "riscoDeRejeicao": risco
-            }
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao analisar página: {str(e)}")
-
-
-# ===== SIMULADOR PREDITIVO =====
-
-@app.post("/api/v1/predict/simulator", tags=["Análises Preditivas"])
-async def predict_simulator(input_data: PageSimulatorInput):
-    """
-    Simula performance esperada de uma nova página baseado em features.
-    
-    Recebe características de conteúdo e retorna estimativas de:
-    - Taxa de conversão
-    - Taxa de rejeição
-    - Duração média de sessão
-    - Recomendações de otimização
-    """
-    try:
-        # Busca baseline de cada tabela separadamente
-        engagement_baseline = get_db().query_df("""
-            SELECT AVG(engagement_rate) as avg_engagement
-            FROM engagement
-        """)
-        
-        traffic_baseline = get_db().query_df("""
-            SELECT AVG(average_session_duration) as avg_duration
-            FROM traffic
-            WHERE average_session_duration IS NOT NULL
-        """)
-        
-        conversion_baseline = get_db().query_df("""
-            SELECT 
-                SUM(key_events) as total_conversions,
-                (SELECT SUM(sessions) FROM traffic) as total_sessions
-            FROM conversions
-        """)
-        
-        # Modelo simplificado baseado em heurísticas
-        palavras = input_data.contagemDePalavras
-        imagens = input_data.numeroDeImagens
-        preco = input_data.precoDoProduto
-        
-        # Baseline do banco
-        baseline_engagement = float(engagement_baseline['avg_engagement'].iloc[0]) if not engagement_baseline.empty else 0.5
-        baseline_duration = float(traffic_baseline['avg_duration'].iloc[0]) if not traffic_baseline.empty else 180
-        
-        # Calcula taxa de conversão
-        if not conversion_baseline.empty and conversion_baseline['total_sessions'].iloc[0]:
-            baseline_conversion = float(conversion_baseline['total_conversions'].iloc[0]) / float(conversion_baseline['total_sessions'].iloc[0])
-        else:
-            baseline_conversion = 0.02
-        
-        # Ajustes baseados em features
-        # Contagem de palavras: mais palavras = maior duração, melhor engagement
-        word_factor = min(palavras / 1000, 1.5)  # Cap em 1.5x
-        
-        # Imagens: mais imagens = melhor engagement, mas pode aumentar bounce se muitas
-        image_factor = 1 + (min(imagens, 5) * 0.05)  # +5% por imagem, max 5
-        
-        # Preço: produtos caros tendem a ter menor conversão
-        price_factor = 1.0 if preco == 0 else max(0.5, 1 - (preco / 1000) * 0.1)
-        
-        # Predições
-        estimated_engagement = min(baseline_engagement * word_factor * image_factor, 1.0)
-        estimated_bounce = max(0.1, 1 - estimated_engagement)
-        estimated_duration = baseline_duration * word_factor
-        estimated_conversion_per_1k = (baseline_conversion * 1000) * price_factor * image_factor
-        
-        # Recomendações
-        recommendations = []
-        if palavras < 300:
-            recommendations.append("⚠️ Contagem de palavras baixa. Considere expandir o conteúdo para melhorar engajamento.")
-        elif palavras > 2000:
-            recommendations.append("✅ Excelente contagem de palavras para engajamento.")
-        else:
-            recommendations.append("✅ Boa contagem de palavras.")
-        
-        if imagens < 2:
-            recommendations.append("⚠️ Poucas imagens. Adicionar mais imagens pode melhorar a taxa de engajamento.")
-        elif imagens > 10:
-            recommendations.append("⚠️ Muitas imagens podem aumentar o tempo de carregamento. Otimize.")
-        else:
-            recommendations.append("✅ Número adequado de imagens.")
-        
-        if preco > 500:
-            recommendations.append("💰 Produto de alto valor. Considere adicionar mais informações e provas sociais para aumentar conversão.")
-        elif preco > 0:
-            recommendations.append("💰 Produto de valor médio. Destaque benefícios e diferenciais.")
-        
-        if estimated_bounce > 0.7:
-            recommendations.append("🚨 Taxa de rejeição estimada alta. Considere melhorar o conteúdo ou adicionar CTAs mais claros.")
-        
-        return {
-            "inputFeatures": {
-                "contagemDePalavras": palavras,
-                "numeroDeImagens": imagens,
-                "precoDoProduto": preco
-            },
-            "predictedPerformance": {
-                "estimativaEngagementRate": round(estimated_engagement, 2),
-                "estimativaBounceRate": round(estimated_bounce, 2),
-                "estimativaSessionDuration": round(estimated_duration, 1),
-                "estimativaConversoesPorMilSessoes": round(estimated_conversion_per_1k, 1)
-            },
-            "recommendations": recommendations
-        }
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao simular performance: {str(e)}")
-
-
 # ===== VISUALIZAÇÃO COMPLETA DOS DADOS =====
 
 @app.get("/api/v1/data/all", tags=["Dados Brutos"])
@@ -949,6 +626,701 @@ async def get_data_summary():
 
 
 
+# ===== MÉTODOS DIGITAIS =====
+# Objetos nativos do meio (revisões, reversões, links, ranking). Toda resposta traz
+# `leitura_do_meio`: o que o dado diz sobre a plataforma que o produziu.
+
+# vira hostname ({lang}.wikipedia.org): só letras e hífens, nunca ponto ou barra
+WIKI_LANG = r"^[a-z]{2,12}(-[a-z]{2,12}){0,2}$"
+
+
+class WikipediaCollectRequest(BaseModel):
+    """Request para coletar um tema na Wikipedia a partir de uma página-semente."""
+    seed: str = Field(..., min_length=1, max_length=255, description="Título do artigo-semente")
+    lang: str = Field(default="pt", pattern=WIKI_LANG, description="Edição linguística")
+    max_pages: int = Field(default=10, ge=1, le=25, description="Semente + vizinhos de link recíproco")
+    titles: Optional[List[str]] = Field(default=None, max_length=24,
+                                        description="Corpus curado: substitui a descoberta automática de vizinhos")
+    rev_limit: int = Field(default=500, ge=50, le=2000, description="Revisões mais recentes por artigo")
+    edition_langs: List[str] = Field(default=["en", "es", "fr", "de"], max_length=10)
+    admin_key: Optional[str] = Field(default=None, description="Chave de administrador (configurar em .env)")
+
+    @field_validator("seed")
+    @classmethod
+    def _one_title(cls, v: str) -> str:
+        # "|" e U+001F separam títulos na API da Wikipedia: aceitar burlaria os limites de artigos por coleta
+        if "|" in v or not v.strip() or any(ord(c) < 32 for c in v):
+            raise ValueError("título inválido (vazio, com '|' ou com caractere de controle)")
+        return v
+
+    @field_validator("titles")
+    @classmethod
+    def _titles(cls, v):
+        return None if v is None else [cls._one_title(t) for t in v]
+
+
+def _wiki_df(sql: str, params: list) -> pd.DataFrame:
+    return get_db().conn.execute(sql, params).fetchdf()
+
+
+def _wiki_tag_era(lang: str):
+    """Primeira tag de reversão observada no corpus do idioma (None se não houver)."""
+    return get_db().conn.execute(
+        """SELECT MIN("timestamp") FROM wiki_revisions
+           WHERE lang = ? AND (tags LIKE '%mw-reverted%' OR tags LIKE '%mw-manual-revert%')""", [lang]).fetchone()[0]
+
+
+@app.post("/api/v1/digital-methods/wikipedia/collect", tags=["Métodos Digitais"])
+async def collect_wikipedia(request: WikipediaCollectRequest):
+    """
+    Coleta dados reais da API pública da Wikipedia e grava no DuckDB.
+
+    Recorte: a página-semente + os artigos que ela linka **e** que linkam de volta,
+    ordenados por pageviews dos últimos 30 dias; ou, com `titles`, a semente + essa lista
+    curada. Para cada um: histórico de edições.
+    Também: links entre os artigos coletados e a semente em outras edições linguísticas.
+    """
+    admin_key_env = os.getenv("ADMIN_KEY", None)
+    if admin_key_env and request.admin_key != admin_key_env:
+        raise HTTPException(status_code=403, detail="Acesso negado. ADMIN_KEY inválida ou ausente.")
+
+    langs = [l for l in request.edition_langs if re.fullmatch(WIKI_LANG, l)]
+    try:
+        # rede fora do event loop; escrita no banco de volta nele (uma conexão DuckDB só)
+        data = await asyncio.to_thread(
+            wikipedia.collect_topic, seed=request.seed, lang=request.lang, max_pages=request.max_pages,
+            rev_limit=request.rev_limit, edition_langs=langs, titles=request.titles,
+        )
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Falha ao coletar da Wikipedia: {str(e)}")
+
+    try:
+        stored = get_db().save_wiki(data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao gravar coleta: {str(e)}")
+    return {
+        "seed": data["seed"],
+        "lang": data["lang"],
+        "articles": [p["title"] for p in data["pages"]],
+        "stored": stored,
+        "not_found": data.get("not_found", []),
+        "criterio_de_recorte": "semente + lista curada (titles)" if request.titles
+        else "semente + vizinhos de link recíproco, ordenados por pageviews (30 dias)",
+    }
+
+
+@app.get("/api/v1/digital-methods/wikipedia/edit-history", tags=["Métodos Digitais"])
+async def wikipedia_edit_history(title: str = Query(..., description="Título do artigo coletado"),
+                                 lang: str = Query("pt")):
+    """
+    Perfil do histórico de edições de um artigo: quem edita (registrados, anônimos, robôs),
+    concentração entre editores, reversões, interface de edição, linha do tempo e picos.
+    """
+    try:
+        revs = _wiki_df("SELECT * FROM wiki_revisions WHERE lang = ? AND title = ?", [lang, title])
+        if revs.empty:
+            raise HTTPException(status_code=404, detail=f"Artigo '{title}' ({lang}) não coletado. Use POST /wikipedia/collect.")
+        # mesma régua da rota /controversy: era das tags do corpus, não só deste artigo
+        profile = analysis.edit_history_profile(revs, tagged_era_start=_wiki_tag_era(lang))
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao consultar histórico: {str(e)}")
+    return {"title": title, "lang": lang, **profile, "leitura_do_meio": analysis.LEITURAS["edit_history"]}
+
+
+@app.get("/api/v1/digital-methods/wikipedia/controversy", tags=["Métodos Digitais"])
+async def wikipedia_controversy(lang: str = Query("pt"),
+                                seed: Optional[str] = Query(None, description="Filtra por página-semente"),
+                                min_edits: int = Query(20, ge=1, description="Abaixo disso a taxa é marcada low_sample")):
+    """
+    Cartografia de controvérsia: artigos coletados ordenados por taxa de reversão, com quem
+    edita e quanta atenção (pageviews) cada um recebe. Todas as colunas contam só edições
+    desde a primeira tag de reversão observada no corpus (`plataforma.tag_era_start`).
+    """
+    try:
+        pages = _wiki_df("""
+            SELECT title, MIN(seed) AS seed, COALESCE(MAX(pageviews_30d), 0) AS pageviews_30d,
+                   COALESCE(MAX(length), 0) AS length
+            FROM wiki_pages WHERE lang = ? AND (? IS NULL OR seed = ?) GROUP BY title
+        """, [lang, seed, seed])
+        revs = _wiki_df("SELECT * FROM wiki_revisions WHERE lang = ?", [lang])
+        era = _wiki_tag_era(lang)
+        anon = revs[revs["actor_type"] == "anon"]
+
+        articles = []
+        for page in pages.itertuples():
+            sampled = revs[revs["title"] == page.title]
+            if sampled.empty:
+                continue
+            in_era = sampled[sampled["timestamp"] >= era] if era is not None else sampled.iloc[0:0]
+            p = analysis.edit_history_profile(in_era, tagged_era_start=era)
+            has = bool(p["total_edits"])
+            articles.append({
+                "title": page.title,
+                "seed": page.seed,
+                "edits_sampled": len(sampled),
+                "edits_in_tag_era": len(in_era),
+                "low_sample": len(in_era) < min_edits,
+                "revert_rate": p["reverts"]["revert_rate"] if has else None,
+                "unique_editors": p["unique_editors"] if has else None,
+                "anon_share": p["actor_shares"].get("anon", 0.0) if has else None,
+                "bot_share": p["actor_shares"].get("bot", 0.0) if has else None,
+                "top_editor_share": p["concentration"]["top_editor_share"] if has else None,
+                "bursts": len(p["bursts"]) if has else None,
+                "pageviews_30d": int(page.pageviews_30d),
+                "length": int(page.length),
+            })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao consultar coleta: {str(e)}")
+
+    articles.sort(key=lambda a: (a["low_sample"], -(a["revert_rate"] or 0), -a["edits_in_tag_era"], a["title"]))
+    return {
+        "lang": lang,
+        "plataforma": {
+            "tag_era_start": pd.Timestamp(era, tz="UTC").isoformat() if era is not None else None,
+            "last_anon_edit": pd.Timestamp(anon["timestamp"].max(), tz="UTC").isoformat() if not anon.empty else None,
+        },
+        "min_edits": min_edits,
+        "articles": articles,
+        "leitura_do_meio": analysis.LEITURAS["controversy"],
+    }
+
+
+@app.get("/api/v1/digital-methods/wikipedia/link-network", tags=["Métodos Digitais"])
+async def wikipedia_link_network(lang: str = Query("pt"),
+                                 seed: Optional[str] = Query(None, description="Filtra por página-semente")):
+    """Rede dirigida de hiperlinks entre os artigos coletados (nós com grau, arestas, densidade, reciprocidade)."""
+    try:
+        nodes = _wiki_df("SELECT DISTINCT title FROM wiki_pages WHERE lang = ? AND (? IS NULL OR seed = ?)",
+                         [lang, seed, seed])["title"].tolist()
+        edges = _wiki_df("SELECT DISTINCT source, target FROM wiki_links WHERE lang = ? AND (? IS NULL OR seed = ?)",
+                         [lang, seed, seed])
+        network = analysis.link_network(edges, nodes)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao consultar rede: {str(e)}")
+    return {"lang": lang, **network, "leitura_do_meio": analysis.LEITURAS["link_network"]}
+
+
+@app.get("/api/v1/digital-methods/wikipedia/editions", tags=["Métodos Digitais"])
+async def wikipedia_editions(title: str = Query(..., description="Título da página-semente"),
+                             lang: str = Query("pt")):
+    """O mesmo artigo em várias edições linguísticas: tamanho e audiência (pageviews 30 dias)."""
+    try:
+        df = _wiki_df("""
+            SELECT lang, title, length, pageviews_30d FROM wiki_editions
+            WHERE seed_lang = ? AND seed_title = ? ORDER BY pageviews_30d DESC, lang
+        """, [lang, title])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao consultar edições: {str(e)}")
+    if df.empty:
+        raise HTTPException(status_code=404, detail=f"Semente '{title}' ({lang}) não coletada. Use POST /wikipedia/collect.")
+    total = int(df["pageviews_30d"].sum())
+    editions = [
+        {"lang": r.lang, "title": r.title, "length": int(r.length), "pageviews_30d": int(r.pageviews_30d),
+         "pageviews_share": round(r.pageviews_30d / total, 4) if total else 0.0}
+        for r in df.itertuples()
+    ]
+    return {"seed": title, "seed_lang": lang, "editions": editions, "leitura_do_meio": analysis.LEITURAS["editions"]}
+
+
+@app.get("/api/v1/digital-methods/search/rank-effect", tags=["Métodos Digitais"])
+async def search_rank_effect():
+    """
+    O ranking produz o clique: curva de CTR por posição, fatia de cliques e impressões
+    capturada pelo top 3 e correlação de postos entre posição e CTR.
+    """
+    try:
+        df = get_db().query_df("SELECT query, clicks, impressions, position FROM gsc_query_performance")
+        result = analysis.rank_effect(df)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao consultar buscas: {str(e)}")
+    return {**result, "leitura_do_meio": analysis.LEITURAS["rank_effect"]}
+
+
+@app.get("/api/v1/digital-methods/search/query-network", tags=["Métodos Digitais"])
+async def search_query_network():
+    """Rede de coocorrência de termos nas consultas de busca (nós = termos, arestas = aparecem na mesma consulta)."""
+    try:
+        df = get_db().query_df("SELECT query, clicks, impressions FROM gsc_query_performance")
+        result = analysis.query_term_network(df)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao consultar buscas: {str(e)}")
+    return {**result, "leitura_do_meio": analysis.LEITURAS["query_network"]}
+
+
+# ===== QUASE-EXPERIMENTOS =====
+# "A mudança X causou a subida ou a queda?" Cada rota devolve o efeito estimado, o
+# efeito verdadeiro do simulador (`true_effect`) e os pressupostos do método.
+
+def _intervention(intervention_id: str) -> dict:
+    df = get_db().conn.execute(
+        "SELECT * FROM seo_interventions WHERE intervention_id = ?", [intervention_id]).fetchdf()
+    if df.empty:
+        raise HTTPException(status_code=404, detail=f"Intervenção '{intervention_id}' não encontrada.")
+    row = df.iloc[0].to_dict()
+    if row["kind"] != "mudanca":
+        raise HTTPException(status_code=400, detail="Evento externo: atinge o site inteiro, não há páginas tratadas para comparar.")
+    return row
+
+
+def _intervention_panel(intervention_id: str, metric: str) -> pd.DataFrame:
+    """Painel unit, date, y, treated das páginas (tratadas e de controle) de uma intervenção."""
+    return get_db().conn.execute(f"""
+        SELECT d.page AS unit, d.date, d.{metric} AS y, (m.grp = 'tratado') AS treated
+        FROM seo_page_daily d JOIN seo_intervention_pages m ON m.page = d.page
+        WHERE m.intervention_id = ?
+    """, [intervention_id]).fetchdf()   # metric vem de um Literal validado pelo FastAPI
+
+
+def _daily_sum(panel: pd.DataFrame, treated: bool) -> pd.DataFrame:
+    return panel[panel["treated"] == treated].groupby("date", as_index=False)["y"].sum()
+
+
+def _quasi(method: str, intervention_id: str, metric: str, run) -> dict:
+    """Monta o painel, roda o estimador e embrulha a resposta comum às rotas."""
+    info = _intervention(intervention_id)
+    try:
+        panel = _intervention_panel(intervention_id, metric)
+        result = run(info, panel)
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao estimar efeito: {str(e)}")
+    return {
+        "intervention_id": intervention_id,
+        "name": info["name"],
+        "date": str(info["date"])[:10],
+        "metric": metric,
+        "method": method,
+        # o simulador injeta o efeito nos cliques; para outra métrica não há gabarito
+        "true_effect": float(info["true_effect"]) if metric == "clicks" else None,
+        "true_effect_metric": "clicks",
+        **result,
+        "pressupostos": quasi.PRESSUPOSTOS[method],
+        "leitura_do_meio": quasi.LEITURA_DO_MEIO,
+    }
+
+
+QuasiMetric = Literal["clicks", "impressions"]
+
+
+@app.get("/api/v1/quasi-experiments/interventions", tags=["Quase-experimentos"])
+async def list_interventions():
+    """Registro de mudanças do site e eventos externos, com o tamanho de cada grupo."""
+    try:
+        df = get_db().query_df("""
+            SELECT i.*, COUNT(*) FILTER (WHERE m.grp = 'tratado') AS n_treated,
+                   COUNT(*) FILTER (WHERE m.grp = 'controle') AS n_control
+            FROM seo_interventions i LEFT JOIN seo_intervention_pages m USING (intervention_id)
+            GROUP BY ALL ORDER BY i.date
+        """)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao consultar intervenções: {str(e)}")
+    df["date"] = df["date"].astype(str).str[:10]
+    return {"interventions": df.astype(object).where(df.notna(), None).to_dict("records"),
+            "leitura_do_meio": quasi.LEITURA_DO_MEIO}
+
+
+@app.get("/api/v1/quasi-experiments/its", tags=["Quase-experimentos"])
+async def quasi_its(intervention_id: str = Query(...), metric: QuasiMetric = Query("clicks"),
+                    end_date: Optional[date] = Query(None, description="Corta a janela (ex.: antes de um update do algoritmo)")):
+    """Série temporal interrompida: as páginas tratadas contra a própria tendência anterior."""
+    return _quasi("its", intervention_id, metric, lambda info, panel: quasi.interrupted_time_series(
+        _daily_sum(panel, True), info["date"], end_date=end_date))
+
+
+@app.get("/api/v1/quasi-experiments/control-counterfactual", tags=["Quase-experimentos"])
+async def quasi_control_counterfactual(intervention_id: str = Query(...), metric: QuasiMetric = Query("clicks"),
+                                       end_date: Optional[date] = Query(None)):
+    """Contrafactual previsto pelas páginas de controle (a lógica do CausalImpact, com regressão simples)."""
+    return _quasi("control_counterfactual", intervention_id, metric, lambda info, panel: quasi.control_counterfactual(
+        _daily_sum(panel, True), _daily_sum(panel, False), info["date"], end_date=end_date))
+
+
+@app.get("/api/v1/quasi-experiments/did", tags=["Quase-experimentos"])
+async def quasi_did(intervention_id: str = Query(...), metric: QuasiMetric = Query("clicks"),
+                    end_date: Optional[date] = Query(None)):
+    """Diferença-em-diferenças: páginas alteradas contra páginas parecidas que não mudaram."""
+    return _quasi("did", intervention_id, metric, lambda info, panel: quasi.diff_in_diff(
+        panel, info["date"], end_date=end_date))
+
+
+@app.get("/api/v1/quasi-experiments/ab-test", tags=["Quase-experimentos"])
+async def quasi_ab_test(intervention_id: str = Query(...), metric: QuasiMetric = Query("clicks"),
+                        end_date: Optional[date] = Query(None)):
+    """Teste A/B de SEO por grupos de páginas sorteados, com p-valor por permutação."""
+    def run(info, panel):
+        if not info["randomized"]:
+            raise HTTPException(status_code=400, detail="Esta intervenção não foi sorteada: use /did. Teste A/B exige sorteio.")
+        return quasi.ab_test(panel, info["date"], end_date=end_date)
+    return _quasi("ab", intervention_id, metric, run)
+
+
+@app.get("/api/v1/quasi-experiments/ab-split", tags=["Quase-experimentos"])
+async def quasi_ab_split(template: str = Query(..., description="produto, categoria ou post"),
+                         seed: int = Query(0, ge=0, le=2 ** 32 - 1), days: int = Query(28, ge=7, le=365)):
+    """
+    Planeja um teste A/B: sorteia as páginas de um template em dois grupos, estratificando
+    pelos cliques dos últimos `days` dias para os grupos nascerem parecidos.
+    """
+    try:
+        pages = get_db().conn.execute("""
+            SELECT p.page AS unit, COALESCE(SUM(d.clicks), 0) AS pre_metric
+            FROM seo_pages p LEFT JOIN seo_page_daily d ON d.page = p.page
+                 AND d.date > (SELECT MAX(date) FROM seo_page_daily) - CAST(? AS INTEGER)
+            WHERE p.template = ? GROUP BY p.page
+        """, [days, template]).fetchdf()
+        if pages.empty:
+            raise HTTPException(status_code=404, detail=f"Nenhuma página com template '{template}'.")
+        result = quasi.ab_split(pages, seed=seed)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao sortear grupos: {str(e)}")
+    return {"template": template, **result, "pressupostos": quasi.PRESSUPOSTOS["ab"]}
+
+
+# ===== EXPERIMENTO NATURAL (WIKIPEDIA REAL) =====
+# A plataforma muda uma regra em data conhecida; compara-se com uma edição linguística que não mudou.
+
+class NaturalCollectRequest(BaseModel):
+    """Request para coletar o histórico mensal de um experimento natural."""
+    experiment: str = Field(..., description="Identificador do experimento (veja GET /natural/experiments)")
+    seed: Optional[str] = Field(default=None, max_length=255, description="Página-semente; os artigos vêm dos links dela")
+    max_candidates: int = Field(default=40, ge=2, le=80, description="Artigos candidatos (sorteados entre os links da semente)")
+    admin_key: Optional[str] = Field(default=None, description="Chave de administrador (configurar em .env)")
+
+    @field_validator("seed")
+    @classmethod
+    def _one_title(cls, v):
+        if v is not None and ("|" in v or not v.strip() or any(ord(c) < 32 for c in v)):
+            raise ValueError("título inválido (vazio, com '|' ou com caractere de controle)")
+        return v
+
+
+def _natural(experiment: str) -> dict:
+    if experiment not in natural.NATURAL_EXPERIMENTS:
+        raise HTTPException(status_code=404,
+                            detail=f"Experimento '{experiment}' não existe. Opções: {', '.join(natural.NATURAL_EXPERIMENTS)}.")
+    return natural.NATURAL_EXPERIMENTS[experiment]
+
+
+def _natural_data(experiment: str):
+    units = _wiki_df("SELECT pair, lang, title, created FROM wiki_experiment_units WHERE experiment = ?", [experiment])
+    monthly = _wiki_df("SELECT * EXCLUDE (experiment) FROM wiki_monthly WHERE experiment = ?", [experiment])
+    return units, monthly
+
+
+@app.get("/api/v1/quasi-experiments/natural/experiments", tags=["Quase-experimentos"])
+async def natural_experiments():
+    """Experimentos naturais disponíveis, com o que já foi coletado e quantos pares de artigos são elegíveis."""
+    out = []
+    try:
+        for key, exp in natural.NATURAL_EXPERIMENTS.items():
+            units, monthly = _natural_data(key)
+            collected = sorted(set(units["lang"]) - {exp["treated_lang"]})
+            out.append({
+                "experiment": key, **{k: exp[k] for k in ("name", "description", "date", "start", "end", "treated_lang", "control_langs")},
+                "pairs_collected": int(units["pair"].nunique()),
+                "pairs_eligible": {lang: len(natural.eligible_pairs(units, monthly, exp, lang)) for lang in collected},
+                "outcomes": natural.OUTCOMES,
+                "referencia_externa": exp["referencia_externa"],
+            })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao consultar experimentos: {str(e)}")
+    return {"experiments": out, "leitura_do_meio": natural.LEITURA_DO_MEIO}
+
+
+@app.post("/api/v1/quasi-experiments/natural/collect", tags=["Quase-experimentos"])
+async def natural_collect(request: NaturalCollectRequest):
+    """
+    Coleta na Wikipedia o histórico de edições dos mesmos artigos no idioma que mudou a regra
+    e nos de controle, e grava as contagens mensais. Leva vários minutos (centenas de requisições).
+    """
+    admin_key_env = os.getenv("ADMIN_KEY", None)
+    if admin_key_env and request.admin_key != admin_key_env:
+        raise HTTPException(status_code=403, detail="Acesso negado. ADMIN_KEY inválida ou ausente.")
+    exp = _natural(request.experiment)
+    try:
+        data = await asyncio.to_thread(
+            wikipedia.collect_history_pairs, seed=request.seed or exp["default_seed"], treated_lang=exp["treated_lang"],
+            control_langs=exp["control_langs"], start=exp["start"], end=exp["end"],
+            max_candidates=request.max_candidates, rng_seed=0)
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Falha ao coletar da Wikipedia: {str(e)}")
+    try:
+        stored = get_db().save_natural_experiment(request.experiment, data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao gravar coleta: {str(e)}")
+    return {"experiment": request.experiment, "stored": stored}
+
+
+@app.get("/api/v1/quasi-experiments/natural/estimate", tags=["Quase-experimentos"])
+async def natural_estimate(
+    experiment: str = Query(...),
+    outcome: Literal["reverts", "human_edits", "registered_edits", "anon_edits"] = Query("reverts"),
+    method: Literal["ratio_did", "did", "control_counterfactual"] = Query(
+        "ratio_did", description="ratio_did é o indicado para contagens pequenas"),
+    control_lang: Optional[str] = Query(None, description="Idioma de controle (padrão: o primeiro do experimento)"),
+):
+    """
+    Efeito de uma mudança de regra da plataforma: os artigos no idioma que mudou contra os
+    mesmos artigos em um idioma que não mudou. Dado real: não existe `true_effect`.
+    """
+    exp = _natural(experiment)
+    control_lang = control_lang or exp["control_langs"][0]
+    try:
+        units, monthly = _natural_data(experiment)
+        if units.empty:
+            raise HTTPException(status_code=404, detail="Nada coletado. Use POST /quasi-experiments/natural/collect.")
+        if control_lang not in set(units["lang"]) - {exp["treated_lang"]}:
+            raise HTTPException(status_code=404, detail=f"Idioma de controle '{control_lang}' não foi coletado.")
+        pairs = natural.eligible_pairs(units, monthly, exp, control_lang)
+        data = natural.panel(monthly, pairs, exp, control_lang, outcome)
+        t0 = pd.Timestamp(exp["date"]).to_period("M").to_timestamp()   # dado mensal: o mês da mudança já é "depois"
+        sums = data.groupby(["date", "treated"])["y"].sum().unstack("treated").fillna(0)
+        if method == "ratio_did":
+            result = quasi.ratio_did(data, t0)
+        elif method == "did":
+            result = quasi.diff_in_diff(data, t0)
+        else:
+            result = quasi.control_counterfactual(sums[True].rename("y").reset_index(), sums[False].rename("y").reset_index(), t0)
+            result.pop("series", None)
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao estimar efeito: {str(e)}")
+    return {
+        "experiment": experiment, "name": exp["name"], "date": exp["date"],
+        "outcome": outcome, "outcome_definition": natural.OUTCOMES[outcome],
+        "method": method, "treated_lang": exp["treated_lang"], "control_lang": control_lang,
+        "pairs_eligible": len(pairs), "pairs_collected": int(units["pair"].nunique()),
+        "eligibility": {
+            "rule": "artigo criado antes da janela e com edição anônima no período abaixo, nos dois idiomas",
+            "months": [exp["start"], (natural.estimation_start(exp) - pd.DateOffset(months=1)).date().isoformat()],
+        },
+        "true_effect": None,
+        **result,
+        "series": [{"month": d.date().isoformat(), "treated": float(r[True]), "control": float(r[False])}
+                   for d, r in sums.iterrows()],
+        "referencia_externa": exp["referencia_externa"],
+        "pressupostos": natural.PRESSUPOSTOS,
+        "leitura_do_meio": natural.LEITURA_DO_MEIO,
+    }
+
+
+# ===== ANÁLISE DE CONTEÚDO (BARDIN) =====
+# Livro de códigos -> codificação automática -> validação por concordância -> inferência.
+
+REFERENCE_CODES = Path(__file__).parent.parent / "data" / "reference" / "codificacao_referencia_ia.json"
+
+# Corpus -> SQL das unidades (unit_id + campos lidos pelas variáveis) e SQL do desempenho por unidade
+CORPORA = {
+    "seo_consultas": {
+        "units": "SELECT query AS unit_id, query AS text, serp_features FROM seo_queries ORDER BY query",
+        "metrics": "SELECT query AS unit_id, clicks, impressions, position FROM seo_queries",
+    },
+    "seo_paginas": {
+        "units": "SELECT page AS unit_id, title AS text, word_count, byline FROM seo_pages ORDER BY page",
+        "metrics": """SELECT page AS unit_id, SUM(clicks) AS clicks, SUM(impressions) AS impressions, AVG(position) AS position
+                      FROM seo_page_daily GROUP BY page""",
+    },
+    "wikipedia_resumos": {
+        "units": """SELECT CAST(revid AS VARCHAR) AS unit_id, comment AS text, title AS article
+                    FROM wiki_revisions WHERE lang = 'pt' ORDER BY revid""",
+        "metrics": """SELECT CAST(revid AS VARCHAR) AS unit_id, (tags LIKE '%mw-reverted%') AS reverted,
+                             (actor_type = 'bot') AS bot, (actor_type = 'anon') AS anon
+                      FROM wiki_revisions WHERE lang = 'pt'""",
+    },
+}
+
+
+class ContentCodeRequest(BaseModel):
+    """Request para aplicar um livro de códigos a um corpus."""
+    corpus: str = Field(..., description="seo_consultas, seo_paginas ou wikipedia_resumos")
+    coder: Literal["regras", "llm"] = Field(default="regras", description="regras do livro ou modelo de linguagem")
+    admin_key: Optional[str] = Field(default=None, description="Chave de administrador (configurar em .env)")
+
+
+def _codebook(corpus: str) -> dict:
+    if corpus not in CODEBOOKS:
+        raise HTTPException(status_code=404, detail=f"Corpus '{corpus}' não existe. Opções: {', '.join(CODEBOOKS)}.")
+    return CODEBOOKS[corpus]
+
+
+def _variable(corpus: str, variable: str) -> dict:
+    book = _codebook(corpus)
+    if variable not in book["variaveis"]:
+        raise HTTPException(status_code=404,
+                            detail=f"Variável '{variable}' não existe em {corpus}. Opções: {', '.join(book['variaveis'])}.")
+    return book["variaveis"][variable]
+
+
+def _load_reference_codes() -> int:
+    """Carrega no banco a amostra codificada por IA que serve de referência (idempotente)."""
+    if not Path(REFERENCE_CODES).exists():
+        return 0
+    ref = pd.DataFrame(json.loads(Path(REFERENCE_CODES).read_text(encoding="utf-8")))
+    if "coder" not in ref:
+        ref["coder"] = None
+    ref["coder"] = ref["coder"].fillna("referencia_ia")
+    return get_db().save_codes(ref[["corpus", "unit_id", "variable", "coder", "category"]])
+
+
+@app.get("/api/v1/content-analysis/codebooks", tags=["Análise de Conteúdo"])
+async def content_codebooks(corpus: Optional[str] = Query(None, description="Sem valor, lista os corpora")):
+    """Livro de códigos: unidade de registro, variáveis, categorias com definição, exemplos e regras."""
+    if corpus is None:
+        return {"corpora": {name: {"titulo": b["titulo"], "variaveis": list(b["variaveis"])} for name, b in CODEBOOKS.items()}}
+    return {"corpus": corpus, "codebook": _codebook(corpus), "leitura_do_meio": CONTENT_LEITURA[corpus]}
+
+
+@app.get("/api/v1/content-analysis/sample", tags=["Análise de Conteúdo"])
+async def content_sample(corpus: str = Query(...), n: int = Query(50, ge=1, le=500),
+                         seed: int = Query(0, ge=0, le=2 ** 32 - 1)):
+    """Amostra aleatória reproduzível de unidades, para um segundo codificador classificar às cegas."""
+    _codebook(corpus)
+    try:
+        units = get_db().query_df(CORPORA[corpus]["units"])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao ler corpus: {str(e)}")
+    sample = units.sample(n=min(n, len(units)), random_state=seed).sort_values("unit_id")
+    return {"corpus": corpus, "seed": seed, "population": len(units),
+            "units": sample.astype(object).where(sample.notna(), None).to_dict("records")}
+
+
+@app.post("/api/v1/content-analysis/code", tags=["Análise de Conteúdo"])
+async def content_code(request: ContentCodeRequest):
+    """
+    Aplica o livro de códigos a todo o corpus e grava os códigos (recodificar substitui).
+    `coder=regras` usa as regras do livro; `coder=llm` usa um modelo de linguagem (precisa de OPENAI_API_KEY).
+    """
+    admin_key_env = os.getenv("ADMIN_KEY", None)
+    if admin_key_env and request.admin_key != admin_key_env:
+        raise HTTPException(status_code=403, detail="Acesso negado. ADMIN_KEY inválida ou ausente.")
+    book = _codebook(request.corpus)
+    if request.coder == "llm" and not os.getenv("OPENAI_API_KEY"):
+        raise HTTPException(status_code=503, detail="Codificador por IA indisponível: configure OPENAI_API_KEY.")
+    try:
+        units = get_db().query_df(CORPORA[request.corpus]["units"])
+        if request.coder == "llm":
+            from openai import OpenAI
+            codes = await asyncio.to_thread(content_coder.code_units_llm, book, units, OpenAI())
+        else:
+            codes = content_coder.code_units(book, units)
+        get_db().conn.execute("DELETE FROM content_codes WHERE corpus = ? AND coder = ?", [request.corpus, request.coder])
+        get_db().save_codes(codes.assign(corpus=request.corpus, coder=request.coder))
+        _load_reference_codes()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao codificar: {str(e)}")
+    freq = codes.groupby(["variable", "category"]).size()
+    return {
+        "corpus": request.corpus,
+        "coder": request.coder,
+        "units": len(units),
+        # só o codificador por IA pode ficar sem resposta: código que caiu na categoria residual por isso
+        "unanswered": int(codes.attrs.get("unanswered", 0)),
+        "frequencies": {v: freq[v].sort_values(ascending=False).to_dict() for v in freq.index.get_level_values(0).unique()},
+    }
+
+
+@app.get("/api/v1/content-analysis/results", tags=["Análise de Conteúdo"])
+async def content_results(corpus: str = Query(...), variable: str = Query(...), coder: str = Query("regras")):
+    """
+    Tratamento dos resultados: frequência de cada categoria e o desempenho associado
+    (cliques, CTR e posição nas consultas e páginas; reversão, robôs e anônimos na Wikipedia).
+    """
+    var = _variable(corpus, variable)
+    try:
+        df = get_db().conn.execute(f"""
+            SELECT c.category, m.* EXCLUDE (unit_id)
+            FROM content_codes c LEFT JOIN ({CORPORA[corpus]["metrics"]}) m USING (unit_id)
+            WHERE c.corpus = ? AND c.variable = ? AND c.coder = ?
+        """, [corpus, variable, coder]).fetchdf()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao consultar códigos: {str(e)}")
+    if df.empty:
+        raise HTTPException(status_code=404, detail=f"Nada codificado por '{coder}' em {corpus}/{variable}. Use POST /content-analysis/code.")
+
+    categories = []
+    for category, g in df.groupby("category"):
+        row = {"category": category, "n": len(g), "share": round(len(g) / len(df), 4)}
+        if "clicks" in g:
+            impressions, clicks = float(g["impressions"].sum()), float(g["clicks"].sum())
+            row.update({"clicks": int(clicks), "impressions": int(impressions),
+                        "ctr": round(clicks / impressions, 4) if impressions else None,
+                        "avg_position": round(float(g["position"].mean()), 2) if g["position"].notna().any() else None})
+        else:
+            row.update({f"{k}_share": round(float(g[k].fillna(False).astype(bool).mean()), 4)
+                        for k in ("reverted", "bot", "anon")})
+        categories.append(row)
+    known = [c["codigo"] for c in var["categorias"]]
+    categories.sort(key=lambda r: (-r["n"], r["category"]))
+    return {
+        "corpus": corpus, "variable": variable, "coder": coder, "n": len(df),
+        "definicao": var["definicao"],
+        "categories": categories,
+        "empty_categories": [c for c in known if c not in {r["category"] for r in categories}],
+        "leitura_do_meio": CONTENT_LEITURA[corpus],
+    }
+
+
+@app.get("/api/v1/content-analysis/reliability", tags=["Análise de Conteúdo"])
+async def content_reliability(corpus: str = Query(...), variable: str = Query(...),
+                              coder_a: str = Query("regras"), coder_b: str = Query("referencia_ia")):
+    """
+    Validação: concordância entre dois codificadores nas unidades que ambos codificaram
+    (percentual, kappa de Cohen, alfa de Krippendorff, matriz de confusão) e a lista de
+    desacordos para revisar o livro de códigos. `coder_b` é tomado como referência.
+    """
+    _variable(corpus, variable)
+    try:
+        pairs = get_db().conn.execute(f"""
+            SELECT a.unit_id, u.text, a.category AS a, b.category AS b
+            FROM content_codes a
+            JOIN content_codes b ON b.corpus = a.corpus AND b.unit_id = a.unit_id AND b.variable = a.variable
+            LEFT JOIN ({CORPORA[corpus]["units"]}) u ON u.unit_id = a.unit_id
+            WHERE a.corpus = ? AND a.variable = ? AND a.coder = ? AND b.coder = ?
+            ORDER BY a.unit_id
+        """, [corpus, variable, coder_a, coder_b]).fetchdf()
+        result = content_reliability_metrics.agreement(pairs["a"], pairs["b"])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao calcular concordância: {str(e)}")
+    if pairs.empty:
+        raise HTTPException(status_code=404,
+                            detail=f"Nenhuma unidade de {corpus}/{variable} codificada por '{coder_a}' e por '{coder_b}'.")
+    diff = pairs[pairs["a"] != pairs["b"]]
+    avisos = {
+        "referencia_ia": "A referência foi codificada por IA às cegas, não por humanos: mede consistência entre dois procedimentos, não validade.",
+        "referencia_ia_desenvolvimento": "Amostra de desenvolvimento, codificada por IA com a versão 1 do livro: os desacordos dela serviram para revisar as regras, então a concordância aqui é otimista. Use `referencia_ia` para validar.",
+        "verdade_simulador": "A referência é o rótulo do próprio gerador de dados: os textos saem de moldes, então a concordância é otimista.",
+    }
+    return {
+        "corpus": corpus, "variable": variable, "coder_a": coder_a, "coder_b": coder_b,
+        **result,
+        "disagreements": [{"unit_id": r.unit_id, "text": r.text, coder_a: r.a, coder_b: r.b} for r in diff.head(50).itertuples()],
+        "aviso": avisos.get(coder_b, "Concordância entre dois codificadores não prova que algum deles está certo."),
+    }
+
+
+async def collect_digital_methods() -> dict:
+    """Resumo de métodos digitais para o relatório de IA (efeito do ranking + controvérsia na Wikipedia)."""
+    return {
+        "rank_effect": await search_rank_effect(),
+        # chamada direta: os defaults Query() não se resolvem, passar tudo explícito
+        "controversy": await wikipedia_controversy(lang="pt", seed=None, min_edits=20),
+    }
+
+
 # ===== RELATÓRIOS INTELIGENTES COM AGNO =====
 
 @app.post("/api/v1/reports/generate", tags=["Reports"], response_model=dict)
@@ -985,7 +1357,7 @@ async def generate_report(request: ReportRequest):
                 'kpis': get_kpis(),
                 'channel_clusters': get_channel_clusters(n_clusters=3),
                 'keyword_clusters': get_keyword_clusters(n_clusters=3),
-                'page_clusters': get_page_clusters_ml(n_clusters=3),
+                'digital_methods': collect_digital_methods(),
                 'correlations': get_correlation_matrix()
             }
             
@@ -1043,8 +1415,8 @@ Gere um relatório analítico completo baseado nos seguintes dados de marketing 
 ## 🔍 Clusters de Keywords (Google Search Console)
 {format_keyword_clusters(data_collection.get('keyword_clusters', {}))}
 
-## 📄 Clusters de Páginas (Por Engajamento)
-{format_page_clusters(data_collection.get('page_clusters', {}))}
+## 🧭 Métodos Digitais (leitura do meio)
+{format_digital_methods(data_collection.get('digital_methods', {}))}
 
 ## 🔗 Matriz de Correlação entre Métricas
 {format_correlations(data_collection.get('correlations', {}))}
@@ -1134,7 +1506,7 @@ Gere um relatório analítico completo baseado nos seguintes dados de marketing 
             "recommendations": report_data.get("recommendations", []),
             "metadata": {
                 "data_sources": list(data_collection.keys()),
-                "ml_models_used": ["channel_profiling", "keyword_clustering", "page_segmentation"],
+                "ml_models_used": ["channel_profiling", "keyword_clustering"],
                 "agent_model": "gpt-4o-mini",
                 "confidence_score": confidence,
                 "generation_timestamp": datetime.now().isoformat(),
@@ -1185,6 +1557,11 @@ de {conversion_rate:.2f}%. A taxa de rejeição foi de {bounce_rate:.2f}%.
 Dados completos disponíveis nos endpoints individuais de análise.
 """.strip(),
         "sections": [
+            {
+                "title": "🧭 Métodos Digitais — leitura do meio",
+                "content": format_digital_methods(data.get('digital_methods', {})),
+                "key_insights": ["Cada métrica é produzida pela plataforma: leia as ressalvas antes de concluir"]
+            },
             {
                 "title": "📊 KPIs Principais",
                 "content": format_kpis(kpis),
@@ -1305,6 +1682,12 @@ async def populate_database(request: PopulateDatabaseRequest):
         # GSC
         db_instance.insert_gsc_query_data(gsc_data)
         logger.info(f"   ✅ {len(gsc_data)} registros GSC salvos")
+
+        # Painel de quase-experimentos e corpus de análise de conteúdo: sempre 120 dias
+        # (as intervenções têm datas fixas dentro da janela), substituindo o anterior
+        from tests.simulador_dados import ExperimentSimulator
+        experiment = db_instance.save_seo_experiment(ExperimentSimulator().generate(days=120, end_date=end_date))
+        logger.info(f"   ✅ {experiment['daily']} linhas do painel página×dia salvas")
         
         logger.info("✅ População do banco concluída com sucesso!")
         
@@ -1318,6 +1701,8 @@ async def populate_database(request: PopulateDatabaseRequest):
                 "engagement_records": len(ga4_engagement),
                 "conversion_records": len(ga4_conversions),
                 "gsc_records": len(gsc_data),
+                "experiment_panel_rows": experiment["daily"],
+                "experiment_queries": experiment["queries"],
                 "overwrite_mode": request.overwrite
             },
             "next_steps": [

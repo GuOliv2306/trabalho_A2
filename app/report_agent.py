@@ -88,11 +88,13 @@ def create_report_agent(debug_mode: bool = False) -> Agent:
             - Destacar keywords de alto valor
             - Sugerir estratégias de conteúdo
             
-            ### Seção 4: Segmentação de Páginas 📄
-            - Descrever os 3 clusters de páginas
-            - Identificar páginas de alta performance (benchmarks)
-            - Detectar páginas com problemas (alta rejeição, baixo engagement)
-            - Sugerir melhorias específicas para páginas problemáticas
+            ### Seção 4: Métodos Digitais — leitura do meio 🧭
+            - Tratar cada métrica como produto da plataforma, não como retrato neutro do público
+            - Busca: explicar quanto do clique vem da posição no ranking e o que isso limita nas conclusões
+            - Wikipedia (se houver coleta): descrever a controvérsia pelos objetos do meio (reversões,
+              anônimos, robôs, concentração de editores, atenção) e quem são os atores
+            - Explicitar as ressalvas fornecidas: o que o dado diz sobre a plataforma e o que diz sobre o tema
+            - Não tirar conclusão causal nem "opinião pública" desses dados
             
             ### Seção 5: Correlações e Padrões 🔗
             - Explicar correlações significativas encontradas
@@ -122,7 +124,6 @@ def create_report_agent(debug_mode: bool = False) -> Agent:
             4. **Exemplos de Nomenclatura**:
                - Canais: "Canais Orgânicos Premium", "Tráfego Pago de Alto Volume", "Canais Emergentes"
                - Keywords: "Termos de Pesquisa Branded", "Keywords Informacionais", "Queries Transacionais"
-               - Páginas: "Landing Pages Otimizadas", "Conteúdo de Blog", "Páginas de Produto de Baixo Desempenho"
             """),
             
             dedent("""
@@ -222,7 +223,7 @@ def create_report_agent(debug_mode: bool = False) -> Agent:
             ### Metadata Obrigatório:
             Sempre incluir no campo metadata:
             - **data_sources**: Lista das fontes de dados utilizadas
-            - **ml_models_used**: ["channel_profiling", "keyword_clustering", "page_segmentation"]
+            - **ml_models_used**: ["channel_profiling", "keyword_clustering"]
             - **confidence_score**: 0-1 (já calculado e fornecido)
             - **analysis_date**: Data da análise
             - **period_analyzed**: Período dos dados

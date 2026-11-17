@@ -135,32 +135,38 @@ def format_keyword_clusters(clusters: dict) -> str:
     return "\n".join(output)
 
 
-def format_page_clusters(clusters: dict) -> str:
-    """Formata clusters de páginas em texto estruturado."""
-    if not clusters or 'clusters' not in clusters:
-        return "Dados de clusters de páginas não disponíveis."
-    
-    output = ["**Clusters de Páginas (K-Means):**\n"]
-    
-    for cluster_id, cluster_data in clusters['clusters'].items():
-        pages_list = cluster_data.get('pages', [])
-        pages_preview = ', '.join(pages_list[:5])
-        if len(pages_list) > 5:
-            pages_preview += f" (+ {len(pages_list) - 5} outras)"
-        
-        avg_metrics = cluster_data.get('avg_metrics', {})
-        
-        output.append(f"""
-### Cluster {cluster_id}
-- **Tamanho**: {cluster_data.get('count', 0)} páginas
-- **Páginas Exemplo**: {pages_preview}
-- **Características Médias**:
-  * Taxa de Engajamento: {avg_metrics.get('engagement_rate', 0):.2f}%
-  * Eventos por Sessão: {avg_metrics.get('event_count', 0):.1f}
-  * Duração Média: {avg_metrics.get('avg_duration', 0):.1f}s
-""")
-    
-    return "\n".join(output)
+def format_digital_methods(dm: dict) -> str:
+    """Formata o resumo de métodos digitais (o dado como produto da plataforma)."""
+    if not dm:
+        return "Dados de métodos digitais não disponíveis."
+
+    def pct(value, digits=0):
+        return "s/d" if value is None else f"{value:.{digits}%}"
+
+    output = []
+    rank = dm.get("rank_effect") or {}
+    if rank.get("curve"):
+        output.append("**Busca — o ranking produz o clique:**")
+        output.append(f"- Top 3 posições concentram {pct(rank.get('top3_click_share'))} dos cliques "
+                      f"com {pct(rank.get('top3_impression_share'))} das impressões")
+        output.append(f"- Correlação de postos posição x CTR: {rank.get('spearman_position_ctr')}")
+        output.extend(f"- Posição {b['position']}: CTR {pct(b['ctr'], 1)} ({b['queries']} consultas)" for b in rank["curve"][:10])
+        output.extend(f"- Ressalva: {n}" for n in rank.get("leitura_do_meio", []))
+
+    controversy = dm.get("controversy") or {}
+    articles = controversy.get("articles", [])
+    if articles:
+        era = (controversy.get("plataforma") or {}).get("tag_era_start")
+        output.append(f"\n**Wikipedia — cartografia de controvérsia (dados reais; edições desde {era}):**")
+        output.extend(
+            f"- {a['title']} ({a['edits_in_tag_era']} edições{', amostra pequena' if a.get('low_sample') else ''}): "
+            f"reversão {pct(a['revert_rate'], 1)}, anônimos {pct(a['anon_share'])}, robôs {pct(a['bot_share'])}, "
+            f"editor mais ativo {pct(a['top_editor_share'])}, {a['pageviews_30d']:,} pageviews/30d"
+            for a in articles[:10]
+        )
+        output.extend(f"- Ressalva: {n}" for n in controversy.get("leitura_do_meio", []))
+
+    return "\n".join(output) or "Dados de métodos digitais não disponíveis."
 
 
 def format_correlations(correlations: dict) -> str:
@@ -200,7 +206,7 @@ def calculate_confidence_score(data_collection: dict) -> float:
     - Volume de dados (30%)
     """
     # Completude: quantas fontes têm dados
-    sources = ['kpis', 'channel_clusters', 'keyword_clusters', 'page_clusters', 'correlations']
+    sources = ['kpis', 'channel_clusters', 'keyword_clusters', 'digital_methods', 'correlations']
     available_sources = sum(1 for s in sources if data_collection.get(s))
     completeness = available_sources / len(sources)
     
@@ -209,7 +215,7 @@ def calculate_confidence_score(data_collection: dict) -> float:
     total_clusters = 0
     total_elements = 0
     
-    for cluster_type in ['channel_clusters', 'keyword_clusters', 'page_clusters']:
+    for cluster_type in ['channel_clusters', 'keyword_clusters']:
         cluster_data = data_collection.get(cluster_type, {})
         if 'clusters' in cluster_data:
             for cluster_info in cluster_data['clusters'].values():
@@ -222,7 +228,7 @@ def calculate_confidence_score(data_collection: dict) -> float:
     
     # Volume de dados: baseado em sessões
     kpis = data_collection.get('kpis', {})
-    total_sessions = kpis.get('total_sessions', 0)
+    total_sessions = kpis.get('sessoesTotais', kpis.get('total_sessions', 0))
     data_volume = min(total_sessions / 1000, 1.0)  # Normaliza para 0-1
     
     # Fórmula final

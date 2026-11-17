@@ -234,7 +234,190 @@ class GA4DatabaseStorage:
             )
         """)
 
+        # ===== TABELAS QUASE-EXPERIMENTOS E ANÁLISE DE CONTEÚDO =====
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS seo_pages (
+                page VARCHAR PRIMARY KEY, template VARCHAR, title VARCHAR, word_count BIGINT, byline VARCHAR
+            )
+        """)
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS seo_page_daily (
+                page VARCHAR, date DATE, clicks BIGINT, impressions BIGINT, position DOUBLE,
+                PRIMARY KEY (page, date)
+            )
+        """)
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS seo_interventions (
+                intervention_id VARCHAR PRIMARY KEY, name VARCHAR, description VARCHAR,
+                kind VARCHAR,          -- 'mudanca' (do site) ou 'externo' (da plataforma)
+                date DATE, template VARCHAR, randomized BOOLEAN,
+                true_effect DOUBLE     -- só existe porque o dado é simulado
+            )
+        """)
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS seo_intervention_pages (
+                intervention_id VARCHAR, page VARCHAR, grp VARCHAR,   -- 'tratado' ou 'controle'
+                PRIMARY KEY (intervention_id, page)
+            )
+        """)
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS seo_queries (
+                query VARCHAR PRIMARY KEY, clicks BIGINT, impressions BIGINT, position DOUBLE,
+                serp_features VARCHAR   -- 'formato:área|formato:área'
+            )
+        """)
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS content_codes (
+                corpus VARCHAR, unit_id VARCHAR, variable VARCHAR, coder VARCHAR, category VARCHAR,
+                PRIMARY KEY (corpus, unit_id, variable, coder)
+            )
+        """)
+
+        # ===== TABELAS EXPERIMENTO NATURAL (WIKIPEDIA) =====
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS wiki_experiment_units (
+                experiment VARCHAR, pair VARCHAR, lang VARCHAR, title VARCHAR, created VARCHAR,
+                PRIMARY KEY (experiment, pair, lang)   -- pair = título no idioma tratado
+            )
+        """)
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS wiki_monthly (
+                experiment VARCHAR, pair VARCHAR, lang VARCHAR, title VARCHAR, month DATE,
+                human_edits BIGINT, registered_edits BIGINT, anon_edits BIGINT, bot_edits BIGINT, reverts BIGINT,
+                PRIMARY KEY (experiment, pair, lang, month)
+            )
+        """)
+
+        # ===== TABELAS MÉTODOS DIGITAIS (WIKIPEDIA) =====
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS wiki_pages (
+                lang VARCHAR, title VARCHAR, seed VARCHAR, pageid BIGINT,
+                length BIGINT, pageviews_30d BIGINT, collected_at TIMESTAMP,
+                PRIMARY KEY (lang, seed, title)  -- um artigo pode estar no recorte de várias sementes
+            )
+        """)
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS wiki_revisions (
+                lang VARCHAR, title VARCHAR, revid BIGINT, parentid BIGINT,
+                "timestamp" TIMESTAMP, "user" VARCHAR, actor_type VARCHAR,
+                size BIGINT, size_diff BIGINT, minor BOOLEAN, comment VARCHAR,
+                tags VARCHAR,  -- separadas por '|'
+                PRIMARY KEY (lang, revid)
+            )
+        """)
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS wiki_links (
+                lang VARCHAR, seed VARCHAR, source VARCHAR, target VARCHAR,
+                PRIMARY KEY (lang, seed, source, target)
+            )
+        """)
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS wiki_editions (
+                seed_lang VARCHAR, seed_title VARCHAR, lang VARCHAR, title VARCHAR,
+                length BIGINT, pageviews_30d BIGINT,
+                PRIMARY KEY (seed_lang, seed_title, lang)
+            )
+        """)
+
         print("OK Tabelas criadas/verificadas no banco de dados (GA4 + GSC)")
+
+    def save_seo_experiment(self, data: Dict[str, Any]) -> Dict[str, int]:
+        """
+        Grava a saída de `ExperimentSimulator.generate`, substituindo o painel anterior,
+        os códigos verdadeiros do simulador e os códigos automáticos dos corpora simulados
+        (que precisam ser refeitos com POST /content-analysis/code). A referência fica.
+        """
+        tables = [("seo_pages", "pages"), ("seo_page_daily", "daily"), ("seo_interventions", "interventions"),
+                  ("seo_intervention_pages", "intervention_pages"), ("seo_queries", "queries")]
+        self.conn.execute("BEGIN")
+        try:
+            for table, key in tables:
+                self.conn.execute(f"DELETE FROM {table}")
+            self.conn.execute("""DELETE FROM content_codes WHERE coder = 'verdade_simulador'
+                                 OR (corpus LIKE 'seo_%' AND coder IN ('regras', 'llm'))""")
+            for table, key in tables + [("content_codes", "codes")]:
+                self.conn.register("_seo_df", data[key])
+                self.conn.execute(f"INSERT INTO {table} BY NAME SELECT * FROM _seo_df")
+                self.conn.unregister("_seo_df")
+            self.conn.execute("COMMIT")
+        except Exception:
+            self.conn.execute("ROLLBACK")
+            raise
+        return {key: len(data[key]) for _, key in tables}
+
+    def save_natural_experiment(self, experiment: str, data: Dict[str, Any]) -> Dict[str, int]:
+        """Grava a saída de `wikipedia.collect_history_pairs`, substituindo a coleta anterior do experimento."""
+        frames = {"wiki_experiment_units": data["units"].assign(experiment=experiment),
+                  "wiki_monthly": data["monthly"].assign(experiment=experiment)}
+        self.conn.execute("BEGIN")
+        try:
+            for table, df in frames.items():
+                self.conn.execute(f"DELETE FROM {table} WHERE experiment = ?", [experiment])
+                if not df.empty:
+                    self.conn.register("_nat_df", df)
+                    self.conn.execute(f"INSERT INTO {table} BY NAME SELECT * FROM _nat_df")
+                    self.conn.unregister("_nat_df")
+            self.conn.execute("COMMIT")
+        except Exception:
+            self.conn.execute("ROLLBACK")
+            raise
+        return {"units": len(data["units"]), "monthly": len(data["monthly"])}
+
+    def save_codes(self, codes) -> int:
+        """Grava códigos de análise de conteúdo (DataFrame corpus, unit_id, variable, coder, category), substituindo os iguais."""
+        if len(codes) == 0:
+            return 0
+        self.conn.register("_codes_df", codes)
+        self.conn.execute("INSERT OR REPLACE INTO content_codes BY NAME SELECT * FROM _codes_df")
+        self.conn.unregister("_codes_df")
+        return len(codes)
+
+    def save_wiki(self, data: Dict[str, Any]) -> Dict[str, int]:
+        """
+        Grava o resultado de `wikipedia.collect_topic`. Páginas e links pertencem
+        à semente (recoletar substitui o recorte dela sem tocar no de outras);
+        revisões pertencem ao artigo e são atualizadas para os artigos coletados.
+
+        Returns:
+            Contagem de linhas gravadas por tabela.
+        """
+        import pandas as pd
+
+        lang, seed = data["lang"], data["seed"]
+        titles = [p["title"] for p in data["pages"]]
+
+        pages = pd.DataFrame(data["pages"]).assign(lang=lang, seed=seed, collected_at=datetime.now())
+        revisions = pd.DataFrame([
+            {**r, "lang": lang, "title": t, "tags": "|".join(r["tags"])}
+            for t, revs in data["revisions"].items() for r in revs
+        ])
+        if not revisions.empty:
+            revisions["timestamp"] = pd.to_datetime(revisions["timestamp"], utc=True).dt.tz_localize(None)
+        links = pd.DataFrame(data["links"], columns=["source", "target"]).assign(lang=lang, seed=seed)
+        editions = pd.DataFrame(data["editions"]).assign(seed_lang=lang, seed_title=seed)
+
+        self.conn.execute("BEGIN")
+        try:
+            self.conn.execute("DELETE FROM wiki_pages WHERE lang = ? AND seed = ?", [lang, seed])
+            self.conn.execute("DELETE FROM wiki_links WHERE lang = ? AND seed = ?", [lang, seed])
+            self.conn.execute("DELETE FROM wiki_revisions WHERE lang = ? AND title IN (SELECT unnest(?))", [lang, titles])
+            self.conn.execute("DELETE FROM wiki_editions WHERE seed_lang = ? AND seed_title = ?", [lang, seed])
+            for table, df in [("wiki_pages", pages), ("wiki_revisions", revisions),
+                              ("wiki_links", links), ("wiki_editions", editions)]:
+                if not df.empty:
+                    self.conn.register("_wiki_df", df)
+                    self.conn.execute(f"INSERT INTO {table} BY NAME SELECT * FROM _wiki_df")
+                    self.conn.unregister("_wiki_df")
+            # revisões de artigos que saíram de todos os recortes
+            self.conn.execute(
+                "DELETE FROM wiki_revisions WHERE lang = ? AND title NOT IN (SELECT title FROM wiki_pages WHERE lang = ?)",
+                [lang, lang])
+            self.conn.execute("COMMIT")
+        except Exception:
+            self.conn.execute("ROLLBACK")
+            raise
+
+        return {"pages": len(pages), "revisions": len(revisions), "links": len(links), "editions": len(editions)}
 
     def insert_from_json(self, json_filepath: str) -> int:
         """

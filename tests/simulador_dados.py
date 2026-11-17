@@ -23,6 +23,8 @@ from pathlib import Path
 from typing import List, Dict, Any, Tuple
 import argparse
 
+import numpy as np
+
 # Adiciona o diretório raiz ao path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -590,6 +592,204 @@ class GSCSimulator:
             })
         
         return date_data
+
+
+class ExperimentSimulator:
+    """
+    Simula o que os quase-experimentos e a análise de conteúdo precisam e o resto do
+    simulador não tem: um painel página×dia com intervenções de efeito conhecido, e
+    consultas/páginas com texto e com o código verdadeiro de cada variável.
+
+    Determinístico para um mesmo `seed`.
+    """
+
+    TEMPLATES = {"produto": 40, "categoria": 24, "post": 30}
+    INSTITUCIONAIS = [("/", "Home"), ("/sobre", "Sobre nós"), ("/contato", "Contato"),
+                      ("/servicos", "Serviços"), ("/politica-de-privacidade", "Política de privacidade")]
+    PRODUTOS = ["tênis de corrida", "mochila de trilha", "garrafa térmica", "relógio esportivo", "barraca de camping",
+                "fone bluetooth", "bicicleta ergométrica", "colchonete de yoga", "lanterna de cabeça", "saco de dormir",
+                "bota de trekking", "jaqueta impermeável"]
+    MARCAS = ["trilhamax", "corremais", "campobase"]
+    AUTORES = ["Ana Lima", "Bruno Reis", "Carla Nunes", "Diego Prado"]
+    # (dia relativo ao início de uma janela de 120 dias, efeito relativo verdadeiro)
+    UPDATE_ALGORITMO = (95, -0.12)
+
+    def __init__(self, seed: int = 42, site_url: str = DataSimulatorConfig.SITE_URL):
+        self.seed = seed
+        self.site_url = site_url.rstrip("/")
+
+    # ---------- páginas ----------
+    def _pages(self, rng):
+        import pandas as pd
+        rows, codes = [], []
+
+        def add(path, template, title, tipo):
+            profundidade = rng.choice(["rasa", "media", "profunda"], p=[0.3, 0.45, 0.25])
+            words = {"rasa": rng.integers(80, 300), "media": rng.integers(300, 1200),
+                     "profunda": rng.integers(1200, 3500)}[profundidade]
+            if tipo in ("home", "institucional", "categoria"):
+                autoria = "sem_autoria"
+            else:
+                autoria = rng.choice(["sem_autoria", "autor_identificado", "autor_com_credenciais"], p=[0.35, 0.4, 0.25])
+            autor = rng.choice(self.AUTORES)
+            byline = {
+                # "Equipe" e "Redação" parecem assinatura, mas não identificam ninguém
+                "sem_autoria": rng.choice(["", "", "Equipe Editorial", "Redação"]),
+                "autor_identificado": rng.choice([f"Por {autor}", f"Escrito por {autor}", f"{autor}"]),
+                "autor_com_credenciais": rng.choice([
+                    f"Por {autor}, fisioterapeuta com 10 anos de experiência em corrida",
+                    f"Por {autor}. Revisado por especialista em equipamentos",
+                    f"{autor}, guia de montanha certificado, testou o produto por 3 meses",
+                ]),
+            }[autoria]
+            page = self.site_url + path
+            rows.append({"page": page, "template": template, "title": title, "word_count": int(words), "byline": byline})
+            for variable, category in [("tipo_pagina", tipo), ("profundidade", profundidade), ("autoria", autoria)]:
+                codes.append({"corpus": "seo_paginas", "unit_id": page, "variable": variable,
+                              "coder": "verdade_simulador", "category": category})
+
+        for path, title in self.INSTITUCIONAIS:
+            add(path, "institucional", title, "home" if path == "/" else "institucional")
+        for i in range(self.TEMPLATES["produto"]):
+            nome = self.PRODUTOS[i % len(self.PRODUTOS)]
+            add(f"/produtos/item-{i + 1:02d}", "produto", f"{nome.capitalize()} modelo {i + 1}", "produto")
+        for i in range(self.TEMPLATES["categoria"]):
+            add(f"/produtos/categoria-{i + 1:02d}", "categoria", f"Categoria: {self.PRODUTOS[i % len(self.PRODUTOS)]}", "categoria")
+        for i in range(self.TEMPLATES["post"]):
+            nome = self.PRODUTOS[i % len(self.PRODUTOS)]
+            titulo = [f"Como escolher {nome}", f"Guia completo de {nome}", f"{nome.capitalize()}: vale a pena?"][i % 3]
+            add(f"/blog/artigo-{i + 1:02d}", "post", titulo, "post")
+        return pd.DataFrame(rows), codes
+
+    # ---------- intervenções ----------
+    def _interventions(self, rng, pages, base, start):
+        import pandas as pd
+
+        def of(template):
+            return pages.loc[pages["template"] == template, "page"].tolist()
+
+        def day(n):
+            return (start + timedelta(days=n)).date()
+
+        produtos, categorias, posts = of("produto"), of("categoria"), of("post")
+        # escolhida a dedo: as categorias de maior tráfego (viés de seleção de propósito)
+        cat_tratadas = sorted(categorias, key=lambda p: -base[p])[:12]
+        # sorteada: metade dos produtos
+        prod_tratados = set(rng.permutation(produtos)[:20].tolist())
+
+        interventions = pd.DataFrame([
+            {"intervention_id": "titulos_blog", "name": "Novos títulos nos posts do blog",
+             "description": "Todos os posts tiveram o título reescrito no mesmo dia.", "kind": "mudanca",
+             "date": day(60), "template": "post", "randomized": False, "true_effect": 0.15},
+            {"intervention_id": "schema_categorias", "name": "Dados estruturados nas categorias de maior tráfego",
+             "description": "A equipe escolheu as 12 categorias mais visitadas para receber a mudança.", "kind": "mudanca",
+             "date": day(70), "template": "categoria", "randomized": False, "true_effect": 0.20},
+            {"intervention_id": "descricao_produtos_ab", "name": "Teste A/B: nova descrição de produto",
+             "description": "Metade das páginas de produto, sorteada, recebeu a nova descrição.", "kind": "mudanca",
+             "date": day(75), "template": "produto", "randomized": True, "true_effect": 0.10},
+            {"intervention_id": "update_algoritmo", "name": "Atualização do algoritmo do buscador",
+             "description": "Evento externo que atingiu todas as páginas do site.", "kind": "externo",
+             "date": day(self.UPDATE_ALGORITMO[0]), "template": None, "randomized": False,
+             "true_effect": self.UPDATE_ALGORITMO[1]},
+        ])
+        cat_controle = [p for p in categorias if p not in cat_tratadas]
+        mapping = (
+            [("titulos_blog", p, "tratado") for p in posts]
+            + [("titulos_blog", p, "controle") for p in cat_controle]   # categorias nunca alteradas
+            + [("schema_categorias", p, "tratado") for p in cat_tratadas]
+            + [("schema_categorias", p, "controle") for p in cat_controle]
+            + [("descricao_produtos_ab", p, "tratado" if p in prod_tratados else "controle") for p in produtos]
+        )
+        return interventions, pd.DataFrame(mapping, columns=["intervention_id", "page", "grp"])
+
+    # ---------- painel página×dia ----------
+    def _daily(self, rng, pages, base, start, days, interventions, mapping):
+        import numpy as np
+        import pandas as pd
+
+        effect_start = {}   # página -> (dia, efeito)
+        for row in interventions[interventions["kind"] == "mudanca"].itertuples():
+            offset = (row.date - start.date()).days
+            for page in mapping.query("intervention_id == @row.intervention_id and grp == 'tratado'")["page"]:
+                effect_start[page] = (offset, row.true_effect)
+        upd_day, upd_effect = self.UPDATE_ALGORITMO
+
+        t = np.arange(days)
+        common = (1 + 0.15 * np.sin(2 * np.pi * (t + start.weekday()) / 7)) * (1 + 0.001 * t)
+        common = common * np.where(t >= upd_day, 1 + upd_effect, 1.0)
+        frames = []
+        for page in pages["page"]:
+            off, eff = effect_start.get(page, (days + 1, 0.0))
+            treated_now = t >= off
+            lam = base[page] * common * np.where(treated_now, 1 + eff, 1.0)
+            clicks = rng.poisson(lam)
+            position = np.clip(rng.normal(6.0, 1.5) - np.where(treated_now, 0.4, 0.0) + rng.normal(0, 0.3, days), 1, 50)
+            impressions = np.maximum(clicks, rng.poisson(lam * position * 2.5))
+            frames.append(pd.DataFrame({
+                "page": page, "date": [(start + timedelta(days=int(d))).date() for d in t],
+                "clicks": clicks, "impressions": impressions, "position": np.round(position, 2),
+            }))
+        return pd.concat(frames, ignore_index=True)
+
+    # ---------- consultas ----------
+    def _queries(self, rng):
+        import pandas as pd
+        patterns = {
+            "informacional": ["como escolher {p}", "o que é {p}", "como usar {p}", "para que serve {p}",
+                              "dicas de {p}", "{p} como funciona"],
+            "navegacional": ["{m}", "{m} site oficial", "{m} login", "loja {m}", "{m} telefone"],
+            "comercial": ["melhor {p}", "{p} vale a pena", "{p} avaliação", "{p} ou {q}", "top 10 {p}",
+                          "{p}"],            # consulta "seca": a intenção não está escrita
+            "transacional": ["comprar {p}", "{p} preço", "{p} promoção", "{p} frete grátis", "{p} barato", "onde comprar {p}"],
+        }
+        formats = {   # formato dominante da página de resultados, por intenção
+            "informacional": (["snippet_em_destaque", "video", "links_organicos"], [0.5, 0.2, 0.3]),
+            "navegacional": (["sitelinks", "links_organicos"], [0.8, 0.2]),
+            "comercial": (["links_organicos", "shopping", "video"], [0.55, 0.3, 0.15]),
+            "transacional": (["shopping", "links_organicos", "pacote_local"], [0.6, 0.25, 0.15]),
+        }
+        ctr_factor = {"links_organicos": 1.0, "sitelinks": 1.6, "snippet_em_destaque": 0.6,
+                      "video": 0.7, "shopping": 0.5, "pacote_local": 0.65}
+        rows, codes, seen = [], [], set()
+        for intent, pats in patterns.items():
+            for pat in pats:
+                for i, p in enumerate(self.PRODUTOS):
+                    query = pat.format(p=p, q=self.PRODUTOS[(i + 5) % len(self.PRODUTOS)], m=self.MARCAS[i % len(self.MARCAS)])
+                    if query in seen:
+                        continue
+                    seen.add(query)
+                    names, probs = formats[intent]
+                    dominant = str(rng.choice(names, p=probs))
+                    others = [n for n in ctr_factor if n != dominant]
+                    extra = str(rng.choice(others))
+                    share = round(float(rng.uniform(0.5, 0.8)), 2)
+                    position = round(float(np.clip(rng.lognormal(1.2, 0.6), 1, 40)), 2)
+                    impressions = int(rng.lognormal(6, 1))
+                    ctr = min(0.6, 0.30 / position * ctr_factor[dominant])
+                    rows.append({"query": query, "clicks": int(rng.binomial(impressions, ctr)), "impressions": impressions,
+                                 "position": position, "serp_features": f"{dominant}:{share}|{extra}:{round(1 - share, 2)}"})
+                    for variable, category in [("intencao", intent), ("formato_serp", dominant)]:
+                        codes.append({"corpus": "seo_consultas", "unit_id": query, "variable": variable,
+                                      "coder": "verdade_simulador", "category": category})
+        return pd.DataFrame(rows), codes
+
+    def generate(self, days: int = 120, end_date: datetime = None) -> Dict[str, Any]:
+        """Devolve DataFrames: pages, daily, interventions, intervention_pages, queries, codes."""
+        import pandas as pd
+        if days < 110:
+            raise ValueError("O painel de experimentos precisa de pelo menos 110 dias (intervenções até o dia 95).")
+        rng = np.random.default_rng(self.seed)
+        end = (end_date or datetime(2025, 11, 11)).replace(hour=0, minute=0, second=0, microsecond=0)
+        start = end - timedelta(days=days - 1)
+        pages, page_codes = self._pages(rng)
+        scale = {"produto": 3.6, "categoria": 4.2, "post": 3.9, "institucional": 3.0}
+        base = {r.page: float(rng.lognormal(scale[r.template], 0.5)) for r in pages.itertuples()}
+        interventions, mapping = self._interventions(rng, pages, base, start)
+        # sequências separadas: o painel depende das datas, as consultas não podem depender dele
+        daily = self._daily(np.random.default_rng([self.seed, 1]), pages, base, start, days, interventions, mapping)
+        queries, query_codes = self._queries(np.random.default_rng([self.seed, 2]))
+        return {"pages": pages, "daily": daily, "interventions": interventions, "intervention_pages": mapping,
+                "queries": queries, "codes": pd.DataFrame(page_codes + query_codes)}
 
 
 def main():
