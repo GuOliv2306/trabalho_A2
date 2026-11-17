@@ -38,6 +38,9 @@ Todas as de estimativa recebem `intervention_id`, `metric` (`clicks` ou `impress
 Como ler o DiD: `placebo_pre` repete a conta dentro do período anterior, onde o efeito tem de
 ser zero; se o intervalo não contém zero, as tendências não eram paralelas e o resultado não vale.
 
+Para contagens pequenas existe ainda `ratio_did` (razões de somas, sem log), usado no
+experimento com dado real: ver [EXPERIMENTO_NATURAL.md](EXPERIMENTO_NATURAL.md).
+
 ## O painel simulado
 
 `ExperimentSimulator` (em `tests/simulador_dados.py`) gera 99 páginas × 120 dias com

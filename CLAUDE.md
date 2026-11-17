@@ -18,7 +18,8 @@ API FastAPI (projeto em português) sobre um DuckDB local, para a disciplina de 
 Quatro frentes: painel de marketing com dados sintéticos (GA4 / Search Console simulados);
 **métodos nativamente digitais** com dados reais da Wikipedia; **quase-experimentos**
 (série interrompida, contrafactual por controles, diff-in-diff, teste A/B) sobre um painel
-simulado de efeito conhecido; e **análise de conteúdo** (Bardin) com livro de códigos,
+simulado de efeito conhecido, e um **experimento natural** com dado real (o fim da edição
+anônima na pt.wikipedia); e **análise de conteúdo** (Bardin) com livro de códigos,
 codificador por regras ou IA e validação por concordância. A tese que guia as features:
 o dado é produzido pela plataforma, então toda análise devolve `leitura_do_meio` — o que o
 número diz sobre o meio e o limite do que diz sobre o tema.
@@ -35,7 +36,7 @@ número diz sobre o meio e o limite do que diz sobre o tema.
 
 ```bash
 python -m uvicorn app.main:app --reload --port 8000
-python -m pytest tests/test_api.py tests/test_digital_methods.py tests/test_quasi_experiments.py tests/test_content_analysis.py -v
+python -m pytest tests/test_api.py tests/test_digital_methods.py tests/test_quasi_experiments.py tests/test_natural_experiments.py tests/test_content_analysis.py -v
 RUN_NETWORK=1 python -m pytest tests/test_digital_methods.py -k live   # Wikipedia real
 ```
 
@@ -45,10 +46,12 @@ RUN_NETWORK=1 python -m pytest tests/test_digital_methods.py -k live   # Wikiped
 - Chamadas à Wikipedia só por `_query`/`_get` em `src/digital_methods/wikipedia.py` (limite de requisições).
 - Mudou formato de resposta de rota? O frontend na Vercel (outro repositório) depende disso — avise.
 - Estimador causal novo só entra com teste que recupera um efeito conhecido.
+- Em dado real não há gabarito: mostre o placebo e o método que discorda antes de afirmar um efeito.
+- Nunca use o mesmo período para escolher as unidades e para medir o "antes".
 - Categoria nova no livro de códigos: definição, exemplo e teste; depois recodifique e veja a concordância.
 - Nunca apresente codificação feita por IA como validação humana.
 - Commits locais por etapa testada; sem push sem pedir.
 
 Detalhes: [docs/CODEBASE_MAP.md](docs/CODEBASE_MAP.md) · [docs/METODOS_DIGITAIS.md](docs/METODOS_DIGITAIS.md) ·
-[docs/QUASE_EXPERIMENTOS.md](docs/QUASE_EXPERIMENTOS.md) · [docs/ANALISE_DE_CONTEUDO.md](docs/ANALISE_DE_CONTEUDO.md) ·
+[docs/QUASE_EXPERIMENTOS.md](docs/QUASE_EXPERIMENTOS.md) · [docs/EXPERIMENTO_NATURAL.md](docs/EXPERIMENTO_NATURAL.md) · [docs/ANALISE_DE_CONTEUDO.md](docs/ANALISE_DE_CONTEUDO.md) ·
 [docs/SIMULADOR_PENDENCIAS.md](docs/SIMULADOR_PENDENCIAS.md)

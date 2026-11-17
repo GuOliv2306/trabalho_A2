@@ -33,7 +33,7 @@ from src.ml import ChannelProfiler, KeywordClusterer
 from src.digital_methods import analysis, wikipedia
 
 # ✅ QUASE-EXPERIMENTOS
-from src.quasi_experiments import analysis as quasi
+from src.quasi_experiments import analysis as quasi, natural
 
 # ✅ ANÁLISE DE CONTEÚDO
 from src.content_analysis import coder as content_coder, reliability as content_reliability_metrics
@@ -983,6 +983,139 @@ async def quasi_ab_split(template: str = Query(..., description="produto, catego
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao sortear grupos: {str(e)}")
     return {"template": template, **result, "pressupostos": quasi.PRESSUPOSTOS["ab"]}
+
+
+# ===== EXPERIMENTO NATURAL (WIKIPEDIA REAL) =====
+# A plataforma muda uma regra em data conhecida; compara-se com uma edição linguística que não mudou.
+
+class NaturalCollectRequest(BaseModel):
+    """Request para coletar o histórico mensal de um experimento natural."""
+    experiment: str = Field(..., description="Identificador do experimento (veja GET /natural/experiments)")
+    seed: Optional[str] = Field(default=None, max_length=255, description="Página-semente; os artigos vêm dos links dela")
+    max_candidates: int = Field(default=40, ge=2, le=80, description="Artigos candidatos (sorteados entre os links da semente)")
+    admin_key: Optional[str] = Field(default=None, description="Chave de administrador (configurar em .env)")
+
+    @field_validator("seed")
+    @classmethod
+    def _one_title(cls, v):
+        if v is not None and ("|" in v or not v.strip() or any(ord(c) < 32 for c in v)):
+            raise ValueError("título inválido (vazio, com '|' ou com caractere de controle)")
+        return v
+
+
+def _natural(experiment: str) -> dict:
+    if experiment not in natural.NATURAL_EXPERIMENTS:
+        raise HTTPException(status_code=404,
+                            detail=f"Experimento '{experiment}' não existe. Opções: {', '.join(natural.NATURAL_EXPERIMENTS)}.")
+    return natural.NATURAL_EXPERIMENTS[experiment]
+
+
+def _natural_data(experiment: str):
+    units = _wiki_df("SELECT pair, lang, title, created FROM wiki_experiment_units WHERE experiment = ?", [experiment])
+    monthly = _wiki_df("SELECT * EXCLUDE (experiment) FROM wiki_monthly WHERE experiment = ?", [experiment])
+    return units, monthly
+
+
+@app.get("/api/v1/quasi-experiments/natural/experiments", tags=["Quase-experimentos"])
+async def natural_experiments():
+    """Experimentos naturais disponíveis, com o que já foi coletado e quantos pares de artigos são elegíveis."""
+    out = []
+    try:
+        for key, exp in natural.NATURAL_EXPERIMENTS.items():
+            units, monthly = _natural_data(key)
+            collected = sorted(set(units["lang"]) - {exp["treated_lang"]})
+            out.append({
+                "experiment": key, **{k: exp[k] for k in ("name", "description", "date", "start", "end", "treated_lang", "control_langs")},
+                "pairs_collected": int(units["pair"].nunique()),
+                "pairs_eligible": {lang: len(natural.eligible_pairs(units, monthly, exp, lang)) for lang in collected},
+                "outcomes": natural.OUTCOMES,
+                "referencia_externa": exp["referencia_externa"],
+            })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao consultar experimentos: {str(e)}")
+    return {"experiments": out, "leitura_do_meio": natural.LEITURA_DO_MEIO}
+
+
+@app.post("/api/v1/quasi-experiments/natural/collect", tags=["Quase-experimentos"])
+async def natural_collect(request: NaturalCollectRequest):
+    """
+    Coleta na Wikipedia o histórico de edições dos mesmos artigos no idioma que mudou a regra
+    e nos de controle, e grava as contagens mensais. Leva vários minutos (centenas de requisições).
+    """
+    admin_key_env = os.getenv("ADMIN_KEY", None)
+    if admin_key_env and request.admin_key != admin_key_env:
+        raise HTTPException(status_code=403, detail="Acesso negado. ADMIN_KEY inválida ou ausente.")
+    exp = _natural(request.experiment)
+    try:
+        data = await asyncio.to_thread(
+            wikipedia.collect_history_pairs, seed=request.seed or exp["default_seed"], treated_lang=exp["treated_lang"],
+            control_langs=exp["control_langs"], start=exp["start"], end=exp["end"],
+            max_candidates=request.max_candidates, rng_seed=0)
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Falha ao coletar da Wikipedia: {str(e)}")
+    try:
+        stored = get_db().save_natural_experiment(request.experiment, data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao gravar coleta: {str(e)}")
+    return {"experiment": request.experiment, "stored": stored}
+
+
+@app.get("/api/v1/quasi-experiments/natural/estimate", tags=["Quase-experimentos"])
+async def natural_estimate(
+    experiment: str = Query(...),
+    outcome: Literal["reverts", "human_edits", "registered_edits", "anon_edits"] = Query("reverts"),
+    method: Literal["ratio_did", "did", "control_counterfactual"] = Query(
+        "ratio_did", description="ratio_did é o indicado para contagens pequenas"),
+    control_lang: Optional[str] = Query(None, description="Idioma de controle (padrão: o primeiro do experimento)"),
+):
+    """
+    Efeito de uma mudança de regra da plataforma: os artigos no idioma que mudou contra os
+    mesmos artigos em um idioma que não mudou. Dado real: não existe `true_effect`.
+    """
+    exp = _natural(experiment)
+    control_lang = control_lang or exp["control_langs"][0]
+    try:
+        units, monthly = _natural_data(experiment)
+        if units.empty:
+            raise HTTPException(status_code=404, detail="Nada coletado. Use POST /quasi-experiments/natural/collect.")
+        if control_lang not in set(units["lang"]) - {exp["treated_lang"]}:
+            raise HTTPException(status_code=404, detail=f"Idioma de controle '{control_lang}' não foi coletado.")
+        pairs = natural.eligible_pairs(units, monthly, exp, control_lang)
+        data = natural.panel(monthly, pairs, exp, control_lang, outcome)
+        t0 = pd.Timestamp(exp["date"]).to_period("M").to_timestamp()   # dado mensal: o mês da mudança já é "depois"
+        sums = data.groupby(["date", "treated"])["y"].sum().unstack("treated").fillna(0)
+        if method == "ratio_did":
+            result = quasi.ratio_did(data, t0)
+        elif method == "did":
+            result = quasi.diff_in_diff(data, t0)
+        else:
+            result = quasi.control_counterfactual(sums[True].rename("y").reset_index(), sums[False].rename("y").reset_index(), t0)
+            result.pop("series", None)
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao estimar efeito: {str(e)}")
+    return {
+        "experiment": experiment, "name": exp["name"], "date": exp["date"],
+        "outcome": outcome, "outcome_definition": natural.OUTCOMES[outcome],
+        "method": method, "treated_lang": exp["treated_lang"], "control_lang": control_lang,
+        "pairs_eligible": len(pairs), "pairs_collected": int(units["pair"].nunique()),
+        "eligibility": {
+            "rule": "artigo criado antes da janela e com edição anônima no período abaixo, nos dois idiomas",
+            "months": [exp["start"], (natural.estimation_start(exp) - pd.DateOffset(months=1)).date().isoformat()],
+        },
+        "true_effect": None,
+        **result,
+        "series": [{"month": d.date().isoformat(), "treated": float(r[True]), "control": float(r[False])}
+                   for d, r in sums.iterrows()],
+        "referencia_externa": exp["referencia_externa"],
+        "pressupostos": natural.PRESSUPOSTOS,
+        "leitura_do_meio": natural.LEITURA_DO_MEIO,
+    }
 
 
 # ===== ANÁLISE DE CONTEÚDO (BARDIN) =====

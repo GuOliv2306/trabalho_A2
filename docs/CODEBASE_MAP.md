@@ -9,6 +9,7 @@ API FastAPI (projeto em português) sobre um arquivo **DuckDB** local. Duas fren
 1. **Painel de marketing** com dados sintéticos de GA4 / Search Console (simulador em `tests/simulador_dados.py`).
 2. **Métodos digitais** com dados reais da Wikipedia (`src/digital_methods/`). Ver [METODOS_DIGITAIS.md](METODOS_DIGITAIS.md).
 3. **Quase-experimentos** sobre um painel simulado de efeito conhecido (`src/quasi_experiments/`). Ver [QUASE_EXPERIMENTOS.md](QUASE_EXPERIMENTOS.md).
+   E um **experimento natural** com dado real da Wikipedia. Ver [EXPERIMENTO_NATURAL.md](EXPERIMENTO_NATURAL.md).
 4. **Análise de conteúdo** (Bardin) sobre consultas, páginas e resumos de edição (`src/content_analysis/`). Ver [ANALISE_DE_CONTEUDO.md](ANALISE_DE_CONTEUDO.md).
 
 Deploy da API no Render (`https://siteup.onrender.com`). O frontend Next.js é outro repositório, na Vercel.
@@ -37,6 +38,7 @@ src/collectors/db_storage.py   GA4DatabaseStorage: schema, inserts, query_df, sa
 src/digital_methods/wikipedia.py   Coletor (requests): revisões, links, pageviews, edições
 src/digital_methods/analysis.py    Análises puras em pandas + LEITURAS (ressalvas)
 src/quasi_experiments/analysis.py  ITS, contrafactual por controles, DiD, teste A/B, sorteio (puro, numpy/scipy)
+src/quasi_experiments/natural.py   Registro de experimentos naturais, elegibilidade dos pares, painel mensal
 src/content_analysis/codebooks.py  Livros de códigos como dado (categorias, definições, regras)
 src/content_analysis/coder.py      code_units (regras) e code_units_llm (IA opcional)
 src/content_analysis/reliability.py  concordância, kappa de Cohen, alfa de Krippendorff
@@ -70,6 +72,8 @@ data/processed/ga4_data.duckdb   Banco versionado (sintético + coleta da Wikipe
 | GET | `/api/v1/quasi-experiments/interventions` | registro de mudanças e eventos externos |
 | GET | `/api/v1/quasi-experiments/its`, `/control-counterfactual`, `/did`, `/ab-test` | estimadores de `quasi_experiments.analysis` via `_quasi` |
 | GET | `/api/v1/quasi-experiments/ab-split` | sorteio estratificado de um template |
+| GET | `/api/v1/quasi-experiments/natural/experiments`, `/natural/estimate` | experimento natural com dado real: `ratio_did`, `did` ou `control_counterfactual` |
+| POST | `/api/v1/quasi-experiments/natural/collect` | histórico mensal pt + controles → `save_natural_experiment` (usa `ADMIN_KEY` se definida; vários minutos) |
 | GET | `/api/v1/content-analysis/codebooks`, `/sample` | livro de códigos; amostra reproduzível |
 | POST | `/api/v1/content-analysis/code` | codifica o corpus (regras ou IA) e carrega a referência (usa `ADMIN_KEY` se definida) |
 | GET | `/api/v1/content-analysis/results`, `/reliability` | frequências + desempenho; concordância entre codificadores |
@@ -87,6 +91,7 @@ data/processed/ga4_data.duckdb   Banco versionado (sintético + coleta da Wikipe
 | `gsc_page/country/device/date_performance` | só o CLI do simulador | data/* |
 | `wiki_pages`, `wiki_revisions`, `wiki_links`, `wiki_editions` | `wikipedia/collect` → `save_wiki` | rotas `wikipedia/*`, relatório, análise de conteúdo |
 | `seo_pages`, `seo_page_daily`, `seo_interventions`, `seo_intervention_pages`, `seo_queries` | `ExperimentSimulator` → `save_seo_experiment` (populate-database) | quase-experimentos, análise de conteúdo |
+| `wiki_experiment_units`, `wiki_monthly` | `natural/collect` → `save_natural_experiment` | rotas `natural/*` |
 | `content_codes` | `content-analysis/code` (coder `regras`/`llm`/`referencia_ia`), simulador (`verdade_simulador`) | `results`, `reliability` |
 
 `wiki_pages` e `wiki_links` pertencem à semente (chave inclui `seed`); `wiki_revisions` pertence ao artigo.
@@ -119,6 +124,8 @@ data/processed/ga4_data.duckdb   Banco versionado (sintético + coleta da Wikipe
 - Matar o servidor à força deixa um `.wal` ao lado do banco (ignorado pelo git); abrir e fechar o banco consolida.
 - `period_days` do relatório é cosmético (não filtra datas). `agent.run()` é síncrono dentro de `async def`.
 - O simulador antigo (9 páginas, 15 consultas) e o `ExperimentSimulator` (99 páginas, 231 consultas) são sites diferentes; as tabelas não se cruzam. Pendências em [SIMULADOR_PENDENCIAS.md](SIMULADOR_PENDENCIAS.md).
+- `natural/collect` faz centenas de requisições e leva minutos: no Render pode estourar o tempo da requisição; o banco versionado já traz a coleta.
+- Reversão no experimento natural é por conteúdo idêntico (sha1), não pelas tags `mw-*` usadas nas rotas `wikipedia/*`: os números não são comparáveis.
 - `true_effect` e `verdade_simulador` só existem porque o dado é simulado: servem para conferir o método, não são resultado.
 - KPI de bounce rate (`get_kpis`) não é uma taxa de rejeição real.
 - Caminho de ingestão por JSON (`insert_from_json`) provavelmente quebrado; não é usado.

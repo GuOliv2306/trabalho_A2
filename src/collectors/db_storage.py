@@ -273,6 +273,21 @@ class GA4DatabaseStorage:
             )
         """)
 
+        # ===== TABELAS EXPERIMENTO NATURAL (WIKIPEDIA) =====
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS wiki_experiment_units (
+                experiment VARCHAR, pair VARCHAR, lang VARCHAR, title VARCHAR, created VARCHAR,
+                PRIMARY KEY (experiment, pair, lang)   -- pair = título no idioma tratado
+            )
+        """)
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS wiki_monthly (
+                experiment VARCHAR, pair VARCHAR, lang VARCHAR, title VARCHAR, month DATE,
+                human_edits BIGINT, registered_edits BIGINT, anon_edits BIGINT, bot_edits BIGINT, reverts BIGINT,
+                PRIMARY KEY (experiment, pair, lang, month)
+            )
+        """)
+
         # ===== TABELAS MÉTODOS DIGITAIS (WIKIPEDIA) =====
         self.conn.execute("""
             CREATE TABLE IF NOT EXISTS wiki_pages (
@@ -329,6 +344,24 @@ class GA4DatabaseStorage:
             self.conn.execute("ROLLBACK")
             raise
         return {key: len(data[key]) for _, key in tables}
+
+    def save_natural_experiment(self, experiment: str, data: Dict[str, Any]) -> Dict[str, int]:
+        """Grava a saída de `wikipedia.collect_history_pairs`, substituindo a coleta anterior do experimento."""
+        frames = {"wiki_experiment_units": data["units"].assign(experiment=experiment),
+                  "wiki_monthly": data["monthly"].assign(experiment=experiment)}
+        self.conn.execute("BEGIN")
+        try:
+            for table, df in frames.items():
+                self.conn.execute(f"DELETE FROM {table} WHERE experiment = ?", [experiment])
+                if not df.empty:
+                    self.conn.register("_nat_df", df)
+                    self.conn.execute(f"INSERT INTO {table} BY NAME SELECT * FROM _nat_df")
+                    self.conn.unregister("_nat_df")
+            self.conn.execute("COMMIT")
+        except Exception:
+            self.conn.execute("ROLLBACK")
+            raise
+        return {"units": len(data["units"]), "monthly": len(data["monthly"])}
 
     def save_codes(self, codes) -> int:
         """Grava códigos de análise de conteúdo (DataFrame corpus, unit_id, variable, coder, category), substituindo os iguais."""

@@ -8,6 +8,7 @@ automatizada e validada.
 
 - Conceito e rotas de métodos digitais: [`docs/METODOS_DIGITAIS.md`](docs/METODOS_DIGITAIS.md)
 - Quase-experimentos (série interrompida, diff-in-diff, teste A/B): [`docs/QUASE_EXPERIMENTOS.md`](docs/QUASE_EXPERIMENTOS.md)
+- Experimento natural com dado real (fim da edição anônima na pt.wikipedia): [`docs/EXPERIMENTO_NATURAL.md`](docs/EXPERIMENTO_NATURAL.md)
 - Análise de conteúdo (livro de códigos, codificador, concordância): [`docs/ANALISE_DE_CONTEUDO.md`](docs/ANALISE_DE_CONTEUDO.md)
 - O que o simulador gera e o que falta: [`docs/SIMULADOR_PENDENCIAS.md`](docs/SIMULADOR_PENDENCIAS.md)
 - Arquitetura: [`docs/CODEBASE_MAP.md`](docs/CODEBASE_MAP.md)
@@ -28,7 +29,7 @@ Documentação interativa em http://localhost:8000/docs.
 | Variável | Para quê |
 |---|---|
 | `OPENAI_API_KEY` | relatório por IA (sem ela, sai um relatório simples) e codificador por IA da análise de conteúdo |
-| `ADMIN_KEY` | protege `populate-database`, `wikipedia/collect` e `content-analysis/code` |
+| `ADMIN_KEY` | protege `populate-database`, `wikipedia/collect`, `natural/collect` e `content-analysis/code` |
 | `WIKIPEDIA_USER_AGENT` | identificação enviada à Wikipedia (padrão: URL do repositório) |
 
 ## Dados
@@ -56,6 +57,7 @@ Documentação interativa em http://localhost:8000/docs.
 | | `GET /api/v1/digital-methods/search/query-network` |
 | Quase-experimentos | `GET /api/v1/quasi-experiments/interventions` |
 | | `GET /api/v1/quasi-experiments/its`, `/control-counterfactual`, `/did`, `/ab-test`, `/ab-split` |
+| | `GET /api/v1/quasi-experiments/natural/experiments`, `/natural/estimate`; `POST /natural/collect` |
 | Análise de conteúdo | `GET /api/v1/content-analysis/codebooks`, `/sample`, `/results`, `/reliability` |
 | | `POST /api/v1/content-analysis/code` |
 | Dados brutos | `GET /api/v1/data/all`, `GET /api/v1/data/summary` |
@@ -68,7 +70,7 @@ Removidas (o frontend deve parar de chamar): `/api/v1/ml/page_clusters`,
 ## Testes
 
 ```bash
-python -m pytest tests/test_api.py tests/test_digital_methods.py tests/test_quasi_experiments.py tests/test_content_analysis.py -v
+python -m pytest tests/test_api.py tests/test_digital_methods.py tests/test_quasi_experiments.py tests/test_natural_experiments.py tests/test_content_analysis.py -v
 RUN_NETWORK=1 python -m pytest tests/test_digital_methods.py -k live   # bate na Wikipedia real
 ```
 

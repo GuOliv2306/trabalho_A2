@@ -10,6 +10,7 @@ Funções puras sobre DataFrames.
 - control_counterfactual: a série contra um contrafactual previsto por páginas de controle
   (a lógica do CausalImpact, com regressão simples no lugar do modelo bayesiano).
 - diff_in_diff: páginas alteradas contra páginas parecidas que não mudaram.
+- ratio_did: o mesmo com razões de contagens somadas, para contagens pequenas.
 - ab_test / ab_split: o mesmo, com sorteio, e inferência por permutação.
 """
 
@@ -261,6 +262,72 @@ def diff_in_diff(panel: pd.DataFrame, intervention_date, end_date=None) -> Dict[
         "placebo_pre": placebo,
         "event_study": [{"week": int(w), "gap": round(float(g), 4)} for w, g in gap.items()],
         "avisos": _low_count_warning(df.groupby("unit")["y"].mean()),
+    }
+
+
+def ratio_did(panel: pd.DataFrame, intervention_date, end_date=None, n_boot: int = 1000, seed: int = 0,
+              _placebo: bool = True) -> Dict[str, Any]:
+    """
+    Diferença-em-diferenças de razões: (tratadas depois / antes) dividido por (controles
+    depois / antes), somando as contagens de todas as unidades. Não usa log(1 + y), então
+    serve para contagens pequenas e com zeros. Intervalo por reamostragem das unidades.
+
+    `panel`: colunas unit, date, y, treated.
+    """
+    t0 = pd.Timestamp(intervention_date)
+    df = _clean_panel(panel, end_date)
+    df = df.assign(post=df["date"] >= t0)
+    n_pre, n_post = df.loc[~df["post"], "date"].nunique(), df.loc[df["post"], "date"].nunique()
+    if not n_pre or not n_post:
+        raise ValueError("É preciso ter períodos antes e depois da data da intervenção.")
+    sums = df.pivot_table(index=["unit", "treated"], columns="post", values="y", aggfunc="sum", fill_value=0).reset_index()
+    for col in (False, True):
+        if col not in sums:
+            sums[col] = 0.0
+    t, c = sums[sums["treated"]], sums[~sums["treated"]]
+    if len(t) < 2 or len(c) < 2:
+        raise ValueError("É preciso ter pelo menos 2 unidades tratadas e 2 de controle.")
+    tp, tq, cp, cq = (x.to_numpy(dtype=float) for x in (t[False], t[True], c[False], c[True]))
+
+    def effect(tpre, tpost, cpre, cpost):
+        if tpre.sum() == 0 or cpre.sum() == 0 or cpost.sum() == 0:
+            return np.nan
+        return (tpost.sum() / tpre.sum()) / (cpost.sum() / cpre.sum()) - 1
+
+    estimate = effect(tp, tq, cp, cq)
+    if np.isnan(estimate):
+        raise ValueError("Contagens zeradas antes da data (ou nos controles depois): não há razão para calcular.")
+    rng = np.random.default_rng(seed)
+    draws = []
+    for _ in range(n_boot):
+        i, j = rng.integers(0, len(tp), len(tp)), rng.integers(0, len(cp), len(cp))
+        draws.append(effect(tp[i], tq[i], cp[j], cq[j]))
+    draws = np.array(draws)
+    draws = draws[~np.isnan(draws)]
+    lo, hi = np.percentile(draws, [2.5, 97.5]) if len(draws) else (np.nan, np.nan)
+
+    placebo = None
+    pre_dates = np.sort(df.loc[~df["post"], "date"].unique())
+    if _placebo and len(pre_dates) >= 4:
+        fake = pd.Timestamp(pre_dates[len(pre_dates) // 2])
+        try:
+            r = ratio_did(df[~df["post"]].drop(columns="post"), fake, n_boot=n_boot, seed=seed, _placebo=False)
+            placebo = {"date": fake.date().isoformat(), "relative_effect": r["relative_effect"], "ci95": r["ci95"]}
+        except ValueError:
+            placebo = None
+    return {
+        "relative_effect": round(float(estimate), 4),
+        "ci95": [round(float(lo), 4), round(float(hi), 4)],
+        "p_value": round(float(min(1.0, 2 * min((draws <= 0).mean(), (draws >= 0).mean()))), 4) if len(draws) else None,
+        # médias por período: antes e depois podem ter durações diferentes
+        "naive_before_after": round(float((tq.sum() / n_post) / (tp.sum() / n_pre) - 1), 4),
+        "control_change": round(float((cq.sum() / n_post) / (cp.sum() / n_pre) - 1), 4),
+        "n_treated": len(t), "n_control": len(c),
+        "n_pre": int(n_pre), "n_post": int(n_post),
+        "totals": {"treated_pre": float(tp.sum()), "treated_post": float(tq.sum()),
+                   "control_pre": float(cp.sum()), "control_post": float(cq.sum())},
+        "placebo_pre": placebo,
+        "avisos": [],
     }
 
 

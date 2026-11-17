@@ -229,3 +229,111 @@ def collect_topic(seed: str, lang: str = "pt", max_pages: int = 10, rev_limit: i
         "editions": fetch_editions(s, lang, seed_title, edition_langs),
         "not_found": not_found,
     }
+
+
+# ===== HISTÓRICO PARA EXPERIMENTOS NATURAIS =====
+
+REVERT_WINDOW = 15  # quantas versões anteriores olhar para reconhecer uma reversão
+
+
+def fetch_history(s: requests.Session, lang: str, title: str, start: str, end: str) -> List[Dict[str, Any]]:
+    """Todas as revisões de `title` entre `start` e `end` (da mais antiga para a mais nova), com o sha1 do conteúdo."""
+    revs: List[Dict[str, Any]] = []
+    for data in _query(s, lang, prop="revisions", titles=title, rvlimit="max", rvdir="newer",
+                       rvstart=f"{start}T00:00:00Z", rvend=f"{end}T00:00:00Z", rvprop="ids|timestamp|user|flags|sha1"):
+        for p in data.get("query", {}).get("pages", []):
+            revs.extend(p.get("revisions", []))
+    return revs
+
+
+def fetch_creation(s: requests.Session, lang: str, title: str) -> Optional[str]:
+    """Data da primeira revisão do artigo."""
+    for data in _query(s, lang, prop="revisions", titles=title, rvlimit=1, rvdir="newer", rvprop="timestamp"):
+        for p in data.get("query", {}).get("pages", []):
+            for r in p.get("revisions", []):
+                return r["timestamp"]
+        break
+    return None
+
+
+def fetch_langlinks(s: requests.Session, lang: str, titles: Sequence[str], target: str) -> Dict[str, str]:
+    """{título em `lang`: título do mesmo artigo em `target`}, só para os que existem lá."""
+    out: Dict[str, str] = {}
+    for chunk in _chunks(list(titles)):
+        for data in _query(s, lang, prop="langlinks", titles="|".join(chunk), lllang=target, lllimit="max"):
+            for p in data.get("query", {}).get("pages", []):
+                for link in p.get("langlinks", []):
+                    out[p["title"]] = link["title"]
+    return out
+
+
+def detect_reverts(sha1s: Sequence[Optional[str]], window: int = REVERT_WINDOW) -> List[bool]:
+    """
+    Reversão por identidade: a revisão devolve o artigo a um conteúdo idêntico ao de uma das
+    `window` versões anteriores. Repetir a versão imediatamente anterior é edição nula, não reversão.
+    Independe das tags do MediaWiki, então vale para qualquer época.
+    """
+    out = []
+    for i, sha in enumerate(sha1s):
+        previous = sha1s[max(0, i - window):i]
+        out.append(bool(sha is not None and previous and previous[-1] != sha and sha in previous))
+    return out
+
+
+def monthly_counts(raw: List[Dict[str, Any]], bots: Set[str], start: str, end: str):
+    """Contagens por mês (meses sem edição entram como zero): pessoas, registradas, anônimas, robôs, reversões."""
+    import pandas as pd
+    months = pd.date_range(start, end, freq="MS", inclusive="left")
+    raw = sorted(raw, key=lambda r: r["timestamp"])
+    rows = []
+    for r, reverted in zip(raw, detect_reverts([r.get("sha1") for r in raw])):
+        user = r.get("user")
+        anon = bool(r.get("anon") or (user and re.match(r"~\d{4}-", user)))
+        bot = bool(user in bots) and not anon
+        rows.append({"month": r["timestamp"][:7], "anon_edits": int(anon), "bot_edits": int(bot),
+                     "registered_edits": int(not anon and not bot), "human_edits": int(not bot), "reverts": int(reverted)})
+    columns = ["human_edits", "registered_edits", "anon_edits", "bot_edits", "reverts"]
+    counts = pd.DataFrame(rows, columns=["month"] + columns).groupby("month")[columns].sum()
+    counts = counts.reindex(months.strftime("%Y-%m"), fill_value=0)
+    counts.insert(0, "month", [m.date() for m in months])
+    return counts.reset_index(drop=True)
+
+
+def collect_history_pairs(seed: str, treated_lang: str, control_langs: Sequence[str], start: str, end: str,
+                          max_candidates: int = 40, rng_seed: int = 0) -> Dict[str, Any]:
+    """
+    Histórico mensal dos mesmos artigos em vários idiomas, para um experimento natural.
+
+    Artigos: sorteio (reprodutível) entre os links da página-semente que existem em todos os
+    idiomas de controle. Sorteio, e não "os mais vistos": os mais vistos costumam estar protegidos.
+    Devolve `units` (pair, lang, title, created) e `monthly` (uma linha por artigo, idioma e mês).
+    """
+    import random
+
+    import pandas as pd
+    s = _session()
+    links = sorted(fetch_links(s, treated_lang, seed))
+    if not links:
+        raise LookupError(f"Artigo '{seed}' não encontrado ou sem links em {treated_lang}.wikipedia.org")
+    random.Random(rng_seed).shuffle(links)
+    titles_by_lang = {lang: fetch_langlinks(s, treated_lang, links, lang) for lang in control_langs}
+    pairs = [t for t in links if all(t in titles_by_lang[lang] for lang in control_langs)][:max_candidates]
+
+    units, histories = [], {}
+    for pair in pairs:
+        for lang in [treated_lang, *control_langs]:
+            title = pair if lang == treated_lang else titles_by_lang[lang][pair]
+            histories[(pair, lang)] = fetch_history(s, lang, title, start, end)
+            units.append({"pair": pair, "lang": lang, "title": title, "created": fetch_creation(s, lang, title)})
+
+    frames = []
+    for lang in [treated_lang, *control_langs]:
+        users = {r["user"] for (_, l), revs in histories.items() if l == lang
+                 for r in revs if r.get("user") and not r.get("anon")}
+        bots = fetch_bots(s, lang, users)
+        for u in units:
+            if u["lang"] == lang:
+                m = monthly_counts(histories[(u["pair"], lang)], bots, start, end)
+                frames.append(m.assign(pair=u["pair"], lang=lang, title=u["title"]))
+    monthly = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+    return {"units": pd.DataFrame(units), "monthly": monthly}
