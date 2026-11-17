@@ -220,6 +220,22 @@ def test_routes_errors(client):
     assert client.get(f"{BASE}/did", params={"intervention_id": "update_algoritmo"}).status_code == 400
 
 
+def test_populate_database_also_generates_experiment_panel(tmp_path, monkeypatch):
+    storage = GA4DatabaseStorage(db_path=str(tmp_path / "p.duckdb"))
+    monkeypatch.setattr(main, "db", storage)
+    monkeypatch.delenv("ADMIN_KEY", raising=False)
+    c = TestClient(main.app)
+    r = c.post("/api/v1/admin/populate-database", json={"days": 7, "overwrite": True})
+    assert r.status_code == 200, r.text
+    assert r.json()["statistics"]["experiment_panel_rows"] == 99 * 120
+    assert c.get(f"{BASE}/did", params={"intervention_id": "schema_categorias"}).status_code == 200
+    # as intervenções acompanham a data de hoje: o update do algoritmo fica 24 dias antes do fim
+    dates = storage.query_df("SELECT MAX(date) AS last FROM seo_page_daily")["last"][0]
+    upd = storage.query_df("SELECT date FROM seo_interventions WHERE kind = 'externo'")["date"][0]
+    assert (pd.Timestamp(dates) - pd.Timestamp(upd)).days == 24
+    storage.close()
+
+
 def test_route_ab_split(client):
     r = client.get(f"{BASE}/ab-split", params={"template": "produto", "seed": 1})
     assert r.status_code == 200, r.text

@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional, Dict, Any, List, Literal
 from contextlib import asynccontextmanager
+import json
 import re
 import sys
 from pathlib import Path
@@ -33,6 +34,10 @@ from src.digital_methods import analysis, wikipedia
 
 # ✅ QUASE-EXPERIMENTOS
 from src.quasi_experiments import analysis as quasi
+
+# ✅ ANÁLISE DE CONTEÚDO
+from src.content_analysis import coder as content_coder, reliability as content_reliability_metrics
+from src.content_analysis.codebooks import CODEBOOKS, LEITURA_DO_MEIO as CONTENT_LEITURA
 
 # ✅ MÓDULOS DE RELATÓRIO AGNO
 from app.report_models import (
@@ -978,6 +983,197 @@ async def quasi_ab_split(template: str = Query(..., description="produto, catego
     return {"template": template, **result, "pressupostos": quasi.PRESSUPOSTOS["ab"]}
 
 
+# ===== ANÁLISE DE CONTEÚDO (BARDIN) =====
+# Livro de códigos -> codificação automática -> validação por concordância -> inferência.
+
+REFERENCE_CODES = Path(__file__).parent.parent / "data" / "reference" / "codificacao_referencia_ia.json"
+
+# Corpus -> SQL das unidades (unit_id + campos lidos pelas variáveis) e SQL do desempenho por unidade
+CORPORA = {
+    "seo_consultas": {
+        "units": "SELECT query AS unit_id, query AS text, serp_features FROM seo_queries ORDER BY query",
+        "metrics": "SELECT query AS unit_id, clicks, impressions, position FROM seo_queries",
+    },
+    "seo_paginas": {
+        "units": "SELECT page AS unit_id, title AS text, word_count, byline FROM seo_pages ORDER BY page",
+        "metrics": """SELECT page AS unit_id, SUM(clicks) AS clicks, SUM(impressions) AS impressions, AVG(position) AS position
+                      FROM seo_page_daily GROUP BY page""",
+    },
+    "wikipedia_resumos": {
+        "units": """SELECT CAST(revid AS VARCHAR) AS unit_id, comment AS text, title AS article
+                    FROM wiki_revisions WHERE lang = 'pt' ORDER BY revid""",
+        "metrics": """SELECT CAST(revid AS VARCHAR) AS unit_id, (tags LIKE '%mw-reverted%') AS reverted,
+                             (actor_type = 'bot') AS bot, (actor_type = 'anon') AS anon
+                      FROM wiki_revisions WHERE lang = 'pt'""",
+    },
+}
+
+
+class ContentCodeRequest(BaseModel):
+    """Request para aplicar um livro de códigos a um corpus."""
+    corpus: str = Field(..., description="seo_consultas, seo_paginas ou wikipedia_resumos")
+    coder: Literal["regras", "llm"] = Field(default="regras", description="regras do livro ou modelo de linguagem")
+    admin_key: Optional[str] = Field(default=None, description="Chave de administrador (configurar em .env)")
+
+
+def _codebook(corpus: str) -> dict:
+    if corpus not in CODEBOOKS:
+        raise HTTPException(status_code=404, detail=f"Corpus '{corpus}' não existe. Opções: {', '.join(CODEBOOKS)}.")
+    return CODEBOOKS[corpus]
+
+
+def _variable(corpus: str, variable: str) -> dict:
+    book = _codebook(corpus)
+    if variable not in book["variaveis"]:
+        raise HTTPException(status_code=404,
+                            detail=f"Variável '{variable}' não existe em {corpus}. Opções: {', '.join(book['variaveis'])}.")
+    return book["variaveis"][variable]
+
+
+def _load_reference_codes() -> int:
+    """Carrega no banco a amostra codificada por IA que serve de referência (idempotente)."""
+    if not Path(REFERENCE_CODES).exists():
+        return 0
+    ref = pd.DataFrame(json.loads(Path(REFERENCE_CODES).read_text(encoding="utf-8")))
+    if "coder" not in ref:
+        ref["coder"] = None
+    ref["coder"] = ref["coder"].fillna("referencia_ia")
+    return get_db().save_codes(ref[["corpus", "unit_id", "variable", "coder", "category"]])
+
+
+@app.get("/api/v1/content-analysis/codebooks", tags=["Análise de Conteúdo"])
+async def content_codebooks(corpus: Optional[str] = Query(None, description="Sem valor, lista os corpora")):
+    """Livro de códigos: unidade de registro, variáveis, categorias com definição, exemplos e regras."""
+    if corpus is None:
+        return {"corpora": {name: {"titulo": b["titulo"], "variaveis": list(b["variaveis"])} for name, b in CODEBOOKS.items()}}
+    return {"corpus": corpus, "codebook": _codebook(corpus), "leitura_do_meio": CONTENT_LEITURA[corpus]}
+
+
+@app.get("/api/v1/content-analysis/sample", tags=["Análise de Conteúdo"])
+async def content_sample(corpus: str = Query(...), n: int = Query(50, ge=1, le=500), seed: int = Query(0, ge=0)):
+    """Amostra aleatória reproduzível de unidades, para um segundo codificador classificar às cegas."""
+    _codebook(corpus)
+    try:
+        units = get_db().query_df(CORPORA[corpus]["units"])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao ler corpus: {str(e)}")
+    sample = units.sample(n=min(n, len(units)), random_state=seed).sort_values("unit_id")
+    return {"corpus": corpus, "seed": seed, "population": len(units),
+            "units": sample.astype(object).where(sample.notna(), None).to_dict("records")}
+
+
+@app.post("/api/v1/content-analysis/code", tags=["Análise de Conteúdo"])
+async def content_code(request: ContentCodeRequest):
+    """
+    Aplica o livro de códigos a todo o corpus e grava os códigos (recodificar substitui).
+    `coder=regras` usa as regras do livro; `coder=llm` usa um modelo de linguagem (precisa de OPENAI_API_KEY).
+    """
+    admin_key_env = os.getenv("ADMIN_KEY", None)
+    if admin_key_env and request.admin_key != admin_key_env:
+        raise HTTPException(status_code=403, detail="Acesso negado. ADMIN_KEY inválida ou ausente.")
+    book = _codebook(request.corpus)
+    if request.coder == "llm" and not os.getenv("OPENAI_API_KEY"):
+        raise HTTPException(status_code=503, detail="Codificador por IA indisponível: configure OPENAI_API_KEY.")
+    try:
+        units = get_db().query_df(CORPORA[request.corpus]["units"])
+        if request.coder == "llm":
+            from openai import OpenAI
+            codes = await asyncio.to_thread(content_coder.code_units_llm, book, units, OpenAI())
+        else:
+            codes = content_coder.code_units(book, units)
+        get_db().conn.execute("DELETE FROM content_codes WHERE corpus = ? AND coder = ?", [request.corpus, request.coder])
+        get_db().save_codes(codes.assign(corpus=request.corpus, coder=request.coder))
+        _load_reference_codes()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao codificar: {str(e)}")
+    freq = codes.groupby(["variable", "category"]).size()
+    return {
+        "corpus": request.corpus,
+        "coder": request.coder,
+        "units": len(units),
+        "frequencies": {v: freq[v].sort_values(ascending=False).to_dict() for v in freq.index.get_level_values(0).unique()},
+    }
+
+
+@app.get("/api/v1/content-analysis/results", tags=["Análise de Conteúdo"])
+async def content_results(corpus: str = Query(...), variable: str = Query(...), coder: str = Query("regras")):
+    """
+    Tratamento dos resultados: frequência de cada categoria e o desempenho associado
+    (cliques, CTR e posição nas consultas e páginas; reversão, robôs e anônimos na Wikipedia).
+    """
+    var = _variable(corpus, variable)
+    try:
+        df = get_db().conn.execute(f"""
+            SELECT c.category, m.* EXCLUDE (unit_id)
+            FROM content_codes c LEFT JOIN ({CORPORA[corpus]["metrics"]}) m USING (unit_id)
+            WHERE c.corpus = ? AND c.variable = ? AND c.coder = ?
+        """, [corpus, variable, coder]).fetchdf()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao consultar códigos: {str(e)}")
+    if df.empty:
+        raise HTTPException(status_code=404, detail=f"Nada codificado por '{coder}' em {corpus}/{variable}. Use POST /content-analysis/code.")
+
+    categories = []
+    for category, g in df.groupby("category"):
+        row = {"category": category, "n": len(g), "share": round(len(g) / len(df), 4)}
+        if "clicks" in g:
+            impressions, clicks = float(g["impressions"].sum()), float(g["clicks"].sum())
+            row.update({"clicks": int(clicks), "impressions": int(impressions),
+                        "ctr": round(clicks / impressions, 4) if impressions else None,
+                        "avg_position": round(float(g["position"].mean()), 2) if g["position"].notna().any() else None})
+        else:
+            row.update({f"{k}_share": round(float(g[k].fillna(False).astype(bool).mean()), 4)
+                        for k in ("reverted", "bot", "anon")})
+        categories.append(row)
+    known = [c["codigo"] for c in var["categorias"]]
+    categories.sort(key=lambda r: (-r["n"], r["category"]))
+    return {
+        "corpus": corpus, "variable": variable, "coder": coder, "n": len(df),
+        "definicao": var["definicao"],
+        "categories": categories,
+        "empty_categories": [c for c in known if c not in {r["category"] for r in categories}],
+        "leitura_do_meio": CONTENT_LEITURA[corpus],
+    }
+
+
+@app.get("/api/v1/content-analysis/reliability", tags=["Análise de Conteúdo"])
+async def content_reliability(corpus: str = Query(...), variable: str = Query(...),
+                              coder_a: str = Query("regras"), coder_b: str = Query("referencia_ia")):
+    """
+    Validação: concordância entre dois codificadores nas unidades que ambos codificaram
+    (percentual, kappa de Cohen, alfa de Krippendorff, matriz de confusão) e a lista de
+    desacordos para revisar o livro de códigos. `coder_b` é tomado como referência.
+    """
+    _variable(corpus, variable)
+    try:
+        pairs = get_db().conn.execute(f"""
+            SELECT a.unit_id, u.text, a.category AS a, b.category AS b
+            FROM content_codes a
+            JOIN content_codes b ON b.corpus = a.corpus AND b.unit_id = a.unit_id AND b.variable = a.variable
+            LEFT JOIN ({CORPORA[corpus]["units"]}) u ON u.unit_id = a.unit_id
+            WHERE a.corpus = ? AND a.variable = ? AND a.coder = ? AND b.coder = ?
+            ORDER BY a.unit_id
+        """, [corpus, variable, coder_a, coder_b]).fetchdf()
+        result = content_reliability_metrics.agreement(pairs["a"], pairs["b"])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao calcular concordância: {str(e)}")
+    if pairs.empty:
+        raise HTTPException(status_code=404,
+                            detail=f"Nenhuma unidade de {corpus}/{variable} codificada por '{coder_a}' e por '{coder_b}'.")
+    diff = pairs[pairs["a"] != pairs["b"]]
+    avisos = {
+        "referencia_ia": "A referência foi codificada por IA às cegas, não por humanos: mede consistência entre dois procedimentos, não validade.",
+        "referencia_ia_desenvolvimento": "Amostra de desenvolvimento, codificada por IA com a versão 1 do livro: os desacordos dela serviram para revisar as regras, então a concordância aqui é otimista. Use `referencia_ia` para validar.",
+        "verdade_simulador": "A referência é o rótulo do próprio gerador de dados: os textos saem de moldes, então a concordância é otimista.",
+    }
+    return {
+        "corpus": corpus, "variable": variable, "coder_a": coder_a, "coder_b": coder_b,
+        **result,
+        "disagreements": [{"unit_id": r.unit_id, "text": r.text, coder_a: r.a, coder_b: r.b} for r in diff.head(50).itertuples()],
+        "aviso": avisos.get(coder_b, "Concordância entre dois codificadores não prova que algum deles está certo."),
+    }
+
+
 async def collect_digital_methods() -> dict:
     """Resumo de métodos digitais para o relatório de IA (efeito do ranking + controvérsia na Wikipedia)."""
     return {
@@ -1348,6 +1544,12 @@ async def populate_database(request: PopulateDatabaseRequest):
         # GSC
         db_instance.insert_gsc_query_data(gsc_data)
         logger.info(f"   ✅ {len(gsc_data)} registros GSC salvos")
+
+        # Painel de quase-experimentos e corpus de análise de conteúdo: sempre 120 dias
+        # (as intervenções têm datas fixas dentro da janela), substituindo o anterior
+        from tests.simulador_dados import ExperimentSimulator
+        experiment = db_instance.save_seo_experiment(ExperimentSimulator().generate(days=120, end_date=end_date))
+        logger.info(f"   ✅ {experiment['daily']} linhas do painel página×dia salvas")
         
         logger.info("✅ População do banco concluída com sucesso!")
         
@@ -1361,6 +1563,8 @@ async def populate_database(request: PopulateDatabaseRequest):
                 "engagement_records": len(ga4_engagement),
                 "conversion_records": len(ga4_conversions),
                 "gsc_records": len(gsc_data),
+                "experiment_panel_rows": experiment["daily"],
+                "experiment_queries": experiment["queries"],
                 "overwrite_mode": request.overwrite
             },
             "next_steps": [

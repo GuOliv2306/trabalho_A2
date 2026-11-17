@@ -15,22 +15,27 @@ Termine o que começar, do início ao fim:
 ## O que é
 
 API FastAPI (projeto em português) sobre um DuckDB local, para a disciplina de **Métodos Digitais**.
-Duas frentes: painel de marketing com dados sintéticos (GA4 / Search Console simulados) e
-**métodos nativamente digitais** com dados reais da Wikipedia. A tese que guia as features:
+Quatro frentes: painel de marketing com dados sintéticos (GA4 / Search Console simulados);
+**métodos nativamente digitais** com dados reais da Wikipedia; **quase-experimentos**
+(série interrompida, contrafactual por controles, diff-in-diff, teste A/B) sobre um painel
+simulado de efeito conhecido; e **análise de conteúdo** (Bardin) com livro de códigos,
+codificador por regras ou IA e validação por concordância. A tese que guia as features:
 o dado é produzido pela plataforma, então toda análise devolve `leitura_do_meio` — o que o
 número diz sobre o meio e o limite do que diz sobre o tema.
 
 **Stack**: Python, FastAPI, DuckDB, pandas, scikit-learn, requests, Agno + OpenAI, pytest.
 
 **Estrutura**: `app/main.py` (todas as rotas), `app/report_*` (relatório por IA),
-`src/digital_methods/` (coletor da Wikipedia + análises puras), `src/collectors/db_storage.py`
+`src/digital_methods/` (coletor da Wikipedia + análises puras), `src/quasi_experiments/`
+(estimadores causais), `src/content_analysis/` (livros de códigos, codificador, concordância),
+`src/collectors/db_storage.py`
 (DuckDB), `src/ml/` (clusters), `src/cleaning/`, `tests/`.
 
 ## Comandos (da raiz do repositório)
 
 ```bash
 python -m uvicorn app.main:app --reload --port 8000
-python -m pytest tests/test_api.py tests/test_digital_methods.py -v
+python -m pytest tests/test_api.py tests/test_digital_methods.py tests/test_quasi_experiments.py tests/test_content_analysis.py -v
 RUN_NETWORK=1 python -m pytest tests/test_digital_methods.py -k live   # Wikipedia real
 ```
 
@@ -39,6 +44,11 @@ RUN_NETWORK=1 python -m pytest tests/test_digital_methods.py -k live   # Wikiped
 - Entrada do usuário em SQL sempre por parâmetro, nunca f-string.
 - Chamadas à Wikipedia só por `_query`/`_get` em `src/digital_methods/wikipedia.py` (limite de requisições).
 - Mudou formato de resposta de rota? O frontend na Vercel (outro repositório) depende disso — avise.
+- Estimador causal novo só entra com teste que recupera um efeito conhecido.
+- Categoria nova no livro de códigos: definição, exemplo e teste; depois recodifique e veja a concordância.
+- Nunca apresente codificação feita por IA como validação humana.
 - Commits locais por etapa testada; sem push sem pedir.
 
-Detalhes: [docs/CODEBASE_MAP.md](docs/CODEBASE_MAP.md) · [docs/METODOS_DIGITAIS.md](docs/METODOS_DIGITAIS.md)
+Detalhes: [docs/CODEBASE_MAP.md](docs/CODEBASE_MAP.md) · [docs/METODOS_DIGITAIS.md](docs/METODOS_DIGITAIS.md) ·
+[docs/QUASE_EXPERIMENTOS.md](docs/QUASE_EXPERIMENTOS.md) · [docs/ANALISE_DE_CONTEUDO.md](docs/ANALISE_DE_CONTEUDO.md) ·
+[docs/SIMULADOR_PENDENCIAS.md](docs/SIMULADOR_PENDENCIAS.md)

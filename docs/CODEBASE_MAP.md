@@ -8,6 +8,8 @@ API FastAPI (projeto em português) sobre um arquivo **DuckDB** local. Duas fren
 
 1. **Painel de marketing** com dados sintéticos de GA4 / Search Console (simulador em `tests/simulador_dados.py`).
 2. **Métodos digitais** com dados reais da Wikipedia (`src/digital_methods/`). Ver [METODOS_DIGITAIS.md](METODOS_DIGITAIS.md).
+3. **Quase-experimentos** sobre um painel simulado de efeito conhecido (`src/quasi_experiments/`). Ver [QUASE_EXPERIMENTOS.md](QUASE_EXPERIMENTOS.md).
+4. **Análise de conteúdo** (Bardin) sobre consultas, páginas e resumos de edição (`src/content_analysis/`). Ver [ANALISE_DE_CONTEUDO.md](ANALISE_DE_CONTEUDO.md).
 
 Deploy da API no Render (`https://siteup.onrender.com`). O frontend Next.js é outro repositório, na Vercel.
 
@@ -34,11 +36,18 @@ app/report_models.py     Modelos do relatório + format_* (montam o prompt)
 src/collectors/db_storage.py   GA4DatabaseStorage: schema, inserts, query_df, save_wiki
 src/digital_methods/wikipedia.py   Coletor (requests): revisões, links, pageviews, edições
 src/digital_methods/analysis.py    Análises puras em pandas + LEITURAS (ressalvas)
+src/quasi_experiments/analysis.py  ITS, contrafactual por controles, DiD, teste A/B, sorteio (puro, numpy/scipy)
+src/content_analysis/codebooks.py  Livros de códigos como dado (categorias, definições, regras)
+src/content_analysis/coder.py      code_units (regras) e code_units_llm (IA opcional)
+src/content_analysis/reliability.py  concordância, kappa de Cohen, alfa de Krippendorff
 src/ml/                  ChannelProfiler, KeywordClusterer (StandardScaler + KMeans)
 src/cleaning/            Limpeza/deduplicação usadas pelo storage
 tests/test_api.py        pytest, TestClient, usa o DuckDB real (precisa estar populado)
 tests/test_digital_methods.py   pytest, banco temporário, sem rede (1 teste ao vivo opcional)
-tests/simulador_dados.py Gerador sintético (TAMBÉM importado em produção por populate-database)
+tests/test_quasi_experiments.py, tests/test_content_analysis.py   pytest, banco temporário
+tests/simulador_dados.py Gerador sintético (TAMBÉM importado em produção por populate-database);
+                         ExperimentSimulator gera o painel página×dia, intervenções, consultas e códigos verdadeiros
+data/reference/codificacao_referencia_ia.json   amostra codificada às cegas por IA (referência da validação)
 data/processed/ga4_data.duckdb   Banco versionado (sintético + coleta da Wikipedia)
 ```
 
@@ -58,6 +67,12 @@ data/processed/ga4_data.duckdb   Banco versionado (sintético + coleta da Wikipe
 | GET | `/api/v1/digital-methods/wikipedia/editions` | edições linguísticas da semente |
 | GET | `/api/v1/digital-methods/search/rank-effect` | `analysis.rank_effect` |
 | GET | `/api/v1/digital-methods/search/query-network` | `analysis.query_term_network` |
+| GET | `/api/v1/quasi-experiments/interventions` | registro de mudanças e eventos externos |
+| GET | `/api/v1/quasi-experiments/its`, `/control-counterfactual`, `/did`, `/ab-test` | estimadores de `quasi_experiments.analysis` via `_quasi` |
+| GET | `/api/v1/quasi-experiments/ab-split` | sorteio estratificado de um template |
+| GET | `/api/v1/content-analysis/codebooks`, `/sample` | livro de códigos; amostra reproduzível |
+| POST | `/api/v1/content-analysis/code` | codifica o corpus (regras ou IA) e carrega a referência (usa `ADMIN_KEY` se definida) |
+| GET | `/api/v1/content-analysis/results`, `/reliability` | frequências + desempenho; concordância entre codificadores |
 | GET | `/api/v1/data/all`, `/api/v1/data/summary` | amostras e agregados das tabelas |
 | POST | `/api/v1/reports/generate` | chama handlers in-process → `format_*` → agente; fallback simples em erro |
 | POST | `/api/v1/admin/populate-database` | gera dados sintéticos (usa `ADMIN_KEY` se definida) |
@@ -70,7 +85,9 @@ data/processed/ga4_data.duckdb   Banco versionado (sintético + coleta da Wikipe
 | `traffic`, `conversions`, `engagement` | simulador / populate-database | kpis, correlação, channel_clusters, data/* |
 | `gsc_query_performance` | simulador / populate-database | keyword_clusters, search/rank-effect, search/query-network |
 | `gsc_page/country/device/date_performance` | só o CLI do simulador | data/* |
-| `wiki_pages`, `wiki_revisions`, `wiki_links`, `wiki_editions` | `wikipedia/collect` → `save_wiki` | rotas `wikipedia/*`, relatório |
+| `wiki_pages`, `wiki_revisions`, `wiki_links`, `wiki_editions` | `wikipedia/collect` → `save_wiki` | rotas `wikipedia/*`, relatório, análise de conteúdo |
+| `seo_pages`, `seo_page_daily`, `seo_interventions`, `seo_intervention_pages`, `seo_queries` | `ExperimentSimulator` → `save_seo_experiment` (populate-database) | quase-experimentos, análise de conteúdo |
+| `content_codes` | `content-analysis/code` (coder `regras`/`llm`/`referencia_ia`), simulador (`verdade_simulador`) | `results`, `reliability` |
 
 `wiki_pages` e `wiki_links` pertencem à semente (chave inclui `seed`); `wiki_revisions` pertence ao artigo.
 `wiki_revisions.tags` é texto separado por `|`; `timestamp` é UTC sem fuso.
@@ -87,6 +104,8 @@ data/processed/ga4_data.duckdb   Banco versionado (sintético + coleta da Wikipe
 
 - **Nova análise de métodos digitais**: função pura em `analysis.py` + ressalvas em `LEITURAS` + rota em `main.py` + teste em `tests/test_digital_methods.py`.
 - **Novo objeto coletado**: `fetch_*` em `wikipedia.py` (sempre via `_query`/`_get`, que cuidam de paginação e limite), tabela em `_create_tables`, gravação em `save_wiki`.
+- **Novo estimador causal**: função pura em `quasi_experiments/analysis.py` + `PRESSUPOSTOS` + rota fina com `_quasi` + teste que recupera efeito conhecido.
+- **Novo corpus ou variável de conteúdo**: `CODEBOOKS` (e `CORPORA` em `main.py` para o SQL das unidades) + testes parametrizados; depois `POST /content-analysis/code` e olhar `/reliability`.
 - **Relatório de IA**: persona/instruções em `report_agent.py`; prompt em `generate_report` + `format_*`.
 - **Mudar formato de resposta**: o frontend na Vercel depende disso — avise.
 
@@ -99,6 +118,8 @@ data/processed/ga4_data.duckdb   Banco versionado (sintético + coleta da Wikipe
 - Mudou o esquema de uma tabela `wiki_*`? `CREATE TABLE IF NOT EXISTS` não migra: dropar a tabela no banco versionado e recoletar.
 - Matar o servidor à força deixa um `.wal` ao lado do banco (ignorado pelo git); abrir e fechar o banco consolida.
 - `period_days` do relatório é cosmético (não filtra datas). `agent.run()` é síncrono dentro de `async def`.
+- O simulador antigo (9 páginas, 15 consultas) e o `ExperimentSimulator` (99 páginas, 231 consultas) são sites diferentes; as tabelas não se cruzam. Pendências em [SIMULADOR_PENDENCIAS.md](SIMULADOR_PENDENCIAS.md).
+- `true_effect` e `verdade_simulador` só existem porque o dado é simulado: servem para conferir o método, não são resultado.
 - KPI de bounce rate (`get_kpis`) não é uma taxa de rejeição real.
 - Caminho de ingestão por JSON (`insert_from_json`) provavelmente quebrado; não é usado.
 - Segredos antigos continuam no **histórico** do git (`credentials.json`, chaves em docs apagados): devem ser revogados.
