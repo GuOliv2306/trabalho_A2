@@ -234,6 +234,45 @@ class GA4DatabaseStorage:
             )
         """)
 
+        # ===== TABELAS QUASE-EXPERIMENTOS E ANÁLISE DE CONTEÚDO =====
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS seo_pages (
+                page VARCHAR PRIMARY KEY, template VARCHAR, title VARCHAR, word_count BIGINT, byline VARCHAR
+            )
+        """)
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS seo_page_daily (
+                page VARCHAR, date DATE, clicks BIGINT, impressions BIGINT, position DOUBLE,
+                PRIMARY KEY (page, date)
+            )
+        """)
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS seo_interventions (
+                intervention_id VARCHAR PRIMARY KEY, name VARCHAR, description VARCHAR,
+                kind VARCHAR,          -- 'mudanca' (do site) ou 'externo' (da plataforma)
+                date DATE, template VARCHAR, randomized BOOLEAN,
+                true_effect DOUBLE     -- só existe porque o dado é simulado
+            )
+        """)
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS seo_intervention_pages (
+                intervention_id VARCHAR, page VARCHAR, grp VARCHAR,   -- 'tratado' ou 'controle'
+                PRIMARY KEY (intervention_id, page)
+            )
+        """)
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS seo_queries (
+                query VARCHAR PRIMARY KEY, clicks BIGINT, impressions BIGINT, position DOUBLE,
+                serp_features VARCHAR   -- 'formato:área|formato:área'
+            )
+        """)
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS content_codes (
+                corpus VARCHAR, unit_id VARCHAR, variable VARCHAR, coder VARCHAR, category VARCHAR,
+                PRIMARY KEY (corpus, unit_id, variable, coder)
+            )
+        """)
+
         # ===== TABELAS MÉTODOS DIGITAIS (WIKIPEDIA) =====
         self.conn.execute("""
             CREATE TABLE IF NOT EXISTS wiki_pages (
@@ -266,6 +305,37 @@ class GA4DatabaseStorage:
         """)
 
         print("OK Tabelas criadas/verificadas no banco de dados (GA4 + GSC)")
+
+    def save_seo_experiment(self, data: Dict[str, Any]) -> Dict[str, int]:
+        """
+        Grava a saída de `ExperimentSimulator.generate`, substituindo o painel anterior
+        e os códigos verdadeiros do simulador (os dos outros codificadores ficam).
+        """
+        tables = [("seo_pages", "pages"), ("seo_page_daily", "daily"), ("seo_interventions", "interventions"),
+                  ("seo_intervention_pages", "intervention_pages"), ("seo_queries", "queries")]
+        self.conn.execute("BEGIN")
+        try:
+            for table, key in tables:
+                self.conn.execute(f"DELETE FROM {table}")
+            self.conn.execute("DELETE FROM content_codes WHERE coder = 'verdade_simulador'")
+            for table, key in tables + [("content_codes", "codes")]:
+                self.conn.register("_seo_df", data[key])
+                self.conn.execute(f"INSERT INTO {table} BY NAME SELECT * FROM _seo_df")
+                self.conn.unregister("_seo_df")
+            self.conn.execute("COMMIT")
+        except Exception:
+            self.conn.execute("ROLLBACK")
+            raise
+        return {key: len(data[key]) for _, key in tables}
+
+    def save_codes(self, codes) -> int:
+        """Grava códigos de análise de conteúdo (DataFrame corpus, unit_id, variable, coder, category), substituindo os iguais."""
+        if len(codes) == 0:
+            return 0
+        self.conn.register("_codes_df", codes)
+        self.conn.execute("INSERT OR REPLACE INTO content_codes BY NAME SELECT * FROM _codes_df")
+        self.conn.unregister("_codes_df")
+        return len(codes)
 
     def save_wiki(self, data: Dict[str, Any]) -> Dict[str, int]:
         """

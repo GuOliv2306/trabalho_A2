@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Literal
 from contextlib import asynccontextmanager
 import re
 import sys
@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import uuid
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import logging
 import asyncio
 import os
@@ -30,6 +30,9 @@ from src.ml import ChannelProfiler, KeywordClusterer
 
 # ✅ MÉTODOS DIGITAIS
 from src.digital_methods import analysis, wikipedia
+
+# ✅ QUASE-EXPERIMENTOS
+from src.quasi_experiments import analysis as quasi
 
 # ✅ MÓDULOS DE RELATÓRIO AGNO
 from app.report_models import (
@@ -841,6 +844,138 @@ async def search_query_network():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao consultar buscas: {str(e)}")
     return {**result, "leitura_do_meio": analysis.LEITURAS["query_network"]}
+
+
+# ===== QUASE-EXPERIMENTOS =====
+# "A mudança X causou a subida ou a queda?" Cada rota devolve o efeito estimado, o
+# efeito verdadeiro do simulador (`true_effect`) e os pressupostos do método.
+
+def _intervention(intervention_id: str) -> dict:
+    df = get_db().conn.execute(
+        "SELECT * FROM seo_interventions WHERE intervention_id = ?", [intervention_id]).fetchdf()
+    if df.empty:
+        raise HTTPException(status_code=404, detail=f"Intervenção '{intervention_id}' não encontrada.")
+    row = df.iloc[0].to_dict()
+    if row["kind"] != "mudanca":
+        raise HTTPException(status_code=400, detail="Evento externo: atinge o site inteiro, não há páginas tratadas para comparar.")
+    return row
+
+
+def _intervention_panel(intervention_id: str, metric: str) -> pd.DataFrame:
+    """Painel unit, date, y, treated das páginas (tratadas e de controle) de uma intervenção."""
+    return get_db().conn.execute(f"""
+        SELECT d.page AS unit, d.date, d.{metric} AS y, (m.grp = 'tratado') AS treated
+        FROM seo_page_daily d JOIN seo_intervention_pages m ON m.page = d.page
+        WHERE m.intervention_id = ?
+    """, [intervention_id]).fetchdf()   # metric vem de um Literal validado pelo FastAPI
+
+
+def _daily_sum(panel: pd.DataFrame, treated: bool) -> pd.DataFrame:
+    return panel[panel["treated"] == treated].groupby("date", as_index=False)["y"].sum()
+
+
+def _quasi(method: str, intervention_id: str, metric: str, run) -> dict:
+    """Monta o painel, roda o estimador e embrulha a resposta comum às rotas."""
+    info = _intervention(intervention_id)
+    try:
+        panel = _intervention_panel(intervention_id, metric)
+        result = run(info, panel)
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao estimar efeito: {str(e)}")
+    return {
+        "intervention_id": intervention_id,
+        "name": info["name"],
+        "date": str(info["date"])[:10],
+        "metric": metric,
+        "method": method,
+        "true_effect": float(info["true_effect"]),
+        **result,
+        "pressupostos": quasi.PRESSUPOSTOS[method],
+        "leitura_do_meio": quasi.LEITURA_DO_MEIO,
+    }
+
+
+QuasiMetric = Literal["clicks", "impressions"]
+
+
+@app.get("/api/v1/quasi-experiments/interventions", tags=["Quase-experimentos"])
+async def list_interventions():
+    """Registro de mudanças do site e eventos externos, com o tamanho de cada grupo."""
+    try:
+        df = get_db().query_df("""
+            SELECT i.*, COUNT(*) FILTER (WHERE m.grp = 'tratado') AS n_treated,
+                   COUNT(*) FILTER (WHERE m.grp = 'controle') AS n_control
+            FROM seo_interventions i LEFT JOIN seo_intervention_pages m USING (intervention_id)
+            GROUP BY ALL ORDER BY i.date
+        """)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao consultar intervenções: {str(e)}")
+    df["date"] = df["date"].astype(str).str[:10]
+    return {"interventions": df.astype(object).where(df.notna(), None).to_dict("records"),
+            "leitura_do_meio": quasi.LEITURA_DO_MEIO}
+
+
+@app.get("/api/v1/quasi-experiments/its", tags=["Quase-experimentos"])
+async def quasi_its(intervention_id: str = Query(...), metric: QuasiMetric = Query("clicks"),
+                    end_date: Optional[date] = Query(None, description="Corta a janela (ex.: antes de um update do algoritmo)")):
+    """Série temporal interrompida: as páginas tratadas contra a própria tendência anterior."""
+    return _quasi("its", intervention_id, metric, lambda info, panel: quasi.interrupted_time_series(
+        _daily_sum(panel, True), info["date"], end_date=end_date))
+
+
+@app.get("/api/v1/quasi-experiments/control-counterfactual", tags=["Quase-experimentos"])
+async def quasi_control_counterfactual(intervention_id: str = Query(...), metric: QuasiMetric = Query("clicks"),
+                                       end_date: Optional[date] = Query(None)):
+    """Contrafactual previsto pelas páginas de controle (a lógica do CausalImpact, com regressão simples)."""
+    return _quasi("control_counterfactual", intervention_id, metric, lambda info, panel: quasi.control_counterfactual(
+        _daily_sum(panel, True), _daily_sum(panel, False), info["date"], end_date=end_date))
+
+
+@app.get("/api/v1/quasi-experiments/did", tags=["Quase-experimentos"])
+async def quasi_did(intervention_id: str = Query(...), metric: QuasiMetric = Query("clicks"),
+                    end_date: Optional[date] = Query(None)):
+    """Diferença-em-diferenças: páginas alteradas contra páginas parecidas que não mudaram."""
+    return _quasi("did", intervention_id, metric, lambda info, panel: quasi.diff_in_diff(
+        panel, info["date"], end_date=end_date))
+
+
+@app.get("/api/v1/quasi-experiments/ab-test", tags=["Quase-experimentos"])
+async def quasi_ab_test(intervention_id: str = Query(...), metric: QuasiMetric = Query("clicks"),
+                        end_date: Optional[date] = Query(None)):
+    """Teste A/B de SEO por grupos de páginas sorteados, com p-valor por permutação."""
+    def run(info, panel):
+        if not info["randomized"]:
+            raise HTTPException(status_code=400, detail="Esta intervenção não foi sorteada: use /did. Teste A/B exige sorteio.")
+        return quasi.ab_test(panel, info["date"], end_date=end_date)
+    return _quasi("ab", intervention_id, metric, run)
+
+
+@app.get("/api/v1/quasi-experiments/ab-split", tags=["Quase-experimentos"])
+async def quasi_ab_split(template: str = Query(..., description="produto, categoria ou post"),
+                         seed: int = Query(0, ge=0), days: int = Query(28, ge=7, le=365)):
+    """
+    Planeja um teste A/B: sorteia as páginas de um template em dois grupos, estratificando
+    pelos cliques dos últimos `days` dias para os grupos nascerem parecidos.
+    """
+    try:
+        pages = get_db().conn.execute("""
+            SELECT p.page AS unit, COALESCE(SUM(d.clicks), 0) AS pre_metric
+            FROM seo_pages p LEFT JOIN seo_page_daily d ON d.page = p.page
+                 AND d.date > (SELECT MAX(date) FROM seo_page_daily) - CAST(? AS INTEGER)
+            WHERE p.template = ? GROUP BY p.page
+        """, [days, template]).fetchdf()
+        if pages.empty:
+            raise HTTPException(status_code=404, detail=f"Nenhuma página com template '{template}'.")
+        result = quasi.ab_split(pages, seed=seed)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao sortear grupos: {str(e)}")
+    return {"template": template, **result, "pressupostos": quasi.PRESSUPOSTOS["ab"]}
 
 
 async def collect_digital_methods() -> dict:
