@@ -111,6 +111,42 @@ def test_its_requires_enough_points():
         qe.interrupted_time_series(daily(panel), START + pd.Timedelta(days=5))
 
 
+def test_its_effect_is_robust_to_spikes_and_matches_its_own_series():
+    """O efeito é a razão média (geométrica) entre o real e o contrafactual da própria `series`."""
+    panel, t0 = make_panel(effect=0.20, shock=0.0)
+    s = daily(panel)
+    s.loc[s.index[[70, 80, 90]], "y"] *= 8          # três dias de pico no pós
+    r = qe.interrupted_time_series(s, t0)
+    post = [p for p in r["series"] if pd.Timestamp(p["date"]) >= t0]
+    own = np.expm1(np.mean([np.log1p(p["actual"]) - np.log1p(p["counterfactual"]) for p in post]))
+    assert abs(r["relative_effect"] - own) < 0.01
+
+
+def test_series_without_variation_is_rejected():
+    flat = pd.DataFrame({"date": pd.date_range(START, periods=60), "y": 0})
+    with pytest.raises(ValueError):
+        qe.interrupted_time_series(flat, START + pd.Timedelta(days=30))
+
+
+def test_did_input_hygiene():
+    panel, t0 = make_panel(n_units=10, days=60, t0=40, shock_day=50)
+    as_int = panel.assign(treated=panel["treated"].astype(int))           # 0/1 em vez de bool
+    assert qe.diff_in_diff(as_int, t0)["relative_effect"] == qe.diff_in_diff(panel, t0)["relative_effect"]
+    # unidade que só existe antes da data não entra na conta, e isso é informado
+    only_pre = panel[~((panel["unit"] == "u0") & (panel["date"] >= t0))]
+    assert qe.diff_in_diff(only_pre, t0)["units_dropped"] == 1
+    # um único dia de pós não sustenta uma estimativa
+    with pytest.raises(ValueError):
+        qe.diff_in_diff(panel, t0, end_date=t0)
+
+
+def test_low_counts_warning():
+    panel, t0 = make_panel()
+    assert qe.diff_in_diff(panel, t0)["avisos"] == []
+    small = panel.assign(y=(panel["y"] / 40).round())                      # páginas com 0 a 3 cliques por dia
+    assert any("contagens pequenas" in a for a in qe.diff_in_diff(small, t0)["avisos"])
+
+
 def test_its_is_deterministic():
     panel, t0 = make_panel()
     assert qe.interrupted_time_series(daily(panel), t0) == qe.interrupted_time_series(daily(panel), t0)
@@ -148,6 +184,17 @@ def test_ab_test_randomization_inference():
 
 
 # ===== SIMULADOR =====
+
+def test_simulator_content_does_not_depend_on_the_dates():
+    """Consultas, páginas e códigos verdadeiros são os mesmos em qualquer data: a referência de validação continua valendo."""
+    from datetime import datetime
+    a = ExperimentSimulator(seed=42).generate(days=120, end_date=datetime(2025, 11, 11))
+    b = ExperimentSimulator(seed=42).generate(days=120, end_date=datetime(2026, 11, 16))
+    for key in ["pages", "queries", "codes"]:
+        assert a[key].equals(b[key]), key
+    assert a["intervention_pages"].equals(b["intervention_pages"])
+    assert not a["daily"]["date"].equals(b["daily"]["date"])
+
 
 def test_simulator_is_deterministic_and_has_ground_truth():
     a, b = ExperimentSimulator(seed=42).generate(days=120), ExperimentSimulator(seed=42).generate(days=120)
@@ -210,6 +257,10 @@ def test_routes_interventions_and_estimates(client):
 
     cf = client.get(f"{BASE}/control-counterfactual", params={"intervention_id": "titulos_blog"})
     assert cf.status_code == 200 and abs(cf.json()["relative_effect"] - cf.json()["true_effect"]) < 0.06
+
+    # o efeito verdadeiro foi injetado nos cliques: para impressões não há gabarito
+    imp = client.get(f"{BASE}/did", params={"intervention_id": "schema_categorias", "metric": "impressions"}).json()
+    assert imp["true_effect"] is None and imp["true_effect_metric"] == "clicks"
 
 
 def test_routes_errors(client):

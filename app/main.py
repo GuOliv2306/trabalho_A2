@@ -897,7 +897,9 @@ def _quasi(method: str, intervention_id: str, metric: str, run) -> dict:
         "date": str(info["date"])[:10],
         "metric": metric,
         "method": method,
-        "true_effect": float(info["true_effect"]),
+        # o simulador injeta o efeito nos cliques; para outra métrica não há gabarito
+        "true_effect": float(info["true_effect"]) if metric == "clicks" else None,
+        "true_effect_metric": "clicks",
         **result,
         "pressupostos": quasi.PRESSUPOSTOS[method],
         "leitura_do_meio": quasi.LEITURA_DO_MEIO,
@@ -961,7 +963,7 @@ async def quasi_ab_test(intervention_id: str = Query(...), metric: QuasiMetric =
 
 @app.get("/api/v1/quasi-experiments/ab-split", tags=["Quase-experimentos"])
 async def quasi_ab_split(template: str = Query(..., description="produto, categoria ou post"),
-                         seed: int = Query(0, ge=0), days: int = Query(28, ge=7, le=365)):
+                         seed: int = Query(0, ge=0, le=2 ** 32 - 1), days: int = Query(28, ge=7, le=365)):
     """
     Planeja um teste A/B: sorteia as páginas de um template em dois grupos, estratificando
     pelos cliques dos últimos `days` dias para os grupos nascerem parecidos.
@@ -1050,7 +1052,8 @@ async def content_codebooks(corpus: Optional[str] = Query(None, description="Sem
 
 
 @app.get("/api/v1/content-analysis/sample", tags=["Análise de Conteúdo"])
-async def content_sample(corpus: str = Query(...), n: int = Query(50, ge=1, le=500), seed: int = Query(0, ge=0)):
+async def content_sample(corpus: str = Query(...), n: int = Query(50, ge=1, le=500),
+                         seed: int = Query(0, ge=0, le=2 ** 32 - 1)):
     """Amostra aleatória reproduzível de unidades, para um segundo codificador classificar às cegas."""
     _codebook(corpus)
     try:
@@ -1091,6 +1094,8 @@ async def content_code(request: ContentCodeRequest):
         "corpus": request.corpus,
         "coder": request.coder,
         "units": len(units),
+        # só o codificador por IA pode ficar sem resposta: código que caiu na categoria residual por isso
+        "unanswered": int(codes.attrs.get("unanswered", 0)),
         "frequencies": {v: freq[v].sort_values(ascending=False).to_dict() for v in freq.index.get_level_values(0).unique()},
     }
 

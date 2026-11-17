@@ -12,6 +12,8 @@ Tipos de regra de uma categoria:
 - variável com "maior_area": True lê 'formato:área|formato:área' e fica com o de maior área;
 - "primeira_no_texto": entre as categorias listadas vale a que aparece primeiro no texto.
 
+O casamento ignora maiúsculas e acentos ("promocao" casa com r"promoç").
+
 "regras_de_decisao" são as instruções para casos duvidosos: valem para qualquer codificador
 (regras, IA ou pessoa) e nasceram dos desacordos da primeira rodada de validação.
 """
@@ -38,13 +40,13 @@ CODEBOOKS = {
                     {"codigo": "navegacional", "definicao": "Quer chegar a um site ou marca específica.",
                      "exemplos": ["trilhamax login", "loja corremais"],
                      "regex": [r"\b(" + "|".join(MARCAS) + r")\b", r"\bsite oficial\b", r"\blogin\b"]},
+                    {"codigo": "informacional", "definicao": "Quer aprender ou entender algo.",
+                     "exemplos": ["como escolher barraca de camping", "o que é garrafa térmica"],
+                     "regex": [r"\bcomo\b", r"\bo que\b", r"\bpara que\b", r"\bpor ?que\b", r"\bdicas?\b", r"\bguia\b"]},
                     {"codigo": "transacional", "definicao": "Quer comprar ou fechar negócio agora.",
                      "exemplos": ["comprar tênis de corrida", "mochila de trilha preço"],
                      "regex": [r"\bcomprar\b", r"\bpreços?\b", r"\bpromoç", r"\bfrete\b", r"\bbarat[oa]s?\b",
                                r"\bdescontos?\b", r"\bcupom\b"]},
-                    {"codigo": "informacional", "definicao": "Quer aprender ou entender algo.",
-                     "exemplos": ["como escolher barraca de camping", "o que é garrafa térmica"],
-                     "regex": [r"\bcomo\b", r"\bo que\b", r"\bpara que\b", r"\bpor ?que\b", r"\bdicas?\b", r"\bguia\b"]},
                     {"codigo": "comercial", "definicao": "Está comparando opções antes de decidir a compra.",
                      "exemplos": ["melhor fone bluetooth", "bota de trekking vale a pena"],
                      "regex": [r"\bmelhor(es)?\b", r"\bvale a pena\b", r"\bavaliaç", r"\btop \d+\b", r"\bou\b",
@@ -107,16 +109,15 @@ CODEBOOKS = {
                     "Assinatura coletiva (equipe, redação) é sem_autoria.",
                 ],
                 "categorias": [
+                    {"codigo": "sem_autoria", "definicao": "Sem assinatura, ou assinatura coletiva que não identifica ninguém.",
+                     "exemplos": ["", "Equipe Editorial", "Redação"],
+                     "regex": [r"^\W*$", r"^\s*n/?a\s*$", r"\bequipe\b", r"\bredação\b"]},
                     {"codigo": "autor_com_credenciais",
                      "definicao": "Pessoa nomeada com formação, cargo, revisão por especialista ou experiência de uso declarada.",
                      "exemplos": ["Por Ana Lima, fisioterapeuta com 10 anos de experiência"],
-                     "regex": [r"experiência", r"especialista", r"certificad", r"revisado por", r"\btestou\b",
-                               r"\banos de\b", r"\bdr\.?a?\b"]},
-                    {"codigo": "sem_autoria", "definicao": "Sem assinatura, ou assinatura coletiva que não identifica ninguém.",
-                     "exemplos": ["", "Equipe Editorial", "Redação"],
-                     "regex": [r"^\s*$", r"\bequipe\b", r"\bredação\b"]},
+                     "regex": [r"experiência", r"especialista", r"certificad", r"revisado por", r"\btestou\b", r"\bdr\.?a?\b"]},
                     {"codigo": "autor_identificado", "definicao": "Pessoa nomeada, sem credenciais.",
-                     "exemplos": ["Por Bruno Reis"], "regex": [r"\S"]},
+                     "exemplos": ["Por Bruno Reis"], "regex": [r"[a-z]{2,}"]},
                 ],
             },
         },
@@ -143,22 +144,22 @@ CODEBOOKS = {
                 "categorias": [
                     {"codigo": "reversao", "definicao": "Desfaz edição de outra pessoa.",
                      "exemplos": ["Desfeita a edição 123 de X", "Foram revertidas as edições de X"],
-                     "regex": [r"\bdesfeit", r"\brevert", r"\breversão\b", r"\brv\b", r"\bdesfaz"]},
+                     "regex": [r"\bdesfeit", r"\bdesfiz", r"\brevert", r"\breversão\b", r"\brv\b", r"\bdesfaz"]},
                     {"codigo": "administrativa", "definicao": "Ação de administração: proteger, mover, ocultar.",
                      "exemplos": ["Protegeu \"ChatGPT\": alterações indevidas"],
                      "regex": [r"^\s*(des)?protegeu\b", r"\bmoveu \[\[", r"\bocult(ou|ad)"]},
                     {"codigo": "manutencao_assistida", "definicao": "Manutenção feita por robô ou ferramenta semiautomática.",
                      "exemplos": ["robô: Arquivamento de 14 URLs", "adicionou [[Categoria:X]] usando HotCat"],
-                     "regex": [r"\bbot\b", r"\brobô\b", r"iabot", r"\barquivamento de\b", r"\busando \[\[", r"\butilizando \[\[",
-                               r"\bawb\b", r"growthexperiments", r"semiautom"]},
+                     "regex": [r"\b(bot|robô)(\]\])?\s*:", r"iabot", r"\barquivamento de \d+", r"\busando \[\[",
+                               r"\butilizando \[\[", r"\bawb\b", r"growthexperiments", r"semiautom"]},
                     {"codigo": "fontes", "definicao": "Acrescenta, corrige ou remove fontes e referências.",
                      "exemplos": ["inserindo referência sobre o estudo"],
                      "regex": [r"\bfontes?\b", r"ref[eê]r?[eê]nc", r"\brefs?\b", r"\bcitaç", r"\bcitar\b", r"bibliograf",
                                # verbo genérico seguido de perto pelo objeto "referência": a ação é sobre fontes
-                               r"\b(inser|adi[cç]|acresc|inclu|coloc)\w*\s+(\w+\s+){0,2}(ref[eê]r?[eê]nc|fontes?\b|refs?\b|citaç)"]},
+                               r"\b(inser|adi[cç]|acresc|inclu|coloc|remo[vç]|retir|corr)\w*\s+(\w+\s+){0,2}(ref[eê]r?[eê]nc|fontes?\b|refs?\b|citaç)"]},
                     {"codigo": "forma", "definicao": "Ajuste de forma: ortografia, formatação, links, categorias, tradução de termos.",
                      "exemplos": ["Corrigiu erro ortográfico", "hiperligações"],
-                     "regex": [r"ortogr", r"gramát", r"\btypos?\b", r"formata", r"pontua", r"\bcorr[ie]", r"\bajust",
+                     "regex": [r"ortogr", r"gramát", r"\btypos?\b", r"formata", r"pontua", r"\bcorr(e[cç]|ig)", r"\bajust",
                                r"\bestilo\b", r"ligaç", r"\blink", r"categoria", r"wikific", r"clean ?up", r"\bgrafia\b",
                                r"\bnegrito\b", r"\bitálico\b", r"maiúscul", r"minúscul", r"idiomátic", r"\breorganiz",
                                r"\brecoloc", r"\bredaç"]},
@@ -169,7 +170,9 @@ CODEBOOKS = {
                                r"\bconteúdo\b", r"\bexemplo", r"\binforma", r"\bdados\b", r"\btexto\b",
                                r"\bimage[mn]", r"\bfotos?\b", r"^\s*nova página"]},
                     {"codigo": "sem_informacao", "definicao": "Resumo em branco, só com o nome da seção, ou que não descreve a edição.",
-                     "exemplos": ["", "/* História */", "muito obrigado"]},
+                     "exemplos": ["", "/* História */", "muito obrigado", "depois eu adiciono fontes"],
+                     # promessa e agradecimento não descrevem a edição (regra de decisão 5)
+                     "regex": [r"^\s*(muito\s+)?obrigad", r"\b(depois|vou|irei)\b.{0,20}\b(adicion|inser|coloc)"]},
                 ],
             },
             "origem_do_resumo": {
@@ -185,7 +188,8 @@ CODEBOOKS = {
                     {"codigo": "gerado_pelo_software",
                      "definicao": "Texto produzido por botão, ferramenta ou robô (desfazer, reverter, HotCat, só o nome da seção).",
                      "exemplos": ["/* História */", "Desfeita a edição 123 de X"],
-                     "regex": [r"^\s*/\*.*\*/\s*$", r"\bdesfeita", r"^\s*(foram|foi) \[\[", r"\bbot\b", r"\brobô\b", r"iabot",
+                     "regex": [r"^\s*(/\*((?!\*/).)*\*/\s*)+$", r"\bdesfeita", r"^\s*(foram|foi) \[\[",
+                               r"\b(bot|robô)(\]\])?\s*:", r"iabot",
                                r"\busando \[\[", r"\butilizando \[\[", r"^\s*(des)?protegeu\b", r"growthexperiments",
                                r"\bmoveu \[\[", r"semiautom", r"^\s*nova página:", r"\barquivamento de \d+"]},
                     {"codigo": "escrito_pelo_editor", "definicao": "Texto livre digitado por quem editou."},

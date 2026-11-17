@@ -35,7 +35,7 @@ exclusivas (um código por unidade) e exaustivas (há sempre uma categoria resid
 | `GET /sample?corpus=&n=&seed=` | amostra reproduzível, para um segundo codificador classificar às cegas |
 | `POST /code` `{"corpus", "coder": "regras"\|"llm", "admin_key"}` | codifica o corpus inteiro e grava (recodificar substitui) |
 | `GET /results?corpus=&variable=&coder=regras` | por categoria: `n`, `share` e desempenho (cliques, CTR, posição; ou reversão, robôs, anônimos) |
-| `GET /reliability?corpus=&variable=&coder_a=regras&coder_b=referencia_ia` | concordância, matriz de confusão, acerto por categoria e a lista de desacordos |
+| `GET /reliability?corpus=&variable=&coder_a=regras&coder_b=referencia_ia` | concordância, alfa com intervalo de 95%, matriz de confusão, acerto por categoria e a lista de desacordos |
 
 Codificadores gravados: `regras`, `llm` (opcional), `verdade_simulador` (rótulo do gerador),
 `referencia_ia` (amostra de validação) e `referencia_ia_desenvolvimento` (amostra usada para revisar o livro).
@@ -66,30 +66,39 @@ não reversão; imagem é conteúdo; marcador de ferramenta é manutenção assi
 
 **Rodada 2 (livro v2, amostra nova de 150 unidades que não participou da revisão).**
 
-| Variável | Concordância | Kappa | Alfa | Leitura |
+| Variável | Concordância | Kappa | Alfa (intervalo de 95%) | Leitura |
 |---|---|---|---|---|
-| `origem_do_resumo` | 97,3% | 0,96 | 0,96 | confiável |
-| `tipo_edicao` | 82,0% | 0,75 | 0,75 | provisória |
+| `origem_do_resumo` | 97,3% | 0,96 | 0,96 (0,92 a 0,99) | confiável |
+| `tipo_edicao` | 82,0% | 0,75 | 0,75 (0,67 a 0,83) | provisória |
 
-Na amostra de desenvolvimento o `tipo_edicao` v2 chega a 0,84. A diferença para 0,75 é o
+Com 150 unidades o alfa de `tipo_edicao` pode estar em qualquer ponto entre 0,67 e 0,83: a
+amostra não permite dizer se ele está acima ou abaixo do corte de 0,80.
+
+Na amostra de desenvolvimento o `tipo_edicao` v2 chega a 0,85. A diferença para 0,75 é o
 tamanho do otimismo de medir nas mesmas unidades que serviram para ajustar as regras.
 
 Onde `tipo_edicao` ainda erra (amostra de validação): reversão e manutenção assistida saem
 perfeitas; `forma` só é encontrada em 48% dos casos. As regras não reconhecem "hiperligação"
 quando o verbo é genérico ("Adicionando hiperligação" cai em conteúdo) nem resumos sem verbo
-("portugues", "wikilink ..."). As regras não foram mais ajustadas depois desta medição, para
-a amostra continuar valendo como validação. É a próxima revisão do livro.
+("portugues", "wikilink ..."). É a próxima revisão do livro.
+
+Depois da medição houve uma correção de defeitos apontados por uma auditoria independente,
+com exemplos inventados por ela e não tirados da amostra: casar texto sem acento, "bot" só
+como marcador de autoria, "corrida" não é "correção". Os números acima são os de depois
+dessa correção; na amostra de validação ficaram iguais aos de antes.
 
 **Corpora simulados.**
 
 | Variável | Contra a referência por IA | Contra o rótulo do simulador |
 |---|---|---|
 | `intencao` | 100% (60) | 94,8%, alfa 0,93 (231) |
-| `formato_serp`, `tipo_pagina`, `profundidade`, `autoria` | 100% | 100% |
+| `tipo_pagina`, `profundidade`, `autoria` | 100% (40) | 100% (99) |
+| `formato_serp` | não se aplica | 100% (231) |
 
 Os 12 desacordos de `intencao` são as consultas "secas" (só o nome do produto): o gerador
 as marca como comerciais e as regras, como indefinidas. Concordância tão alta aqui é esperada
-e pouco informativa: os textos saem de moldes.
+e pouco informativa: os textos saem de moldes. `formato_serp` é leitura mecânica de um campo
+da plataforma (o formato de maior área); não há o que um segundo codificador interpretar.
 
 ## Inferências (codificador por regras)
 
@@ -97,25 +106,27 @@ e pouco informativa: os textos saem de moldes.
 
 | Origem do resumo | Parte | Edições depois revertidas |
 |---|---|---|
-| Gerado pelo software | 40,2% | 2,1% |
-| Escrito pelo editor | 37,5% | 15,8% |
+| Gerado pelo software | 40,1% | 2,1% |
+| Escrito pelo editor | 37,6% | 15,7% |
 | Em branco | 22,3% | 10,8% |
 
-- **Quase dois terços dos resumos não foram escritos por ninguém**: 40% vêm de botões,
-  ferramentas e robôs, 22% estão em branco. Analisar "o que os editores dizem" é, em boa
-  parte, analisar o que a interface escreve por eles.
+- **62% dos resumos não foram escritos por ninguém**: 40% vêm de botões, ferramentas e
+  robôs, 22% estão em branco. Analisar "o que os editores dizem" é, em boa parte, analisar o
+  que a interface escreve por eles.
 - **Metade das edições (51%) não informa o que fez** (`sem_informacao`).
-- Edições que se declaram de conteúdo são as mais revertidas depois (16,5%); as de manutenção
+- Edições que se declaram de conteúdo são as mais revertidas depois (16,0%); as de manutenção
   assistida, nunca (0%), e 30% delas são de robôs.
 
 **Consultas (simuladas)**: o CTR varia mais com o formato da página de resultados (vitrine de
-produtos 4,8%, links tradicionais 10,3%, links do próprio site 23,8%) do que com a intenção —
-efeito que o simulador injeta de propósito.
+produtos 5,5%, links tradicionais 10,3%, links do próprio site 14,1%) do que entre as
+intenções mais comuns (6,9% a 8,0%) — efeito que o simulador injeta de propósito.
 
 ## Limites
 
 - Referência codificada por IA, não por pessoas. Falta uma amostra codificada por humanos.
-- `tipo_edicao` é provisória (alfa 0,75): serve para descrever, não para sustentar conclusão forte.
+- `tipo_edicao` é provisória (alfa 0,75, entre 0,67 e 0,83): serve para descrever, não para sustentar conclusão forte.
+- As regras ignoram maiúsculas e acentos, mas não erros de digitação nem sinônimos fora da lista.
+- O codificador por IA devolve `unanswered`: quantos códigos caíram na categoria residual por falta de resposta válida.
 - As regras leem o que o resumo declara, não o que a edição fez (o diff não é analisado).
 - Corpora de consultas e páginas são sintéticos; ver [SIMULADOR_PENDENCIAS.md](SIMULADOR_PENDENCIAS.md).
 - Os resumos vêm de 12 artigos sobre inteligência artificial em português: não representam a Wikipedia.

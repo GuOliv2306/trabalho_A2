@@ -27,6 +27,22 @@ def krippendorff_alpha_nominal(a: pd.Series, b: pd.Series) -> Optional[float]:
     return float(1 - (n - 1) * observed / expected)
 
 
+def _alpha_ci(a: pd.Series, b: pd.Series, n_boot: int = 1000, seed: int = 0) -> Optional[list]:
+    """Intervalo de 95% do alfa, reamostrando unidades: com poucas unidades o alfa balança bastante."""
+    rng = np.random.default_rng(seed)
+    av, bv, n = a.to_numpy(), b.to_numpy(), len(a)
+    draws = []
+    for _ in range(n_boot):
+        idx = rng.integers(0, n, n)
+        alpha = krippendorff_alpha_nominal(pd.Series(av[idx]), pd.Series(bv[idx]))
+        if alpha is not None:
+            draws.append(alpha)
+    if len(draws) < n_boot / 2:
+        return None
+    lo, hi = np.percentile(draws, [2.5, 97.5])
+    return [round(float(lo), 4), round(float(hi), 4)]
+
+
 def agreement(a: pd.Series, b: pd.Series) -> Dict[str, Any]:
     """
     Concordância entre o codificador `a` e o codificador `b` (mesma ordem de unidades).
@@ -36,7 +52,7 @@ def agreement(a: pd.Series, b: pd.Series) -> Dict[str, Any]:
     n = len(a)
     if n == 0:
         return {"n": 0, "percent_agreement": None, "cohen_kappa": None, "krippendorff_alpha": None,
-                "interpretation": None, "confusion": {"labels": [], "matrix": []}, "per_category": []}
+                "krippendorff_alpha_ci95": None, "interpretation": None, "confusion": {"labels": [], "matrix": []}, "per_category": []}
     labels = sorted(set(a) | set(b))
     matrix = confusion_matrix(a, b, labels=labels)            # linhas = a, colunas = b
     kappa = float(cohen_kappa_score(a, b, labels=labels)) if len(labels) > 1 else None
@@ -52,6 +68,7 @@ def agreement(a: pd.Series, b: pd.Series) -> Dict[str, Any]:
         "percent_agreement": round(float((a == b).mean()), 4),
         "cohen_kappa": None if kappa is None or np.isnan(kappa) else round(kappa, 4),
         "krippendorff_alpha": None if alpha is None else round(alpha, 4),
+        "krippendorff_alpha_ci95": None if alpha is None else _alpha_ci(a, b),
         "interpretation": None if alpha is None else next(text for floor, text in BANDS if alpha >= floor),
         "confusion": {"labels": labels, "matrix": matrix.tolist()},
         "per_category": per_category,

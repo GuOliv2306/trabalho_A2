@@ -7,21 +7,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "barraca de camping barato",
-"variable": "formato_serp",
-"category": "shopping"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "barraca de camping como funciona",
 "variable": "intencao",
 "category": "informacional"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "barraca de camping como funciona",
-"variable": "formato_serp",
-"category": "video"
 },
 {
 "corpus": "seo_consultas",
@@ -31,21 +19,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "bicicleta ergométrica",
-"variable": "formato_serp",
-"category": "shopping"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "bicicleta ergométrica barato",
 "variable": "intencao",
 "category": "transacional"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "bicicleta ergométrica barato",
-"variable": "formato_serp",
-"category": "shopping"
 },
 {
 "corpus": "seo_consultas",
@@ -55,21 +31,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "bicicleta ergométrica ou jaqueta impermeável",
-"variable": "formato_serp",
-"category": "links_organicos"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "bota de trekking",
 "variable": "intencao",
 "category": "indefinida"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "bota de trekking",
-"variable": "formato_serp",
-"category": "shopping"
 },
 {
 "corpus": "seo_consultas",
@@ -79,21 +43,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "bota de trekking frete grátis",
-"variable": "formato_serp",
-"category": "links_organicos"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "bota de trekking preço",
 "variable": "intencao",
 "category": "transacional"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "bota de trekking preço",
-"variable": "formato_serp",
-"category": "shopping"
 },
 {
 "corpus": "seo_consultas",
@@ -103,21 +55,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "campobase",
-"variable": "formato_serp",
-"category": "sitelinks"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "colchonete de yoga",
 "variable": "intencao",
 "category": "indefinida"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "colchonete de yoga",
-"variable": "formato_serp",
-"category": "video"
 },
 {
 "corpus": "seo_consultas",
@@ -127,21 +67,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "como escolher barraca de camping",
-"variable": "formato_serp",
-"category": "snippet_em_destaque"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "como escolher garrafa térmica",
 "variable": "intencao",
 "category": "informacional"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "como escolher garrafa térmica",
-"variable": "formato_serp",
-"category": "snippet_em_destaque"
 },
 {
 "corpus": "seo_consultas",
@@ -151,21 +79,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "como escolher jaqueta impermeável",
-"variable": "formato_serp",
-"category": "snippet_em_destaque"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "como escolher saco de dormir",
 "variable": "intencao",
 "category": "informacional"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "como escolher saco de dormir",
-"variable": "formato_serp",
-"category": "snippet_em_destaque"
 },
 {
 "corpus": "seo_consultas",
@@ -175,21 +91,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "como usar garrafa térmica",
-"variable": "formato_serp",
-"category": "video"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "como usar mochila de trilha",
 "variable": "intencao",
 "category": "informacional"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "como usar mochila de trilha",
-"variable": "formato_serp",
-"category": "links_organicos"
 },
 {
 "corpus": "seo_consultas",
@@ -199,21 +103,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "comprar bicicleta ergométrica",
-"variable": "formato_serp",
-"category": "links_organicos"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "comprar bota de trekking",
 "variable": "intencao",
 "category": "transacional"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "comprar bota de trekking",
-"variable": "formato_serp",
-"category": "shopping"
 },
 {
 "corpus": "seo_consultas",
@@ -223,21 +115,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "comprar saco de dormir",
-"variable": "formato_serp",
-"category": "shopping"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "corremais login",
 "variable": "intencao",
 "category": "navegacional"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "corremais login",
-"variable": "formato_serp",
-"category": "links_organicos"
 },
 {
 "corpus": "seo_consultas",
@@ -247,21 +127,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "corremais site oficial",
-"variable": "formato_serp",
-"category": "sitelinks"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "dicas de barraca de camping",
 "variable": "intencao",
 "category": "informacional"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "dicas de barraca de camping",
-"variable": "formato_serp",
-"category": "links_organicos"
 },
 {
 "corpus": "seo_consultas",
@@ -271,21 +139,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "dicas de bota de trekking",
-"variable": "formato_serp",
-"category": "snippet_em_destaque"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "dicas de garrafa térmica",
 "variable": "intencao",
 "category": "informacional"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "dicas de garrafa térmica",
-"variable": "formato_serp",
-"category": "snippet_em_destaque"
 },
 {
 "corpus": "seo_consultas",
@@ -295,21 +151,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "dicas de mochila de trilha",
-"variable": "formato_serp",
-"category": "snippet_em_destaque"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "dicas de saco de dormir",
 "variable": "intencao",
 "category": "informacional"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "dicas de saco de dormir",
-"variable": "formato_serp",
-"category": "snippet_em_destaque"
 },
 {
 "corpus": "seo_consultas",
@@ -319,21 +163,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "fone bluetooth como funciona",
-"variable": "formato_serp",
-"category": "snippet_em_destaque"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "fone bluetooth frete grátis",
 "variable": "intencao",
 "category": "transacional"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "fone bluetooth frete grátis",
-"variable": "formato_serp",
-"category": "shopping"
 },
 {
 "corpus": "seo_consultas",
@@ -343,21 +175,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "garrafa térmica",
-"variable": "formato_serp",
-"category": "shopping"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "garrafa térmica como funciona",
 "variable": "intencao",
 "category": "informacional"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "garrafa térmica como funciona",
-"variable": "formato_serp",
-"category": "snippet_em_destaque"
 },
 {
 "corpus": "seo_consultas",
@@ -367,21 +187,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "garrafa térmica promoção",
-"variable": "formato_serp",
-"category": "links_organicos"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "garrafa térmica vale a pena",
 "variable": "intencao",
 "category": "comercial"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "garrafa térmica vale a pena",
-"variable": "formato_serp",
-"category": "links_organicos"
 },
 {
 "corpus": "seo_consultas",
@@ -391,21 +199,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "jaqueta impermeável frete grátis",
-"variable": "formato_serp",
-"category": "shopping"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "jaqueta impermeável ou barraca de camping",
 "variable": "intencao",
 "category": "comercial"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "jaqueta impermeável ou barraca de camping",
-"variable": "formato_serp",
-"category": "video"
 },
 {
 "corpus": "seo_consultas",
@@ -415,21 +211,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "jaqueta impermeável preço",
-"variable": "formato_serp",
-"category": "pacote_local"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "lanterna de cabeça avaliação",
 "variable": "intencao",
 "category": "comercial"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "lanterna de cabeça avaliação",
-"variable": "formato_serp",
-"category": "links_organicos"
 },
 {
 "corpus": "seo_consultas",
@@ -439,21 +223,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "lanterna de cabeça como funciona",
-"variable": "formato_serp",
-"category": "video"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "lanterna de cabeça promoção",
 "variable": "intencao",
 "category": "transacional"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "lanterna de cabeça promoção",
-"variable": "formato_serp",
-"category": "shopping"
 },
 {
 "corpus": "seo_consultas",
@@ -463,21 +235,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "loja corremais",
-"variable": "formato_serp",
-"category": "sitelinks"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "melhor colchonete de yoga",
 "variable": "intencao",
 "category": "comercial"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "melhor colchonete de yoga",
-"variable": "formato_serp",
-"category": "shopping"
 },
 {
 "corpus": "seo_consultas",
@@ -487,21 +247,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "melhor lanterna de cabeça",
-"variable": "formato_serp",
-"category": "links_organicos"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "melhor mochila de trilha",
 "variable": "intencao",
 "category": "comercial"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "melhor mochila de trilha",
-"variable": "formato_serp",
-"category": "links_organicos"
 },
 {
 "corpus": "seo_consultas",
@@ -511,21 +259,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "melhor saco de dormir",
-"variable": "formato_serp",
-"category": "links_organicos"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "mochila de trilha promoção",
 "variable": "intencao",
 "category": "transacional"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "mochila de trilha promoção",
-"variable": "formato_serp",
-"category": "pacote_local"
 },
 {
 "corpus": "seo_consultas",
@@ -535,21 +271,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "o que é bicicleta ergométrica",
-"variable": "formato_serp",
-"category": "links_organicos"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "o que é jaqueta impermeável",
 "variable": "intencao",
 "category": "informacional"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "o que é jaqueta impermeável",
-"variable": "formato_serp",
-"category": "snippet_em_destaque"
 },
 {
 "corpus": "seo_consultas",
@@ -559,21 +283,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "o que é mochila de trilha",
-"variable": "formato_serp",
-"category": "snippet_em_destaque"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "onde comprar saco de dormir",
 "variable": "intencao",
 "category": "transacional"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "onde comprar saco de dormir",
-"variable": "formato_serp",
-"category": "shopping"
 },
 {
 "corpus": "seo_consultas",
@@ -583,21 +295,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "para que serve bota de trekking",
-"variable": "formato_serp",
-"category": "snippet_em_destaque"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "para que serve fone bluetooth",
 "variable": "intencao",
 "category": "informacional"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "para que serve fone bluetooth",
-"variable": "formato_serp",
-"category": "video"
 },
 {
 "corpus": "seo_consultas",
@@ -607,33 +307,15 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "para que serve jaqueta impermeável",
-"variable": "formato_serp",
-"category": "snippet_em_destaque"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "para que serve saco de dormir",
 "variable": "intencao",
 "category": "informacional"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "para que serve saco de dormir",
-"variable": "formato_serp",
-"category": "snippet_em_destaque"
 },
 {
 "corpus": "seo_consultas",
 "unit_id": "relógio esportivo promoção",
 "variable": "intencao",
 "category": "transacional"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "relógio esportivo promoção",
-"variable": "formato_serp",
-"category": "pacote_local"
 },
 {
 "corpus": "seo_consultas",
@@ -643,21 +325,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "saco de dormir",
-"variable": "formato_serp",
-"category": "shopping"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "top 10 bota de trekking",
 "variable": "intencao",
 "category": "comercial"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "top 10 bota de trekking",
-"variable": "formato_serp",
-"category": "links_organicos"
 },
 {
 "corpus": "seo_consultas",
@@ -667,21 +337,9 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "top 10 lanterna de cabeça",
-"variable": "formato_serp",
-"category": "shopping"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "top 10 saco de dormir",
 "variable": "intencao",
 "category": "comercial"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "top 10 saco de dormir",
-"variable": "formato_serp",
-"category": "video"
 },
 {
 "corpus": "seo_consultas",
@@ -691,33 +349,15 @@
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "trilhamax",
-"variable": "formato_serp",
-"category": "sitelinks"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "tênis de corrida preço",
 "variable": "intencao",
 "category": "transacional"
 },
 {
 "corpus": "seo_consultas",
-"unit_id": "tênis de corrida preço",
-"variable": "formato_serp",
-"category": "shopping"
-},
-{
-"corpus": "seo_consultas",
 "unit_id": "tênis de corrida promoção",
 "variable": "intencao",
 "category": "transacional"
-},
-{
-"corpus": "seo_consultas",
-"unit_id": "tênis de corrida promoção",
-"variable": "formato_serp",
-"category": "shopping"
 },
 {
 "corpus": "seo_paginas",

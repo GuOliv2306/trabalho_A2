@@ -10,9 +10,21 @@ Saída: DataFrame unit_id, variable, category — exatamente um código por unid
 
 import json
 import re
+import unicodedata
+from functools import lru_cache
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
+
+
+def _fold(text: str) -> str:
+    """Minúsculas e sem acento: quem digita em buscador ou em resumo de edição costuma omiti-los."""
+    return "".join(c for c in unicodedata.normalize("NFD", text.lower()) if not unicodedata.combining(c))
+
+
+@lru_cache(maxsize=None)
+def _compiled(pattern: str) -> "re.Pattern":
+    return re.compile(_fold(pattern))
 
 
 def _blank(value: Any) -> bool:
@@ -23,6 +35,7 @@ def _largest_area(value: Any, default: str, valid: set) -> str:
     best, best_area = default, -1.0
     for part in ("" if _blank(value) else str(value)).split("|"):
         name, _, area = part.partition(":")
+        name = name.strip().lower()
         try:
             area_value = float(area)
         except ValueError:
@@ -45,14 +58,14 @@ def _code_value(variable: Dict[str, Any], value: Any) -> str:
             if number >= low and (high is None or number < high):
                 return c["codigo"]
         return variable["padrao"]
-    text = "" if _blank(value) else str(value)
+    text = _fold("" if _blank(value) else str(value))
     if variable.get("remover"):
-        text = re.sub(variable["remover"], " ", text)
+        text = _compiled(variable["remover"]).sub(" ", text)
     earliest = set(variable.get("primeira_no_texto", []))
     for c in categories:
         if c["codigo"] in earliest:
             continue
-        if any(re.search(pattern, text, re.IGNORECASE) for pattern in c.get("regex", [])):
+        if any(_compiled(pattern).search(text) for pattern in c.get("regex", [])):
             return c["codigo"]
     # entre estas categorias vale a ação declarada primeiro no texto, não a ordem do livro
     best, best_pos = variable["padrao"], len(text) + 1
@@ -60,7 +73,7 @@ def _code_value(variable: Dict[str, Any], value: Any) -> str:
         if c["codigo"] not in earliest:
             continue
         for pattern in c.get("regex", []):
-            m = re.search(pattern, text, re.IGNORECASE)
+            m = _compiled(pattern).search(text)
             if m and m.start() < best_pos:
                 best, best_pos = c["codigo"], m.start()
     return best
@@ -96,7 +109,8 @@ def code_units_llm(codebook: Dict[str, Any], units: pd.DataFrame, client: Any, m
                    variables: Optional[List[str]] = None, batch_size: int = 25) -> pd.DataFrame:
     """
     Codificador por IA. `client` é um cliente OpenAI (ou compatível). Resposta fora do
-    livro, ou ausente, cai na categoria residual da variável.
+    livro, ou ausente, cai na categoria residual da variável; `.attrs["unanswered"]` conta
+    quantos códigos caíram nela por falta de resposta válida.
     """
     variables = variables or list(codebook["variaveis"])
     fields = ["unit_id"] + sorted({codebook["variaveis"][v]["campo"] for v in variables} - {"unit_id"})
@@ -113,12 +127,18 @@ def code_units_llm(codebook: Dict[str, Any], units: pd.DataFrame, client: Any, m
                       {"role": "user", "content": instructions + "\n\nUnidades:\n" + json.dumps(batch, ensure_ascii=False, default=str)}],
         )
         try:
-            codes = json.loads(response.choices[0].message.content).get("codes", [])
+            content = re.sub(r"^\s*```(?:json)?|```\s*$", "", response.choices[0].message.content.strip())
+            codes = json.loads(content).get("codes")
         except (json.JSONDecodeError, AttributeError, TypeError):
-            codes = []
-        for c in codes:
-            if isinstance(c, dict) and c.get("variable") in valid and c.get("category") in valid[c["variable"]]:
-                answers[(str(c.get("unit_id")), c["variable"])] = c["category"]
-    rows = [{"unit_id": str(u), "variable": v, "category": answers.get((str(u), v), codebook["variaveis"][v]["padrao"])}
-            for v in variables for u in units["unit_id"]]
-    return pd.DataFrame(rows, columns=["unit_id", "variable", "category"])
+            codes = None
+        for c in codes if isinstance(codes, list) else []:
+            if not isinstance(c, dict):
+                continue
+            variable, category = c.get("variable"), c.get("category")
+            if isinstance(variable, str) and isinstance(category, str) and category in valid.get(variable, ()):
+                answers[(str(c.get("unit_id")), variable)] = category
+    wanted = [(str(u), v) for v in variables for u in units["unit_id"]]
+    out = pd.DataFrame([{"unit_id": u, "variable": v, "category": answers.get((u, v), codebook["variaveis"][v]["padrao"])}
+                        for u, v in wanted], columns=["unit_id", "variable", "category"])
+    out.attrs["unanswered"] = sum(key not in answers for key in wanted)
+    return out

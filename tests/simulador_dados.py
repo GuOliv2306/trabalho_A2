@@ -785,8 +785,9 @@ class ExperimentSimulator:
         scale = {"produto": 3.6, "categoria": 4.2, "post": 3.9, "institucional": 3.0}
         base = {r.page: float(rng.lognormal(scale[r.template], 0.5)) for r in pages.itertuples()}
         interventions, mapping = self._interventions(rng, pages, base, start)
-        daily = self._daily(rng, pages, base, start, days, interventions, mapping)
-        queries, query_codes = self._queries(rng)
+        # sequências separadas: o painel depende das datas, as consultas não podem depender dele
+        daily = self._daily(np.random.default_rng([self.seed, 1]), pages, base, start, days, interventions, mapping)
+        queries, query_codes = self._queries(np.random.default_rng([self.seed, 2]))
         return {"pages": pages, "daily": daily, "interventions": interventions, "intervention_pages": mapping,
                 "queries": queries, "codes": pd.DataFrame(page_codes + query_codes)}
 

@@ -308,8 +308,9 @@ class GA4DatabaseStorage:
 
     def save_seo_experiment(self, data: Dict[str, Any]) -> Dict[str, int]:
         """
-        Grava a saída de `ExperimentSimulator.generate`, substituindo o painel anterior
-        e os códigos verdadeiros do simulador (os dos outros codificadores ficam).
+        Grava a saída de `ExperimentSimulator.generate`, substituindo o painel anterior,
+        os códigos verdadeiros do simulador e os códigos automáticos dos corpora simulados
+        (que precisam ser refeitos com POST /content-analysis/code). A referência fica.
         """
         tables = [("seo_pages", "pages"), ("seo_page_daily", "daily"), ("seo_interventions", "interventions"),
                   ("seo_intervention_pages", "intervention_pages"), ("seo_queries", "queries")]
@@ -317,7 +318,8 @@ class GA4DatabaseStorage:
         try:
             for table, key in tables:
                 self.conn.execute(f"DELETE FROM {table}")
-            self.conn.execute("DELETE FROM content_codes WHERE coder = 'verdade_simulador'")
+            self.conn.execute("""DELETE FROM content_codes WHERE coder = 'verdade_simulador'
+                                 OR (corpus LIKE 'seo_%' AND coder IN ('regras', 'llm'))""")
             for table, key in tables + [("content_codes", "codes")]:
                 self.conn.register("_seo_df", data[key])
                 self.conn.execute(f"INSERT INTO {table} BY NAME SELECT * FROM _seo_df")

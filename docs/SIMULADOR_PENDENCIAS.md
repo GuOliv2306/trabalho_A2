@@ -19,7 +19,8 @@ O simulador original (`GA4Simulator`, `GSCSimulator`) **não era suficiente**:
 ## Agora
 
 `ExperimentSimulator` (mesmo arquivo, `tests/simulador_dados.py`) acrescenta, de forma
-determinística por `seed`:
+determinística por `seed` (páginas, consultas e códigos não mudam com a data; o painel
+diário muda, porque acompanha o calendário):
 
 - 99 páginas (40 produtos, 24 categorias, 30 posts, 5 institucionais) com título, contagem de palavras e assinatura;
 - painel página×dia de 120 dias (cliques, impressões, posição), com sazonalidade semanal e tendência;
@@ -35,10 +36,12 @@ determinística por `seed`:
 2. **Cadeia posição → CTR → clique.** O efeito entra direto nos cliques; a posição muda à parte. Falta o efeito passar pela posição.
 3. **Contaminação entre grupos.** Tratadas e controles não disputam as mesmas consultas. Falta canibalização e transbordo por links internos.
 4. **Tendências não paralelas.** Valem por construção. Falta um cenário em que as tratadas já vinham crescendo, para o placebo ter o que acusar.
-5. **Efeitos heterogêneos.** O efeito é igual para todas as páginas tratadas; o update atinge todos os templates por igual.
+5. **Efeito conhecido só nos cliques.** Impressões e posição mudam junto, mas sem um valor verdadeiro declarado para conferir.
+5b. **Efeitos heterogêneos.** O efeito é igual para todas as páginas tratadas; o update atinge todos os templates por igual.
 6. **Painel consulta×página×dia.** As consultas só têm totais. Não dá para medir efeito por intenção de busca nem ligar consulta à página de destino.
 7. **Defeitos do dado real.** Sem dias faltando, sem consultas omitidas por privacidade, sem falhas de coleta, sem valores extremos.
-8. **Controle do tamanho do teste.** Número de páginas, duração e efeito são fixos. Falta parametrizar para estudar o menor efeito detectável.
+8. **Páginas de pouco tráfego.** Todas têm dezenas de cliques por dia; faltam páginas com 0 a 3, onde os métodos em log perdem precisão.
+8b. **Controle do tamanho do teste.** Número de páginas, duração e efeito são fixos. Falta parametrizar para estudar o menor efeito detectável.
 9. **Mudança de formato da página de resultados no tempo.** O formato é fixo por consulta; não há o evento "o buscador passou a mostrar vitrine".
 
 **Para a análise de conteúdo**

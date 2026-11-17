@@ -52,9 +52,29 @@ def test_codebooks_are_exhaustive_and_well_formed():
     ("melhor fone bluetooth", "comercial"),
     ("bota de trekking ou jaqueta impermeável", "comercial"),
     ("lanterna de cabeça", "indefinida"),          # consulta seca: o texto não diz a intenção
+    # quem digita em buscador costuma omitir acento e caixa
+    ("tenis preco", "transacional"),
+    ("TENIS PROMOCAO", "transacional"),
+    ("como escolher tênis barato", "informacional"),   # regra de decisão: forma de pergunta vence
 ])
 def test_query_intent(query, expected):
     assert code_one("seo_consultas", text=query, serp_features="links_organicos:1.0")["intencao"] == expected
+
+
+def test_serp_format_ignores_case():
+    assert code_one("seo_consultas", text="x", serp_features="Shopping:0.9|video:0.1")["formato_serp"] == "shopping"
+
+
+@pytest.mark.parametrize("byline,expected", [
+    ("Redacao", "sem_autoria"),
+    ("Equipe X, 10 anos de experiência", "sem_autoria"),     # assinatura coletiva, mesmo com experiência
+    ("Por Ana, 30 anos de idade", "autor_identificado"),
+    ("---", "sem_autoria"),
+    ("N/A", "sem_autoria"),
+])
+def test_byline_edge_cases(byline, expected):
+    out = coder.code_units(CODEBOOKS["seo_paginas"], pd.DataFrame([{"unit_id": "https://x.com/blog/a", "byline": byline}]))
+    assert dict(zip(out["variable"], out["category"]))["autoria"] == expected
 
 
 def test_serp_format_is_the_largest_area():
@@ -107,6 +127,15 @@ def test_page_codes(unit, expected):
     ("nova página: O viés algorítmico ocorre quando um sistema", "conteudo", "gerado_pelo_software"),
     ("[[WP:SPAM]] Desfeita a edição [[Special:Diff/1|1]] de [[X]]", "reversao", "gerado_pelo_software"),
     ("Ajuste nas Predefinições", "forma", "escrito_pelo_editor"),
+    # achados da auditoria
+    ("reversao de vandalismo", "reversao", "escrito_pelo_editor"),
+    ("desfiz vandalismo", "reversao", "escrito_pelo_editor"),
+    ("adicionei informação sobre o bot do Telegram", "conteudo", "escrito_pelo_editor"),
+    ("Corrida armamentista de IA", "sem_informacao", "escrito_pelo_editor"),
+    ("/* A */ texto livre /* B */", "conteudo", "escrito_pelo_editor"),
+    ("removida referência quebrada", "fontes", "escrito_pelo_editor"),
+    ("depois eu adiciono fontes", "sem_informacao", "escrito_pelo_editor"),
+    ("obrigado pela informação", "sem_informacao", "escrito_pelo_editor"),
 ])
 def test_wikipedia_summary_codes(summary, tipo, origem):
     codes = code_one("wikipedia_resumos", text=summary)
@@ -139,7 +168,10 @@ class FakeLLM:
 
     def create(self, **kw):
         self.prompts.append(kw["messages"][-1]["content"])
-        msg = type("M", (), {"content": json.dumps(self.payload)})
+        text = self.payload if isinstance(self.payload, str) else json.dumps(self.payload)
+        if getattr(self, "fence", False):
+            text = "```json\n" + text + "\n```"
+        msg = type("M", (), {"content": text})
         return type("R", (), {"choices": [type("C", (), {"message": msg})]})
 
 
@@ -155,6 +187,25 @@ def test_llm_coder_uses_codebook_and_rejects_invented_codes():
     # código fora do livro e unidade sem resposta caem na categoria residual; unidade inventada é ignorada
     assert got == {"a": "transacional", "b": "indefinida"}
     assert "transacional" in fake.prompts[0] and "comprar x" in fake.prompts[0]
+    assert out.attrs["unanswered"] == 1          # "b" ficou sem resposta válida
+
+
+@pytest.mark.parametrize("payload", [
+    "isto não é json", {"codes": None}, {"codes": [{"unit_id": "a", "variable": ["x"], "category": {"y": 1}}, 7]}, [],
+])
+def test_llm_coder_survives_bad_answers(payload):
+    units = pd.DataFrame({"unit_id": ["a"], "text": ["comprar x"], "serp_features": [None]})
+    fake = FakeLLM(payload)
+    out = coder.code_units_llm(CODEBOOKS["seo_consultas"], units, client=fake, variables=["intencao"])
+    assert out["category"].tolist() == ["indefinida"] and out.attrs["unanswered"] == 1
+
+
+def test_llm_coder_reads_fenced_json_and_batches():
+    units = pd.DataFrame({"unit_id": [1, 2, 3], "text": ["comprar x", "comprar y", "comprar z"], "serp_features": [None] * 3})
+    fake = FakeLLM({"codes": [{"unit_id": i, "variable": "intencao", "category": "transacional"} for i in (1, 2, 3)]})
+    fake.fence = True
+    out = coder.code_units_llm(CODEBOOKS["seo_consultas"], units, client=fake, variables=["intencao"], batch_size=2)
+    assert out["category"].tolist() == ["transacional"] * 3 and len(fake.prompts) == 2 and out.attrs["unanswered"] == 0
 
 
 # ===== CONFIABILIDADE =====
@@ -185,6 +236,16 @@ def test_agreement_details_and_edge_cases():
     const = reliability.agreement(pd.Series(["x", "x"]), pd.Series(["x", "x"]))
     assert const["percent_agreement"] == 1.0 and const["cohen_kappa"] is None and const["krippendorff_alpha"] is None
     assert reliability.agreement(pd.Series([], dtype=str), pd.Series([], dtype=str))["n"] == 0
+
+
+def test_alpha_comes_with_an_interval():
+    a = pd.Series(["x", "y"] * 40 + ["x"] * 20)
+    b = pd.Series(["x", "y"] * 40 + ["y"] * 20)
+    r = reliability.agreement(a, b)
+    lo, hi = r["krippendorff_alpha_ci95"]
+    assert lo < r["krippendorff_alpha"] < hi and hi - lo < 0.5
+    assert reliability.agreement(a, b)["krippendorff_alpha_ci95"] == [lo, hi]      # reprodutível
+    assert reliability.agreement(pd.Series(["x", "x"]), pd.Series(["x", "x"]))["krippendorff_alpha_ci95"] is None
 
 
 # ===== ROTAS =====
@@ -265,6 +326,19 @@ def test_wikipedia_corpus_results_and_reference(client):
     dev = client.get(f"{BASE}/reliability", params={"corpus": "wikipedia_resumos", "variable": "tipo_edicao",
                                                     "coder_b": "referencia_ia_desenvolvimento"}).json()
     assert dev["n"] == 1 and dev["percent_agreement"] == 1.0 and "IA" in dev["aviso"]
+
+
+def test_sample_rejects_absurd_seed(client):
+    r = client.get(f"{BASE}/sample", params={"corpus": "seo_consultas", "seed": 2 ** 32})
+    assert r.status_code == 422
+
+
+def test_repopulating_drops_stale_rule_codes(client):
+    client.post(f"{BASE}/code", json={"corpus": "seo_consultas"})
+    client.post(f"{BASE}/code", json={"corpus": "wikipedia_resumos"})
+    main.get_db().save_seo_experiment(ExperimentSimulator(seed=7).generate(days=120))
+    left = main.get_db().query_df("SELECT DISTINCT corpus FROM content_codes WHERE coder = 'regras'")["corpus"].tolist()
+    assert left == ["wikipedia_resumos"]      # os códigos das consultas antigas não valem para o painel novo
 
 
 def test_sample_is_deterministic(client):
