@@ -38,7 +38,7 @@ from app.report_models import (
     format_correlations,
     calculate_confidence_score
 )
-from app.report_agent import create_report_agent
+from app.report_agent import create_report_agent, NVIDIA_MODEL
 
 # Logger
 logger = logging.getLogger(__name__)
@@ -954,7 +954,7 @@ async def get_data_summary():
 @app.post("/api/v1/reports/generate", tags=["Reports"], response_model=dict)
 async def generate_report(request: ReportRequest):
     """
-    🤖 Gera relatório analítico narrativo usando IA (Agno + OpenAI).
+    🤖 Gera relatório analítico narrativo usando IA (Agno + NVIDIA).
     
     Este endpoint coleta dados de todas as análises disponíveis e usa um agente de IA
     para gerar um relatório compreensível com insights acionáveis e recomendações.
@@ -1135,7 +1135,7 @@ Gere um relatório analítico completo baseado nos seguintes dados de marketing 
             "metadata": {
                 "data_sources": list(data_collection.keys()),
                 "ml_models_used": ["channel_profiling", "keyword_clustering", "page_segmentation"],
-                "agent_model": "gpt-4o-mini",
+                "agent_model": NVIDIA_MODEL,
                 "confidence_score": confidence,
                 "generation_timestamp": datetime.now().isoformat(),
                 "request_parameters": {
@@ -1188,7 +1188,7 @@ Dados completos disponíveis nos endpoints individuais de análise.
             {
                 "title": "📊 KPIs Principais",
                 "content": format_kpis(kpis),
-                "key_insights": ["Relatório em modo simplificado", "Configure OPENAI_API_KEY para relatórios completos"]
+                "key_insights": ["Relatório em modo simplificado", "Configure NVIDIA_API_KEY para relatórios completos"]
             }
         ],
         "recommendations": []

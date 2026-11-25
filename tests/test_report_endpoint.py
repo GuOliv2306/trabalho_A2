@@ -98,9 +98,9 @@ if __name__ == "__main__":
     
     # Verificar se API key está configurada
     import os
-    if not os.getenv("OPENAI_API_KEY"):
-        print("\n⚠️  AVISO: OPENAI_API_KEY não configurada!")
-        print("   Configure com: export OPENAI_API_KEY=sk-proj-...")
+    if not os.getenv("NVIDIA_API_KEY"):
+        print("\n⚠️  AVISO: NVIDIA_API_KEY não configurada!")
+        print("   Configure com: export NVIDIA_API_KEY=nvapi-...")
         print("   Ou crie arquivo .env na raiz do projeto")
         print("\n   O teste usará modo fallback (sem IA)")
     

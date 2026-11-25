@@ -4,8 +4,10 @@ Agente Agno para geração de relatórios analíticos narrativos.
 import os
 from textwrap import dedent
 from agno.agent import Agent
-from agno.models.openai import OpenAIChat
+from agno.models.nvidia import Nvidia
 from app.report_models import AnalyticsReport
+
+NVIDIA_MODEL = os.getenv("NVIDIA_MODEL", "meta/llama-3.3-70b-instruct")
 
 
 def create_report_agent(debug_mode: bool = False) -> Agent:
@@ -20,16 +22,16 @@ def create_report_agent(debug_mode: bool = False) -> Agent:
     """
     
     # Verificar se API key está disponível
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = os.getenv("NVIDIA_API_KEY")
     if not api_key:
         raise ValueError(
-            "OPENAI_API_KEY não encontrada nas variáveis de ambiente. "
+            "NVIDIA_API_KEY não encontrada nas variáveis de ambiente. "
             "Configure a chave no arquivo .env ou nas variáveis de ambiente do sistema."
         )
     
     agent = Agent(
         name="Analytics Report Generator",
-        model=OpenAIChat(id="gpt-5-mini-2025-08-07"),  # Modelo custo-benefício ideal
+        model=Nvidia(id=NVIDIA_MODEL, api_key=api_key),
         description=dedent("""
             Você é um Analista de Negócios Sênior especializado em transformar dados 
             analíticos complexos de marketing digital em relatórios executivos compreensíveis. 
